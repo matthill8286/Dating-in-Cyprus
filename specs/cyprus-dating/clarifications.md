@@ -2,6 +2,8 @@
 
 Interview record. Canonical terms live in CONTEXT.md.
 
+Initial users: invite-only Limassol seed via existing language-community groups (Facebook, Telegram), not paid ads. Personal invites first, then group posts once both sides of the Pool have enough people. Waitlist for everywhere else. Paid UA is later.
+
 | # | Question | Answer | Impact |
 | --- | -------- | ------ | ------ |
 | 1 | Who is the first audience, and what problem are we solving for them? | Residents (Cypriots and settled expats) looking for a relationship, because global apps treat the island as a tourist market. | Starting problem is a local pool polluted by visitors. Later reframed by row 5. |
@@ -26,3 +28,4 @@ Interview record. Canonical terms live in CONTEXT.md.
 | 20 | How is the Resident gate checked? | Proposed: Cyprus mobile number, a presence check in the Operating area at join, and an attestation that primary home is there. Exact proof is still design. | R-1 stays a gate; this is the first concrete mechanism, not confirmed. |
 | 21 | Test seams? | Proposed: API integration tests as the highest seam for gate, discovery, Interest, Match, Block, and deletion. Client tests for Profile, discovery states, unverified mark, and chat. Vendor stubbed in CI. | Needs confirmation. |
 | 22 | Photo verification and who-you-meet as special-category? | Recorded as special-category (biometrics and possible sexual orientation). dpoReviewed is false until a DPO signs off. | db check will flag this until DPO review. |
+| 23 | Where do initial users come from? | Invite-only Limassol seed from existing English, Ukrainian, Russian, Romanian, and Bulgarian community groups, plus personal invites. Not paid ads. Open the Pool when both sides have enough people. | Acquisition is community seeding, not UA spend. Invite codes belong with join, not the walking skeleton. |

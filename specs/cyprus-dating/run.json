@@ -2,7 +2,7 @@
   "feature": "cyprus-dating",
   "schemaVersion": 1,
   "createdUtc": "2026-08-28T12:57:20.947Z",
-  "updatedUtc": "2026-08-28T13:32:09.260Z",
+  "updatedUtc": "2026-08-28T13:52:47.562Z",
   "phases": {
     "intake": {
       "status": "complete",
@@ -195,6 +195,20 @@
     },
     "pipeline": {
       "status": "pending"
+    }
+  },
+  "scaffold": {
+    "recordedUtc": "2026-08-28T13:52:47.561Z",
+    "files": {
+      "apps/api/eslint.config.js": "sha256:f0cf564b655bef5e17b7b3cf1ac48c08fbf0e9c7a047fc70979e959d68feeccd",
+      "apps/api/package.json": "sha256:696cf1d7c9a9cf42449a09a08c06eca955eb21c8ef8985a0fb706b132123d013",
+      "apps/api/tsconfig.json": "sha256:011f1f39a501e3fa629240c5f908889dc773bc0ef89db5af43870e02c8d5be88",
+      "apps/api/vitest.config.ts": "sha256:b1b84404e04f8fc70070694bb1fbf5176de9b043846c627d778acfa074519b57",
+      "apps/client/eslint.config.js": "sha256:7cbc0d185f520ce4d95a317bc15fc62b4b5cd4366e1db5466678debe12319514",
+      "apps/client/package.json": "sha256:8cc6a0f5c72eef7dc04f05cfbcdeccadbf4c08f37242d0f7c47d878543717f77",
+      "apps/client/tsconfig.json": "sha256:712583ff9cdb4b4e4f9b000a4a56d68db8dc1921cbfbc36d490a3a9f2be3dd72",
+      "apps/client/vitest.config.ts": "sha256:5091ffc608b64538a9957c8742e073550d0dc791ba682599e66bfccae502eaa8",
+      "package.json": "sha256:67fff620b11d949669e8d754092f5961bc535fc99cee7354e42fa9908ee78733"
     }
   }
 }
