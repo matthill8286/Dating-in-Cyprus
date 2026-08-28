@@ -13,6 +13,7 @@ export const PII_REDACT_PATHS = [
   '*.password',
   '*.chatBody',
   '*.photoUrl',
+  '*.firstName',
   'req.body.email',
   'req.body.phone',
   'req.body.mobile',
@@ -20,6 +21,7 @@ export const PII_REDACT_PATHS = [
   'req.body.password',
   'req.body.chatBody',
   'req.body.photoUrl',
+  'req.body.firstName',
 ];
 
 export const loggerRedact = {

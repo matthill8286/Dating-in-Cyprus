@@ -17,6 +17,9 @@ import { accountRoutes } from './account/routes';
 import { MemoryAccountStore, type AccountStore } from './account/store';
 import type { MobileChecker, PresenceChecker } from './account/gate';
 import { poolRoutes } from './pool/routes';
+import { MemoryProfileStore, type ProfileStore } from './profile/store';
+import { MemoryPhotoStore, type PhotoStore } from './profile/photos';
+import { profileRoutes } from './profile/routes';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -27,6 +30,8 @@ declare module 'fastify' {
 export interface AppOptions {
   config: Config;
   accounts?: AccountStore;
+  profiles?: ProfileStore;
+  photos?: PhotoStore;
   now?: () => Date;
   mobileChecker?: MobileChecker;
   presenceChecker?: PresenceChecker;
@@ -91,8 +96,11 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   );
 
   const accounts = opts.accounts ?? new MemoryAccountStore();
+  const profiles = opts.profiles ?? new MemoryProfileStore();
+  const photos = opts.photos ?? new MemoryPhotoStore(opts.config.PHOTO_STORE_REGION);
   app.addHook('onClose', async () => {
     await accounts.close();
+    await profiles.close();
   });
 
   await app.register(accountRoutes, {
@@ -103,6 +111,12 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     presenceChecker: opts.presenceChecker,
   });
   await app.register(poolRoutes, { accounts });
+  await app.register(profileRoutes, {
+    accounts,
+    profiles,
+    photos,
+    now: opts.now ?? (() => new Date()),
+  });
 
   return app;
 }

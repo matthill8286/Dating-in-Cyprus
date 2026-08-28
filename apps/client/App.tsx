@@ -1,46 +1,43 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { api } from './src/api/client';
 import { AppProvider, useApp } from './src/context/AppContext';
 import { JoinScreen } from './src/JoinScreen';
-import { loadHealth } from './src/health';
+import { ProfileEditScreen } from './src/ProfileEditScreen';
+import { ProfileViewScreen } from './src/ProfileViewScreen';
+import type { Profile } from './src/profile';
 
-function HealthScreen() {
-  const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
+function ProfileGate() {
+  const { sessionToken, profile, setProfile } = useApp();
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    void loadHealth(() => api.GET('/health')).then(setStatus);
-  }, []);
+    if (!sessionToken) return;
+    void api
+      .GET('/v1/profiles/me', { headers: { authorization: `Bearer ${sessionToken}` } })
+      .then(({ data }) => {
+        if (data) setProfile(data as Profile);
+      })
+      .finally(() => setReady(true));
+  }, [sessionToken, setProfile]);
 
-  return (
-    <View style={styles.container}>
-      <Text>cyprus-dating</Text>
-      <Text>API health: {status}</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+  if (!ready) return <Text>Loading Profile</Text>;
+  if (!profile) return <ProfileEditScreen />;
+  return <ProfileViewScreen />;
 }
 
 function Root() {
   const { sessionToken } = useApp();
   if (!sessionToken) return <JoinScreen />;
-  return <HealthScreen />;
+  return <ProfileGate />;
 }
 
 export default function App() {
   return (
     <AppProvider>
       <Root />
+      <StatusBar style="auto" />
     </AppProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

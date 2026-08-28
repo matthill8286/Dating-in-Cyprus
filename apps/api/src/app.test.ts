@@ -32,6 +32,7 @@ describe('app', () => {
     expect(spec.paths?.['/v1/accounts']).toBeDefined();
     expect(spec.paths?.['/v1/sessions']).toBeDefined();
     expect(spec.paths?.['/v1/pool']).toBeDefined();
+    expect(spec.paths?.['/v1/profiles/me']).toBeDefined();
     await app.close();
   });
 
