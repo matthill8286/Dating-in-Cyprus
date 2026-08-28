@@ -1,0 +1,21 @@
+# tasks: cyprus-dating
+
+<!-- Generated from tasks.json by the design-and-build runner. Edit the JSON and re-render; do not hand-edit this file. -->
+
+## tasks
+
+- **id:** T1; **title:** Scaffold Expo app, TypeScript API, OpenAPI, and EU Postgres; **blocks:** []; **requirementRefs:** ["R-14","NFR-1","NFR-4","NFR-6","NFR-7"]; **done:** false
+- **id:** T2; **title:** Account join with age 21+ and session; **blocks:** ["T1"]; **requirementRefs:** ["R-2"]; **done:** false
+- **id:** T3; **title:** Resident gate; **blocks:** ["T2"]; **requirementRefs:** ["R-1"]; **done:** false
+- **id:** T4; **title:** Lean Profile with no dating-intent label; **blocks:** ["T3"]; **requirementRefs:** ["R-4","R-16"]; **done:** false
+- **id:** T5; **title:** Distance-aware discovery in one Pool with filters; **blocks:** ["T4"]; **requirementRefs:** ["R-1","R-5","R-6","R-12","NFR-5"]; **done:** false
+- **id:** T6; **title:** Men seeking women and women seeking men matching rule; **blocks:** ["T5"]; **requirementRefs:** ["R-7"]; **done:** false
+- **id:** T7; **title:** Interest and Match; **blocks:** ["T6"]; **requirementRefs:** ["R-8","R-9"]; **done:** false
+- **id:** T8; **title:** Chat after Match; **blocks:** ["T7"]; **requirementRefs:** ["R-9"]; **done:** false
+- **id:** T9; **title:** Block and Report; **blocks:** ["T8"]; **requirementRefs:** ["R-10"]; **done:** false
+- **id:** T10; **title:** Photo verification mark; **blocks:** ["T5"]; **requirementRefs:** ["R-11","NFR-9"]; **done:** false
+- **id:** T11; **title:** Launch languages i18n; **blocks:** ["T9","T10"]; **requirementRefs:** ["R-3","NFR-6"]; **done:** false
+- **id:** T12; **title:** Data export and Account deletion; **blocks:** ["T9","T10"]; **requirementRefs:** ["R-13","NFR-2","NFR-3","NFR-4"]; **done:** false
+- **id:** T13; **title:** Push for Match and message; **blocks:** ["T8"]; **requirementRefs:** ["NFR-8"]; **done:** false
+- **id:** T14; **title:** Free core with no paywall; **blocks:** ["T8"]; **requirementRefs:** ["R-15"]; **done:** false
+

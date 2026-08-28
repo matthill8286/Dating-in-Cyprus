@@ -1,0 +1,36 @@
+{
+  "feature": "cyprus-dating",
+  "solution": "An Expo (React Native) client on iOS, Android, and web talks to a TypeScript API in Azure EU. A person creates an Account, passes the Resident gate and the age floor of 21, and publishes a lean Profile. They discover other Residents in one Pool, nearer first, filtered by age, distance, and languages. Interest is one-way until mutual, then a Match opens chat. Photo verification is optional and unverified Profiles are marked. Block and Report are first-class. Join, discovery, Match, and chat are free. Personal data stays in the EU. The Resident gate mechanism is a design proposal: Cyprus mobile number plus a presence check in the Operating area at join, plus an attestation that primary home is in the Operating area.",
+  "screensJourneys": [
+    "Join: age 21+, Launch language, attestation of primary home, Resident gate, Account created.",
+    "Profile edit: photos, first name, age, city, languages spoken, bio. Photo verification entry. Unverified mark visible.",
+    "Discovery: distance-aware list or cards of Residents in the Pool who match men-seeking-women or women-seeking-men. Filters for age, distance, languages. Empty, loading, error, populated.",
+    "Express Interest from a Profile. Mutual Interest becomes a Match.",
+    "Matches list and chat thread. Block and Report from Profile or chat.",
+    "Settings: export personal data, delete Account, notification permission, Photo verification status."
+  ],
+  "apiContract": "OpenAPI 3 published from the TypeScript API. Clients use a generated TypeScript client. Version in the URL as /v1. Resources: Account, Profile, Discovery, Interest, Match, Chat, Block, Report, PhotoVerification, DataExport.",
+  "testingDecisions": [
+    "API integration tests are the highest seam for gate, discovery, Interest, Match, Block, and deletion.",
+    "Client component tests for Profile, discovery empty/error, unverified mark, and chat thread.",
+    "Contract tests from the OpenAPI doc against the generated client.",
+    "No live Photo verification vendor in CI; the vendor is stubbed.",
+    "k6 against discovery p95. axe against Expo web screens."
+  ],
+  "requirementRefs": [
+    "R-1", "R-2", "R-3", "R-4", "R-5", "R-6", "R-7", "R-8", "R-9", "R-10", "R-11", "R-12", "R-13", "R-14", "R-15", "R-16",
+    "NFR-1", "NFR-2", "NFR-3", "NFR-4", "NFR-5", "NFR-6", "NFR-7", "NFR-8", "NFR-9"
+  ],
+  "outOfScope": [
+    "Northern Cyprus and matching across the Green Line",
+    "Greek UI and Greek-first Cypriots as a core audience",
+    "Same-gender matching and matching beyond men seeking women and women seeking men",
+    "Ages 18 to 20",
+    "Visitors and short stays",
+    "Events, video calls, and a social feed",
+    "Government ID or KYC",
+    "Charging for join, discovery, Match, or chat",
+    "Dating-intent labels",
+    "Language-siloed Pools"
+  ]
+}

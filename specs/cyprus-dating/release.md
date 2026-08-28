@@ -1,0 +1,30 @@
+# release: cyprus-dating
+
+<!-- Generated from release.json by the design-and-build runner. Edit the JSON and re-render; do not hand-edit this file. -->
+
+## rollout
+
+Deploy a new Container Apps revision in the EU and shift traffic only after the health probe is green. Deploy the Expo web client to Static Web App per environment. Postgres expand migrations run before the new API revision. photo-verification-enabled defaults on; push-enabled gates Match and message push. No canary percentage in v1; staging and UAT take the revision first.
+
+
+## featureFlags
+
+- photo-verification-enabled (default on)
+- push-enabled
+
+
+## rollback
+
+Rehearsed on staging each release. Activate the previous healthy Container Apps revision so traffic leaves the bad revision. Redeploy the previous Static Web App artifact. If the fault is Photo verification, turn photo-verification-enabled off; unverified Profiles stay in the Pool and stay marked. If the fault is push, turn push-enabled off; Match and chat still work in the foreground. Do not run contract (drop) migrations as part of rollback. Data written under the new version stays in additive columns; the previous API ignores unknown columns.
+
+
+## hasDatabase
+
+true
+
+
+## migration
+
+
+- **steps:** ["Expand: add tables and nullable columns for Account, Profile, Interest, Match, chat, Photo verification, Block, and Report. Add indexes. Do not drop, rename, or tighten nullability in this step.","Deploy the new Container Apps revision that writes the expanded schema and still reads the previous columns.","Backfill dual-written rows with a pausable job. Confirm counts for Profile, Match, and chat before moving on.","Deploy a follow-up revision that reads only the new columns.","Contract in a later release, only after the previous revision is no longer rollback-eligible: drop unused columns and tables. Never contract in the same release as expand."]
+

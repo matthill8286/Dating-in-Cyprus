@@ -1,0 +1,8 @@
+{
+  "feature": "cyprus-dating",
+  "sbom": {
+    "location": "pipeline artifact sbom.cdx.json, CycloneDX, Dependency-Track project cyprus-dating when the pipeline exists",
+    "format": "CycloneDX"
+  },
+  "findings": []
+}

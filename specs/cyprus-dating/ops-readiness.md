@@ -1,0 +1,79 @@
+# ops-readiness: cyprus-dating
+
+<!-- Generated from ops-readiness.json by the design-and-build runner. Edit the JSON and re-render; do not hand-edit this file. -->
+
+## slos
+
+- **nfrId:** NFR-1; **objective:** 100% of stores and processors that hold Profile, photo, Match, or chat data remain in an EU region over 30 days. Zero extra-EU transfers in configuration or vendor contracts.
+- **nfrId:** NFR-2; **objective:** Zero commercial agreements or runtime paths that sell Profile fields, photos, or chat contents, confirmed by a quarterly contract and code review.
+- **nfrId:** NFR-3; **objective:** 100% of Account deletions purge Profile, photos, Matches, and chat from production stores within 30 days. An export of held personal data is available from the Account.
+- **nfrId:** NFR-4; **objective:** Weekly sampled log lines from join, discovery, Match, chat, and deletion contain none of: name, email, phone, chat body, or a photo URL that identifies a person.
+- **nfrId:** NFR-5; **objective:** 95% of discovery requests render first results in under 2 seconds, excluding photo bytes, over 30 days.
+- **nfrId:** NFR-6; **objective:** Zero serious or critical axe issues on all web screens each release. WCAG 2.2 AA held.
+- **nfrId:** NFR-7; **objective:** Capacity stays within the planned Azure SKUs for 10,000 registered Residents and 1,000 weekly active, measured monthly against registration and weekly-active counts.
+- **nfrId:** NFR-8; **objective:** When notification permission is granted, 99% of new Match and new message events result in an APNs or FCM accept over 30 days.
+- **nfrId:** NFR-9; **objective:** 95% of Photo verification results return a visible pass or fail in under 15 seconds over 30 days.
+
+
+## validations
+
+- **nfrId:** NFR-5; **method:** k6; **threshold:** discovery request to first result p95 < 2s, excluding photo bytes
+- **nfrId:** NFR-6; **method:** axe; **threshold:** WCAG 2.2 AA; zero serious or critical issues on Expo web screens
+- **nfrId:** NFR-9; **method:** k6; **threshold:** Photo verification result p95 < 15s (vendor stubbed in CI)
+
+
+## alerts
+
+- Discovery p95 > 2s for 5 minutes pages on-call.
+- Photo verification p95 > 15s for 5 minutes pages on-call.
+- API 5xx rate > 1% for 5 minutes pages on-call.
+- Container Apps replica unhealthy or restart loop pages on-call.
+- Postgres CPU or storage > 80% for 15 minutes pages on-call.
+- Push vendor reject rate > 5% over 15 minutes notifies on-call (Match and message).
+- Account deletion job age > 7 days notifies on-call (30-day erase SLO).
+- Log sample matching name, email, phone, chat body, or identifying photo URL pages on-call.
+- Any data store or processor region outside the EU (configuration drift) pages on-call.
+- Registered Residents > 8,000 or weekly active > 800 notifies capacity (80% of NFR-7).
+
+
+## dashboards
+
+- API golden signals: request rate, discovery p95, 5xx, Container Apps CPU and memory.
+- Postgres: CPU, connections, storage, backup age.
+- Photo verification latency p95 and pass/fail count.
+- Push accept and reject by iOS and Android for new Match and new message.
+- Deletion job age and remaining personal data after Account deletion; export success rate.
+- Registration count and weekly active versus NFR-7 (10,000 / 1,000).
+
+
+## runbook
+
+docs/runbook.md
+
+
+## rollbackRef
+
+specs/cyprus-dating/release.json
+
+
+## dr
+
+Single EU region (West Europe). Postgres flexible server PITR, RPO 15 minutes, RTO 4 hours restore to a new flexible server in the same region. Personal data stores stay in the EU. No multi-region failover in v1: NFR-7 is a small island market. Photo blobs restore from same-region backup. Rehearse restore on staging before go-live.
+
+
+## goLiveChecklist
+
+- Quality gate green (format, lint, typecheck, tests, coverage).
+- k6 discovery p95 < 2s against staging.
+- k6 Photo verification p95 < 15s against staging with the vendor stubbed.
+- axe reports no serious or critical issues on Expo web screens (WCAG 2.2 AA).
+- All Azure resources in an EU region; Key Vault secrets populated.
+- Postgres backups and PITR enabled; restore rehearsed on staging.
+- Account deletion and personal-data export verified on UAT within the 30-day erase path.
+- Sampled logs from join, discovery, Match, chat, and deletion contain no personal data.
+- APNs and FCM credentials in Key Vault; push-enabled is on for prod.
+- photo-verification-enabled default on; vendor processes in the EU.
+- SLO alerts wired to the on-call channel.
+- Container Apps previous-revision rollback rehearsed on staging.
+- Runbook at docs/runbook.md reviewed by the operator on call for launch.
+

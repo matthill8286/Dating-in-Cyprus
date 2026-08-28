@@ -1,0 +1,18 @@
+{
+  "feature": "cyprus-dating",
+  "stackId": "C",
+  "provider": "azure",
+  "archetype": "web",
+  "feChoices": {
+    "state": "react-context",
+    "styling": "tailwind",
+    "validation": "yup",
+    "clientAuth": "session-token"
+  },
+  "csharpArchitecture": null,
+  "authModel": "hmac-session",
+  "deployTargets": ["static-web-app", "container-app"],
+  "multiBrand": false,
+  "rationale": "The sanctioned Uinsure ids do not include mobile. Clients are Expo (React Native) for iOS, Android, and web, which the user already chose. A server is required to hold the Resident gate, matching, chat, and PII (NFR-1, NFR-4, R-1), so A is out. No SEO/SSR need, so not B. Domain logic is matching and moderation, not a heavy .NET estate, so not D. C (TypeScript API plus clients) is the closest sanctioned id. Auth is an Account session token, recorded as hmac-session because Entra is the wrong identity model. Web client can ship as Expo web on Static Web App; API on Container Apps in an EU region. React Context is enough for v1 client state; Tailwind v4; yup on forms. Needs confirmation that Expo-plus-TS-API is accepted as the real stack sitting under id C.",
+  "adr": "docs/adr/0001-app-architecture.md"
+}

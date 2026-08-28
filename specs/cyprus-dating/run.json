@@ -2,7 +2,7 @@
   "feature": "cyprus-dating",
   "schemaVersion": 1,
   "createdUtc": "2026-08-28T12:57:20.947Z",
-  "updatedUtc": "2026-08-28T12:57:21.322Z",
+  "updatedUtc": "2026-08-28T13:32:09.260Z",
   "phases": {
     "intake": {
       "status": "complete",
@@ -37,52 +37,150 @@
       "updatedUtc": "2026-08-28T12:57:21.322Z"
     },
     "domain-model": {
-      "status": "pending",
-      "artifact": "domain-model.json"
+      "status": "complete",
+      "artifact": "domain-model.json",
+      "hash": "sha256:158ec461f6891070f3d4536569cdfb184cc574cab8df81a74ff95503fa0bc1e2",
+      "inputs": {
+        "requirements.json": "sha256:d0b1e003151fdf1ce2f3ffadd3b412be984d2eddb273ac77cf10763cb42af2dc"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T13:26:55.408Z"
     },
     "data-classification": {
-      "status": "pending",
-      "artifact": "data-classification.json"
+      "status": "complete",
+      "artifact": "data-classification.json",
+      "hash": "sha256:484f7bbe59f313f67f2342b067d00503263a086910cd685d9ea31ccc0a4ff314",
+      "inputs": {
+        "requirements.json": "sha256:d0b1e003151fdf1ce2f3ffadd3b412be984d2eddb273ac77cf10763cb42af2dc",
+        "domain-model.json": "sha256:158ec461f6891070f3d4536569cdfb184cc574cab8df81a74ff95503fa0bc1e2"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T13:26:55.522Z"
     },
     "stack": {
-      "status": "pending",
-      "artifact": "stack.json"
+      "status": "complete",
+      "artifact": "stack.json",
+      "hash": "sha256:7b3099c281e3f025cb8cebafc4d6389ae02f5343f042633fbf836135d243a67b",
+      "inputs": {
+        "intake.json": "sha256:3c83e119b111e9495f3ab09a845491ef4d29241ede0cf2044d0ff9d544d42be2",
+        "nfr.json": "sha256:d4f6a0d0028c36d1cff66612a0666ad62e3780fbf41f15de6a4a763d3fbefe7d",
+        "requirements.json": "sha256:d0b1e003151fdf1ce2f3ffadd3b412be984d2eddb273ac77cf10763cb42af2dc",
+        "domain-model.json": "sha256:158ec461f6891070f3d4536569cdfb184cc574cab8df81a74ff95503fa0bc1e2",
+        "data-classification.json": "sha256:484f7bbe59f313f67f2342b067d00503263a086910cd685d9ea31ccc0a4ff314"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T13:26:55.634Z"
     },
     "spec": {
-      "status": "pending",
-      "artifact": "spec.json"
+      "status": "complete",
+      "artifact": "spec.json",
+      "hash": "sha256:3b111c10d9c763293348d8caf0b6bfc80cbc38d418d18f9b703e0949728d0c24",
+      "inputs": {
+        "requirements.json": "sha256:d0b1e003151fdf1ce2f3ffadd3b412be984d2eddb273ac77cf10763cb42af2dc",
+        "domain-model.json": "sha256:158ec461f6891070f3d4536569cdfb184cc574cab8df81a74ff95503fa0bc1e2",
+        "stack.json": "sha256:7b3099c281e3f025cb8cebafc4d6389ae02f5343f042633fbf836135d243a67b"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T13:26:55.746Z"
     },
     "threat-model": {
-      "status": "pending",
-      "artifact": "threat-model.json"
+      "status": "complete",
+      "artifact": "threat-model.json",
+      "hash": "sha256:e2a0318bfba8d139319819db7524e0886a0fd5688c1bf7070e22c8046956a489",
+      "inputs": {
+        "nfr.json": "sha256:d4f6a0d0028c36d1cff66612a0666ad62e3780fbf41f15de6a4a763d3fbefe7d",
+        "domain-model.json": "sha256:158ec461f6891070f3d4536569cdfb184cc574cab8df81a74ff95503fa0bc1e2",
+        "stack.json": "sha256:7b3099c281e3f025cb8cebafc4d6389ae02f5343f042633fbf836135d243a67b",
+        "spec.json": "sha256:3b111c10d9c763293348d8caf0b6bfc80cbc38d418d18f9b703e0949728d0c24"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T13:32:08.666Z"
     },
     "api-design": {
-      "status": "pending",
-      "artifact": "api-design.json"
+      "status": "complete",
+      "artifact": "api-design.json",
+      "hash": "sha256:7db12ffc5dfb620290b9e57e15cdf55d015d0bb18f1d80161da7eb90522fda2f",
+      "inputs": {
+        "spec.json": "sha256:3b111c10d9c763293348d8caf0b6bfc80cbc38d418d18f9b703e0949728d0c24",
+        "domain-model.json": "sha256:158ec461f6891070f3d4536569cdfb184cc574cab8df81a74ff95503fa0bc1e2"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T13:32:08.816Z"
     },
     "plan": {
-      "status": "pending",
-      "artifact": "plan.json"
+      "status": "complete",
+      "artifact": "plan.json",
+      "hash": "sha256:7768c7cb2f47fec8648faa672e2e4b96aa1ddad05003a784471bd36afb96ed03",
+      "inputs": {
+        "spec.json": "sha256:3b111c10d9c763293348d8caf0b6bfc80cbc38d418d18f9b703e0949728d0c24"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T13:32:08.887Z"
     },
     "tasks": {
-      "status": "pending",
-      "artifact": "tasks.json"
+      "status": "complete",
+      "artifact": "tasks.json",
+      "hash": "sha256:bb9907f6ff40f51a44925e059282ab3a40c2fe1ae7aac97319bdb7ea774861b2",
+      "inputs": {
+        "plan.json": "sha256:7768c7cb2f47fec8648faa672e2e4b96aa1ddad05003a784471bd36afb96ed03"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T13:32:08.958Z"
     },
     "cost": {
-      "status": "pending",
-      "artifact": "cost.json"
+      "status": "complete",
+      "artifact": "cost.json",
+      "hash": "sha256:6b0d08796bf2c001733abdafd34606684b9f6244c2ace5631f2b2ff40438fe1b",
+      "inputs": {
+        "stack.json": "sha256:7b3099c281e3f025cb8cebafc4d6389ae02f5343f042633fbf836135d243a67b"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T13:32:09.030Z"
     },
     "ops-readiness": {
-      "status": "pending",
-      "artifact": "ops-readiness.json"
+      "status": "complete",
+      "artifact": "ops-readiness.json",
+      "hash": "sha256:f0b0e77e8c8277171680a20d45add9a1e8b1198f1cd1b3ef84701672bc8f81c8",
+      "inputs": {
+        "nfr.json": "sha256:d4f6a0d0028c36d1cff66612a0666ad62e3780fbf41f15de6a4a763d3fbefe7d",
+        "stack.json": "sha256:7b3099c281e3f025cb8cebafc4d6389ae02f5343f042633fbf836135d243a67b",
+        "spec.json": "sha256:3b111c10d9c763293348d8caf0b6bfc80cbc38d418d18f9b703e0949728d0c24"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T13:32:09.115Z"
     },
     "supply-chain": {
-      "status": "pending",
-      "artifact": "supply-chain.json"
+      "status": "complete",
+      "artifact": "supply-chain.json",
+      "hash": "sha256:15f3b5f8dcfc2539c21267bae69f448880c0f116dbb3109adcbe3215d2dc9bbe",
+      "inputs": {
+        "stack.json": "sha256:7b3099c281e3f025cb8cebafc4d6389ae02f5343f042633fbf836135d243a67b"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T13:32:09.188Z"
     },
     "release": {
-      "status": "pending",
-      "artifact": "release.json"
+      "status": "complete",
+      "artifact": "release.json",
+      "hash": "sha256:0a303a2a42e591d6af3e6be37261622c39a305eb457672c0a4c1dc6581e3f513",
+      "inputs": {
+        "stack.json": "sha256:7b3099c281e3f025cb8cebafc4d6389ae02f5343f042633fbf836135d243a67b",
+        "spec.json": "sha256:3b111c10d9c763293348d8caf0b6bfc80cbc38d418d18f9b703e0949728d0c24"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T13:32:09.260Z"
     }
   },
   "build": {
