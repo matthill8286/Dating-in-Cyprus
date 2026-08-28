@@ -29,6 +29,8 @@ describe('app', () => {
     const spec = app.swagger();
     expect(spec.paths?.['/health']).toBeDefined();
     expect(spec.paths?.['/v1/session']).toBeDefined();
+    expect(spec.paths?.['/v1/accounts']).toBeDefined();
+    expect(spec.paths?.['/v1/sessions']).toBeDefined();
     await app.close();
   });
 

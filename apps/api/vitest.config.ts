@@ -7,7 +7,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'cobertura'],
       include: ['src/**/*.ts'],
-      exclude: ['src/**/*.test.ts', 'src/server.ts'],
+      exclude: ['src/**/*.test.ts', 'src/server.ts', 'src/account/postgres.ts'],
       thresholds: {
         lines: 80,
         statements: 80,

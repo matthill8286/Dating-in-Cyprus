@@ -13,6 +13,8 @@ import type { Config } from './config';
 import { healthResponse, sessionResponse } from './contracts/health';
 import { loggerRedact } from './logger';
 import { bearerToken, verifySessionToken } from './auth/sessionToken';
+import { accountRoutes } from './account/routes';
+import { MemoryAccountStore, type AccountStore } from './account/store';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -22,11 +24,19 @@ declare module 'fastify' {
 
 export interface AppOptions {
   config: Config;
+  accounts?: AccountStore;
+  now?: () => Date;
 }
 
 function isPublicPath(url: string): boolean {
   const path = url.split('?')[0] ?? url;
-  return path === '/health' || path.startsWith('/documentation') || path === '/openapi.json';
+  return (
+    path === '/health' ||
+    path.startsWith('/documentation') ||
+    path === '/openapi.json' ||
+    path === '/v1/accounts' ||
+    path === '/v1/sessions'
+  );
 }
 
 export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
@@ -75,6 +85,17 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     { schema: { response: { 200: sessionResponse } } },
     async (req) => ({ accountId: req.accountId ?? '' }),
   );
+
+  const accounts = opts.accounts ?? new MemoryAccountStore();
+  app.addHook('onClose', async () => {
+    await accounts.close();
+  });
+
+  await app.register(accountRoutes, {
+    config: opts.config,
+    accounts,
+    now: opts.now ?? (() => new Date()),
+  });
 
   return app;
 }

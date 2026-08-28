@@ -6,7 +6,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'cobertura'],
-      include: ['src/health.ts'],
+      include: ['src/health.ts', 'src/join.ts'],
       exclude: ['src/**/*.test.ts'],
       thresholds: {
         lines: 80,
