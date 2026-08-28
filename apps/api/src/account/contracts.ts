@@ -9,6 +9,12 @@ export const joinRequest = z.object({
   gender: z.enum(GENDERS),
   seeking: z.enum(SEEKING),
   specialCategoryConsent: z.literal(true),
+  mobile: z.string().min(8),
+  primaryHomeAttestation: z.literal(true),
+  presence: z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+  }),
 });
 
 export const signInRequest = z.object({

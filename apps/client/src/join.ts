@@ -17,6 +17,9 @@ export type JoinFormValues = {
   gender: Gender;
   seeking: Seeking;
   specialCategoryConsent: boolean;
+  mobile: string;
+  primaryHomeAttestation: boolean;
+  presence: { latitude: number; longitude: number } | null;
 };
 
 export function joinAgeStatus(
@@ -44,6 +47,17 @@ export const joinFormSchema = yup.object({
   gender: yup.string().oneOf(GENDERS).required(),
   seeking: yup.string().oneOf(SEEKING).required(),
   specialCategoryConsent: yup.boolean().oneOf([true]).required(),
+  mobile: yup
+    .string()
+    .matches(/^\+3579\d{7}$/)
+    .required(),
+  primaryHomeAttestation: yup.boolean().oneOf([true]).required(),
+  presence: yup
+    .object({
+      latitude: yup.number().required(),
+      longitude: yup.number().required(),
+    })
+    .required(),
 });
 
 export function validateJoinForm(
@@ -71,7 +85,12 @@ export async function storeJoinSession(
 
 export function joinRefusalMessage(code: string): string {
   if (code === 'age_ineligible') return 'You must be 21 or over to join.';
-  if (code === 'invalid') return 'Check email, password, Launch language, and consent.';
+  if (code === 'visitor_refused') {
+    return 'Only a Resident can join. A Visitor is refused at the gate.';
+  }
+  if (code === 'invalid') {
+    return 'Check email, password, Launch language, consent, mobile, presence, and attestation.';
+  }
   return 'Join failed.';
 }
 

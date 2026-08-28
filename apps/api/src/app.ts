@@ -15,6 +15,8 @@ import { loggerRedact } from './logger';
 import { bearerToken, verifySessionToken } from './auth/sessionToken';
 import { accountRoutes } from './account/routes';
 import { MemoryAccountStore, type AccountStore } from './account/store';
+import type { MobileChecker, PresenceChecker } from './account/gate';
+import { poolRoutes } from './pool/routes';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -26,6 +28,8 @@ export interface AppOptions {
   config: Config;
   accounts?: AccountStore;
   now?: () => Date;
+  mobileChecker?: MobileChecker;
+  presenceChecker?: PresenceChecker;
 }
 
 function isPublicPath(url: string): boolean {
@@ -95,7 +99,10 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     config: opts.config,
     accounts,
     now: opts.now ?? (() => new Date()),
+    mobileChecker: opts.mobileChecker,
+    presenceChecker: opts.presenceChecker,
   });
+  await app.register(poolRoutes, { accounts });
 
   return app;
 }

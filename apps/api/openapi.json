@@ -111,6 +111,32 @@
                     "enum": [
                       true
                     ]
+                  },
+                  "mobile": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "primaryHomeAttestation": {
+                    "type": "boolean",
+                    "enum": [
+                      true
+                    ]
+                  },
+                  "presence": {
+                    "type": "object",
+                    "properties": {
+                      "latitude": {
+                        "type": "number"
+                      },
+                      "longitude": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "latitude",
+                      "longitude"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -120,7 +146,10 @@
                   "launchLanguage",
                   "gender",
                   "seeking",
-                  "specialCategoryConsent"
+                  "specialCategoryConsent",
+                  "mobile",
+                  "primaryHomeAttestation",
+                  "presence"
                 ],
                 "additionalProperties": false
               }
@@ -287,6 +316,61 @@
             }
           },
           "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pool": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "admitted": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "admitted"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
             "description": "Default Response",
             "content": {
               "application/json": {

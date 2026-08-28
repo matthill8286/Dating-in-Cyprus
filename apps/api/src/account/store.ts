@@ -15,6 +15,8 @@ export type Account = {
   launchLanguage: LaunchLanguage;
   gender: Gender;
   seeking: Seeking;
+  mobile: string;
+  residentAdmitted: boolean;
 };
 
 export type NewAccount = Omit<Account, 'id'>;
@@ -30,17 +32,20 @@ export class AccountConflict extends Error {
 export interface AccountStore {
   create(account: NewAccount): Promise<Account>;
   findByEmail(email: string): Promise<Account | null>;
+  findById(id: string): Promise<Account | null>;
   close(): Promise<void>;
 }
 
 export class MemoryAccountStore implements AccountStore {
   private readonly byEmail = new Map<string, Account>();
+  private readonly byId = new Map<string, Account>();
 
   async create(account: NewAccount): Promise<Account> {
     const existing = this.byEmail.get(account.email.toLowerCase());
     if (existing) throw new AccountConflict();
     const created: Account = { ...account, id: crypto.randomUUID() };
     this.byEmail.set(account.email.toLowerCase(), created);
+    this.byId.set(created.id, created);
     return created;
   }
 
@@ -48,7 +53,12 @@ export class MemoryAccountStore implements AccountStore {
     return this.byEmail.get(email.toLowerCase()) ?? null;
   }
 
+  async findById(id: string): Promise<Account | null> {
+    return this.byId.get(id) ?? null;
+  }
+
   async close(): Promise<void> {
     this.byEmail.clear();
+    this.byId.clear();
   }
 }

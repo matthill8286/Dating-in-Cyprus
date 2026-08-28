@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { buildApp } from '../app';
+import { buildApp, type AppOptions } from '../app';
 import { loadConfig } from '../config';
 import { MemoryAccountStore } from './store';
 
@@ -26,14 +26,18 @@ function adultJoin(email = `${randomUUID()}@example.com`) {
     gender: 'man' as const,
     seeking: 'women' as const,
     specialCategoryConsent: true as const,
+    mobile: '+35799123456',
+    primaryHomeAttestation: true as const,
+    presence: { latitude: 34.685, longitude: 33.038 },
   };
 }
 
-async function build() {
+async function build(extra: Partial<AppOptions> = {}) {
   return buildApp({
     config: testConfig(),
     accounts: new MemoryAccountStore(),
     now: () => NOW,
+    ...extra,
   });
 }
 
@@ -144,6 +148,78 @@ describe('Account sign-in', () => {
     });
     expect(signIn.statusCode).toBe(401);
     expect(signIn.json()).toMatchObject({ code: 'unauthenticated' });
+    await app.close();
+  });
+});
+
+describe('Resident gate', () => {
+  it('refuses a number that is not a Cyprus mobile as visitor_refused', async () => {
+    const app = await build();
+    const join = await app.inject({
+      method: 'POST',
+      url: '/v1/accounts',
+      payload: { ...adultJoin(), mobile: '+447700900123' },
+    });
+    expect(join.statusCode).toBe(403);
+    expect(join.json()).toMatchObject({ code: 'visitor_refused' });
+    await app.close();
+  });
+
+  it('refuses presence in Northern Cyprus as visitor_refused', async () => {
+    const app = await build();
+    const join = await app.inject({
+      method: 'POST',
+      url: '/v1/accounts',
+      payload: {
+        ...adultJoin(),
+        presence: { latitude: 35.341, longitude: 33.319 },
+      },
+    });
+    expect(join.statusCode).toBe(403);
+    expect(join.json()).toMatchObject({ code: 'visitor_refused' });
+    await app.close();
+  });
+
+  it('refuses join without primary-home attestation', async () => {
+    const app = await build();
+    const join = await app.inject({
+      method: 'POST',
+      url: '/v1/accounts',
+      payload: { ...adultJoin(), primaryHomeAttestation: false },
+    });
+    expect(join.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it('does not keep an Account when the gate refuses', async () => {
+    const app = await build();
+    const email = `${randomUUID()}@example.com`;
+    const refused = await app.inject({
+      method: 'POST',
+      url: '/v1/accounts',
+      payload: { ...adultJoin(email), mobile: '+447700900123' },
+    });
+    expect(refused.statusCode).toBe(403);
+    const retry = await app.inject({
+      method: 'POST',
+      url: '/v1/accounts',
+      payload: adultJoin(email),
+    });
+    expect(retry.statusCode).toBe(201);
+    await app.close();
+  });
+
+  it('refuses when the injected SMS vendor rejects a Cyprus mobile', async () => {
+    const app = await build({
+      mobileChecker: { isCyprusMobile: () => false },
+    });
+    const join = await app.inject({
+      method: 'POST',
+      url: '/v1/accounts',
+      payload: adultJoin(),
+    });
+    expect(join.statusCode).toBe(403);
+    expect(join.json()).toMatchObject({ code: 'visitor_refused' });
     await app.close();
   });
 });
