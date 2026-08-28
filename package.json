@@ -1,0 +1,21 @@
+{
+  "name": "cyprus-dating",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --filter client --filter api --parallel dev",
+    "dev:client": "pnpm --filter client start",
+    "dev:api": "pnpm --filter api dev",
+    "build": "pnpm --filter api openapi && pnpm --filter client codegen && pnpm --filter api build",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write .",
+    "type-check": "pnpm -r type-check",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.0"
+  }
+}
