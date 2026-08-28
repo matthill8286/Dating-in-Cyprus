@@ -4,6 +4,10 @@ Dating for people whose primary home is in the Republic of Cyprus.
 
 ## Language
 
+**Account**:
+The login identity of a Resident. Distinct from the Profile they show.
+_Avoid_: User, member, login (as the entity)
+
 **Resident**:
 A person whose primary home is in the Operating area. Settled expats count. A holiday or short-stay visitor does not.
 _Avoid_: User (when you mean this audience rule), local (ambiguous), citizen
