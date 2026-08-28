@@ -1,0 +1,14 @@
+{
+  "feature": "cyprus-dating",
+  "sources": {
+    "figma": null,
+    "poc": null
+  },
+  "screens": [],
+  "components": [],
+  "tokens": [],
+  "flows": [],
+  "openQuestions": [
+    "No Figma design or POC was supplied. Screens, components, and tokens are unknown until design. Product rules were settled in the requirements interview (see clarifications.md)."
+  ]
+}

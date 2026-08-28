@@ -1,0 +1,102 @@
+{
+  "feature": "cyprus-dating",
+  "schemaVersion": 1,
+  "createdUtc": "2026-08-28T12:57:20.947Z",
+  "updatedUtc": "2026-08-28T12:57:21.322Z",
+  "phases": {
+    "intake": {
+      "status": "complete",
+      "artifact": "intake.json",
+      "hash": "sha256:3c83e119b111e9495f3ab09a845491ef4d29241ede0cf2044d0ff9d544d42be2",
+      "inputs": {},
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T12:57:21.046Z"
+    },
+    "nfr": {
+      "status": "complete",
+      "artifact": "nfr.json",
+      "hash": "sha256:d4f6a0d0028c36d1cff66612a0666ad62e3780fbf41f15de6a4a763d3fbefe7d",
+      "inputs": {
+        "intake.json": "sha256:3c83e119b111e9495f3ab09a845491ef4d29241ede0cf2044d0ff9d544d42be2"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T12:57:21.156Z"
+    },
+    "requirements": {
+      "status": "complete",
+      "artifact": "requirements.json",
+      "hash": "sha256:d0b1e003151fdf1ce2f3ffadd3b412be984d2eddb273ac77cf10763cb42af2dc",
+      "inputs": {
+        "intake.json": "sha256:3c83e119b111e9495f3ab09a845491ef4d29241ede0cf2044d0ff9d544d42be2",
+        "nfr.json": "sha256:d4f6a0d0028c36d1cff66612a0666ad62e3780fbf41f15de6a4a763d3fbefe7d"
+      },
+      "model": "cursor-grok-4.6",
+      "skillVersion": "2.9.0-alpha.1",
+      "updatedUtc": "2026-08-28T12:57:21.322Z"
+    },
+    "domain-model": {
+      "status": "pending",
+      "artifact": "domain-model.json"
+    },
+    "data-classification": {
+      "status": "pending",
+      "artifact": "data-classification.json"
+    },
+    "stack": {
+      "status": "pending",
+      "artifact": "stack.json"
+    },
+    "spec": {
+      "status": "pending",
+      "artifact": "spec.json"
+    },
+    "threat-model": {
+      "status": "pending",
+      "artifact": "threat-model.json"
+    },
+    "api-design": {
+      "status": "pending",
+      "artifact": "api-design.json"
+    },
+    "plan": {
+      "status": "pending",
+      "artifact": "plan.json"
+    },
+    "tasks": {
+      "status": "pending",
+      "artifact": "tasks.json"
+    },
+    "cost": {
+      "status": "pending",
+      "artifact": "cost.json"
+    },
+    "ops-readiness": {
+      "status": "pending",
+      "artifact": "ops-readiness.json"
+    },
+    "supply-chain": {
+      "status": "pending",
+      "artifact": "supply-chain.json"
+    },
+    "release": {
+      "status": "pending",
+      "artifact": "release.json"
+    }
+  },
+  "build": {
+    "scaffold": {
+      "status": "pending"
+    },
+    "implement": {
+      "status": "pending"
+    },
+    "iac": {
+      "status": "pending"
+    },
+    "pipeline": {
+      "status": "pending"
+    }
+  }
+}

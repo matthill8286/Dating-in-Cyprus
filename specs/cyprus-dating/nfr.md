@@ -1,0 +1,41 @@
+# nfr: cyprus-dating
+
+<!-- Generated from nfr.json by the design-and-build runner. Edit the JSON and re-render; do not hand-edit this file. -->
+
+## nonFunctional
+
+- **id:** NFR-1; **text:** Personal data stays in the EU; **measure:** Every store and processor that holds Profile, photo, Match, or chat data is in an EU region; no transfer outside the EU
+- **id:** NFR-2; **text:** Profile and chat data are not sold; **measure:** No commercial agreement or runtime path sells Profile fields, photos, or chat contents to a third party
+- **id:** NFR-3; **text:** A person can access and erase their personal data; **measure:** Account deletion removes Profile, photos, Matches, and chat from production stores within 30 days; an export of held personal data is available from the account
+- **id:** NFR-4; **text:** Application logs do not contain personal data; **measure:** A sampled log line from join, discovery, Match, chat, and deletion contains none of: name, email, phone, chat body, or a photo URL that identifies a person
+- **id:** NFR-5; **text:** Discovery feels prompt on a typical Cyprus 4G connection; **measure:** Time from discovery request to first result render p95 < 2s, excluding photo bytes
+- **id:** NFR-6; **text:** The web client is accessible; **measure:** WCAG 2.2 AA on all web screens; axe reports no serious or critical issues
+- **id:** NFR-7; **text:** v1 is sized for a small island market; **measure:** Capacity planned for 10,000 registered Residents and 1,000 weekly active, not millions
+- **id:** NFR-8; **text:** A new Match or message reaches the other person on mobile when the app is in the background; **measure:** Push is delivered for new Match and new message on iOS and Android when notification permission is granted
+- **id:** NFR-9; **text:** Photo verification returns a visible pass or fail without a long wait; **measure:** Photo verification result p95 < 15s
+
+
+## constraints
+
+- Operating area is the Republic of Cyprus only. Northern Cyprus is out of v1.
+- GDPR applies.
+- Separate product from Uinsure D2C. No shared identity, data, or brand with the insurance stack.
+- Launch languages are English, Ukrainian, Russian, Romanian, and Bulgarian.
+- Join, discovery, Match, and chat are free in v1.
+
+
+## trustBoundaries
+
+- client <-> API (account session)
+- API <-> personal data store (Profile, Match, chat)
+- API <-> photo store
+- client <-> photo verification
+- client <-> push delivery
+
+
+## stackHypothesis
+
+
+- **stackId:** null
+- **note:** Provisional only: React Native for iOS and Android, plus a web client. This is not a sanctioned Uinsure stack id. Secrets, matching, and the Resident gate cannot live only on the device. Stack-select ratifies or overturns after the domain model.
+
