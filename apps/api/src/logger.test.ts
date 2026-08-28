@@ -20,7 +20,7 @@ describe('logger redact', () => {
       password: 'password1',
       chatBody: 'hello there',
       photoUrl: 'https://photos.example/ada.jpg',
-      req: { body: { email: 'ada@example.com', password: 'password1' } },
+      req: { body: { email: 'ada@example.com', password: 'password1', mobile: '+35799123456' } },
     });
     const line = Buffer.concat(chunks).toString();
     expect(line).not.toContain('ada@example.com');

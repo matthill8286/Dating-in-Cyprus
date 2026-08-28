@@ -19,6 +19,9 @@ const adult: JoinFormValues = {
   gender: 'man',
   seeking: 'women',
   specialCategoryConsent: true,
+  mobile: '+35799123456',
+  primaryHomeAttestation: true,
+  presence: { latitude: 34.685, longitude: 33.038 },
 };
 
 describe('joinAgeStatus', () => {
@@ -50,6 +53,20 @@ describe('validateJoinForm', () => {
     expect(validateJoinForm({ ...adult, specialCategoryConsent: false }, now)).toBe(
       'invalid',
     );
+  });
+
+  it('refuses a number that is not a Cyprus mobile', () => {
+    expect(validateJoinForm({ ...adult, mobile: '+447700900123' }, now)).toBe('invalid');
+  });
+
+  it('refuses missing primary-home attestation', () => {
+    expect(validateJoinForm({ ...adult, primaryHomeAttestation: false }, now)).toBe(
+      'invalid',
+    );
+  });
+
+  it('refuses missing presence', () => {
+    expect(validateJoinForm({ ...adult, presence: null }, now)).toBe('invalid');
   });
 });
 
@@ -107,13 +124,13 @@ describe('completeJoin', () => {
     let token: string | null = null;
     const result = await completeJoin(
       adult,
-      async () => ({ error: { code: 'age_ineligible' } }),
+      async () => ({ error: { code: 'visitor_refused' } }),
       (value) => {
         token = value;
       },
       now,
     );
-    expect(result).toEqual({ ok: false, code: 'age_ineligible' });
+    expect(result).toEqual({ ok: false, code: 'visitor_refused' });
     expect(token).toBeNull();
   });
 
@@ -141,7 +158,13 @@ describe('joinRefusalMessage', () => {
 
   it('explains invalid form fields', () => {
     expect(joinRefusalMessage('invalid')).toBe(
-      'Check email, password, Launch language, and consent.',
+      'Check email, password, Launch language, consent, mobile, presence, and attestation.',
+    );
+  });
+
+  it('explains a Visitor refused at the gate', () => {
+    expect(joinRefusalMessage('visitor_refused')).toBe(
+      'Only a Resident can join. A Visitor is refused at the gate.',
     );
   });
 

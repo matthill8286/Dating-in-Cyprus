@@ -20,8 +20,15 @@ const CREATE_TABLE = `
     date_of_birth DATE NOT NULL,
     launch_language TEXT NOT NULL,
     gender TEXT NOT NULL,
-    seeking TEXT NOT NULL
+    seeking TEXT NOT NULL,
+    mobile TEXT NOT NULL DEFAULT '',
+    resident_admitted BOOLEAN NOT NULL DEFAULT false
   )
+`;
+
+const MIGRATE = `
+  ALTER TABLE accounts ADD COLUMN IF NOT EXISTS mobile TEXT NOT NULL DEFAULT '';
+  ALTER TABLE accounts ADD COLUMN IF NOT EXISTS resident_admitted BOOLEAN NOT NULL DEFAULT false;
 `;
 
 type AccountRow = {
@@ -32,6 +39,8 @@ type AccountRow = {
   launch_language: string;
   gender: string;
   seeking: string;
+  mobile: string;
+  resident_admitted: boolean;
 };
 
 function isUniqueViolation(err: unknown): boolean {
@@ -53,6 +62,8 @@ function toAccount(row: AccountRow): Account {
     launchLanguage: oneOf<LaunchLanguage>(LAUNCH_LANGUAGES, row.launch_language, 'launch_language'),
     gender: oneOf<Gender>(GENDERS, row.gender, 'gender'),
     seeking: oneOf<Seeking>(SEEKING, row.seeking, 'seeking'),
+    mobile: row.mobile,
+    residentAdmitted: row.resident_admitted,
   };
 }
 
@@ -65,7 +76,10 @@ export class PostgresAccountStore implements AccountStore {
   }
 
   private ensure(): Promise<void> {
-    this.ready ??= this.pool.query(CREATE_TABLE).then(() => undefined);
+    this.ready ??= this.pool
+      .query(CREATE_TABLE)
+      .then(() => this.pool.query(MIGRATE))
+      .then(() => undefined);
     return this.ready;
   }
 
@@ -75,8 +89,8 @@ export class PostgresAccountStore implements AccountStore {
     try {
       await this.pool.query(
         `INSERT INTO accounts
-          (id, email, password_hash, date_of_birth, launch_language, gender, seeking)
-         VALUES ($1, $2, $3, $4::date, $5, $6, $7)`,
+          (id, email, password_hash, date_of_birth, launch_language, gender, seeking, mobile, resident_admitted)
+         VALUES ($1, $2, $3, $4::date, $5, $6, $7, $8, $9)`,
         [
           id,
           account.email.toLowerCase(),
@@ -85,6 +99,8 @@ export class PostgresAccountStore implements AccountStore {
           account.launchLanguage,
           account.gender,
           account.seeking,
+          account.mobile,
+          account.residentAdmitted,
         ],
       );
       return { ...account, id, email: account.email.toLowerCase() };
@@ -98,10 +114,23 @@ export class PostgresAccountStore implements AccountStore {
     await this.ensure();
     const result = await this.pool.query<AccountRow>(
       `SELECT id, email, password_hash, date_of_birth::text AS date_of_birth,
-              launch_language, gender, seeking
+              launch_language, gender, seeking, mobile, resident_admitted
          FROM accounts
         WHERE email = $1`,
       [email.toLowerCase()],
+    );
+    const row = result.rows[0];
+    return row ? toAccount(row) : null;
+  }
+
+  async findById(id: string): Promise<Account | null> {
+    await this.ensure();
+    const result = await this.pool.query<AccountRow>(
+      `SELECT id, email, password_hash, date_of_birth::text AS date_of_birth,
+              launch_language, gender, seeking, mobile, resident_admitted
+         FROM accounts
+        WHERE id = $1`,
+      [id],
     );
     const row = result.rows[0];
     return row ? toAccount(row) : null;

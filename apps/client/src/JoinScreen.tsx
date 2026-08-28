@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Button,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { api } from './api/client';
 import { useApp } from './context/AppContext';
 import {
@@ -23,6 +31,9 @@ const initialForm: JoinFormValues = {
   gender: 'man',
   seeking: 'women',
   specialCategoryConsent: false,
+  mobile: '+357',
+  primaryHomeAttestation: false,
+  presence: null,
 };
 
 function ChoiceRow<T extends string>({
@@ -56,8 +67,25 @@ export function JoinScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text>Join</Text>
+      <AccountFields form={form} setForm={setForm} />
+      <GateFields form={form} setForm={setForm} />
+      {error ? <Text>{error}</Text> : null}
+      <Button title="Join" onPress={() => void onJoin()} />
+    </ScrollView>
+  );
+}
+
+function AccountFields({
+  form,
+  setForm,
+}: {
+  form: JoinFormValues;
+  setForm: (update: (current: JoinFormValues) => JoinFormValues) => void;
+}) {
+  return (
+    <>
       <TextInput
         autoCapitalize="none"
         placeholder="email"
@@ -98,6 +126,50 @@ export function JoinScreen() {
         value={form.seeking}
         onChange={(seeking: Seeking) => setForm((current) => ({ ...current, seeking }))}
       />
+    </>
+  );
+}
+
+function GateFields({
+  form,
+  setForm,
+}: {
+  form: JoinFormValues;
+  setForm: (update: (current: JoinFormValues) => JoinFormValues) => void;
+}) {
+  return (
+    <>
+      <TextInput
+        autoCapitalize="none"
+        placeholder="Cyprus mobile +357..."
+        value={form.mobile}
+        onChangeText={(mobile) => setForm((current) => ({ ...current, mobile }))}
+        style={styles.input}
+      />
+      <Pressable
+        onPress={() =>
+          setForm((current) => ({
+            ...current,
+            presence: { latitude: 34.685, longitude: 33.038 },
+          }))
+        }
+      >
+        <Text>
+          {form.presence ? '[x]' : '[ ]'} Presence in the Operating area
+        </Text>
+      </Pressable>
+      <Pressable
+        onPress={() =>
+          setForm((current) => ({
+            ...current,
+            primaryHomeAttestation: !current.primaryHomeAttestation,
+          }))
+        }
+      >
+        <Text>
+          {form.primaryHomeAttestation ? '[x]' : '[ ]'} Primary home is in the Operating area
+        </Text>
+      </Pressable>
       <Pressable
         onPress={() =>
           setForm((current) => ({
@@ -110,13 +182,12 @@ export function JoinScreen() {
           {form.specialCategoryConsent ? '[x]' : '[ ]'} Consent to gender and who-you-meet
         </Text>
       </Pressable>
-      {error ? <Text>{error}</Text> : null}
-      <Button title="Join" onPress={() => void onJoin()} />
-    </View>
+    </>
   );
 }
 
 async function postJoin(values: JoinFormValues) {
+  if (!values.presence) return { error: { code: 'invalid' } };
   const { data, error } = await api.POST('/v1/accounts', {
     body: {
       email: values.email,
@@ -126,6 +197,9 @@ async function postJoin(values: JoinFormValues) {
       gender: values.gender,
       seeking: values.seeking,
       specialCategoryConsent: true,
+      mobile: values.mobile,
+      primaryHomeAttestation: true,
+      presence: values.presence,
     },
   });
   return {
@@ -135,7 +209,7 @@ async function postJoin(values: JoinFormValues) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, gap: 8 },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 24, gap: 8 },
   input: { borderWidth: 1, borderColor: '#ccc', padding: 8 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   choice: { padding: 4 },
