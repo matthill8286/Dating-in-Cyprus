@@ -89,9 +89,32 @@ export function joinRefusalMessage(code: string): string {
     return 'Only a Resident can join. A Visitor is refused at the gate.';
   }
   if (code === 'invalid') {
-    return 'Check email, password, Launch language, consent, mobile, presence, and attestation.';
+    return 'Check the form and try again.';
   }
   return 'Join failed.';
+}
+
+const JOIN_FIELD_HINT: Record<string, string> = {
+  email: 'Enter a valid email.',
+  password: 'Password must be at least 8 characters.',
+  dateOfBirth: 'Date of birth must be YYYY-MM-DD.',
+  launchLanguage: 'Choose a language.',
+  mobile: 'Enter a Cyprus mobile number starting +3579.',
+  specialCategoryConsent: 'Confirm matching may use gender and who you want to meet.',
+  primaryHomeAttestation: 'Confirm your primary home is in the Republic of Cyprus.',
+  presence: 'Confirm you are in the Republic of Cyprus now.',
+};
+
+export function joinInvalidMessage(values: JoinFormValues): string {
+  try {
+    joinFormSchema.validateSync(values);
+    return joinRefusalMessage('invalid');
+  } catch (error) {
+    if (error instanceof yup.ValidationError && error.path) {
+      return JOIN_FIELD_HINT[error.path] ?? joinRefusalMessage('invalid');
+    }
+    return joinRefusalMessage('invalid');
+  }
 }
 
 export type JoinPostResult = { data?: { token: string }; error?: { code?: string } };

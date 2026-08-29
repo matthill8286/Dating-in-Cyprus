@@ -33,6 +33,7 @@ export interface AccountStore {
   create(account: NewAccount): Promise<Account>;
   findByEmail(email: string): Promise<Account | null>;
   findById(id: string): Promise<Account | null>;
+  listAdmitted(): Promise<Account[]>;
   close(): Promise<void>;
 }
 
@@ -55,6 +56,10 @@ export class MemoryAccountStore implements AccountStore {
 
   async findById(id: string): Promise<Account | null> {
     return this.byId.get(id) ?? null;
+  }
+
+  async listAdmitted(): Promise<Account[]> {
+    return [...this.byId.values()].filter((account) => account.residentAdmitted);
   }
 
   async close(): Promise<void> {

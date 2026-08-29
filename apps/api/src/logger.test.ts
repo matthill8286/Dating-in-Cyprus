@@ -19,8 +19,9 @@ describe('logger redact', () => {
       name: 'Ada',
       password: 'password1',
       chatBody: 'hello there',
+      body: 'secret chat line',
       photoUrl: 'https://photos.example/ada.jpg',
-      req: { body: { email: 'ada@example.com', password: 'password1', mobile: '+35799123456' } },
+      req: { body: { email: 'ada@example.com', password: 'password1', mobile: '+35799123456', body: 'secret chat line' } },
     });
     const line = Buffer.concat(chunks).toString();
     expect(line).not.toContain('ada@example.com');
@@ -28,6 +29,7 @@ describe('logger redact', () => {
     expect(line).not.toContain('Ada');
     expect(line).not.toContain('password1');
     expect(line).not.toContain('hello there');
+    expect(line).not.toContain('secret chat line');
     expect(line).not.toContain('https://photos.example/ada.jpg');
     expect(line).toContain('[redacted]');
   });

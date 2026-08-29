@@ -16,6 +16,8 @@ import { bearerToken, verifySessionToken } from './auth/sessionToken';
 import { accountRoutes } from './account/routes';
 import { MemoryAccountStore, type AccountStore } from './account/store';
 import type { MobileChecker, PresenceChecker } from './account/gate';
+import { matchRoutes } from './match/routes';
+import { MemoryLoopStore, type LoopStore } from './match/store';
 import { poolRoutes } from './pool/routes';
 import { MemoryProfileStore, type ProfileStore } from './profile/store';
 import { MemoryPhotoStore, type PhotoStore } from './profile/photos';
@@ -32,6 +34,7 @@ export interface AppOptions {
   accounts?: AccountStore;
   profiles?: ProfileStore;
   photos?: PhotoStore;
+  loop?: LoopStore;
   now?: () => Date;
   mobileChecker?: MobileChecker;
   presenceChecker?: PresenceChecker;
@@ -98,25 +101,36 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   const accounts = opts.accounts ?? new MemoryAccountStore();
   const profiles = opts.profiles ?? new MemoryProfileStore();
   const photos = opts.photos ?? new MemoryPhotoStore(opts.config.PHOTO_STORE_REGION);
+  const loop = opts.loop ?? new MemoryLoopStore();
+  const now = opts.now ?? (() => new Date());
   app.addHook('onClose', async () => {
     await accounts.close();
     await profiles.close();
+    await loop.close();
   });
+  await registerRoutes(app, opts, { accounts, profiles, photos, loop, now });
+  return app;
+}
 
+async function registerRoutes(
+  app: FastifyInstance,
+  opts: AppOptions,
+  deps: {
+    accounts: AccountStore;
+    profiles: ProfileStore;
+    photos: PhotoStore;
+    loop: LoopStore;
+    now: () => Date;
+  },
+): Promise<void> {
   await app.register(accountRoutes, {
     config: opts.config,
-    accounts,
-    now: opts.now ?? (() => new Date()),
+    accounts: deps.accounts,
+    now: deps.now,
     mobileChecker: opts.mobileChecker,
     presenceChecker: opts.presenceChecker,
   });
-  await app.register(poolRoutes, { accounts });
-  await app.register(profileRoutes, {
-    accounts,
-    profiles,
-    photos,
-    now: opts.now ?? (() => new Date()),
-  });
-
-  return app;
+  await app.register(poolRoutes, deps);
+  await app.register(profileRoutes, deps);
+  await app.register(matchRoutes, deps);
 }

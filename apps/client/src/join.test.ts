@@ -3,6 +3,7 @@ import {
   completeJoin,
   joinAgeStatus,
   joinApiErrorCode,
+  joinInvalidMessage,
   joinRefusalMessage,
   storeJoinSession,
   validateJoinForm,
@@ -151,15 +152,31 @@ describe('joinApiErrorCode', () => {
   });
 });
 
+describe('joinInvalidMessage', () => {
+  it('names an empty email', () => {
+    expect(joinInvalidMessage({ ...adult, email: '' })).toBe('Enter a valid email.');
+  });
+
+  it('names a short password', () => {
+    expect(joinInvalidMessage({ ...adult, password: 'short' })).toBe(
+      'Password must be at least 8 characters.',
+    );
+  });
+
+  it('names an incomplete Cyprus mobile', () => {
+    expect(joinInvalidMessage({ ...adult, mobile: '+357' })).toBe(
+      'Enter a Cyprus mobile number starting +3579.',
+    );
+  });
+});
+
 describe('joinRefusalMessage', () => {
   it('explains under 21', () => {
     expect(joinRefusalMessage('age_ineligible')).toBe('You must be 21 or over to join.');
   });
 
   it('explains invalid form fields', () => {
-    expect(joinRefusalMessage('invalid')).toBe(
-      'Check email, password, Launch language, consent, mobile, presence, and attestation.',
-    );
+    expect(joinRefusalMessage('invalid')).toBe('Check the form and try again.');
   });
 
   it('explains a Visitor refused at the gate', () => {

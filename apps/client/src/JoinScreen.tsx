@@ -1,19 +1,11 @@
 import { useState } from 'react';
-import {
-  Button,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
 import { api } from './api/client';
 import { useApp } from './context/AppContext';
 import {
   completeJoin,
   GENDERS,
   joinApiErrorCode,
+  joinInvalidMessage,
   joinRefusalMessage,
   LAUNCH_LANGUAGES,
   SEEKING,
@@ -22,6 +14,21 @@ import {
   type LaunchLanguage,
   type Seeking,
 } from './join';
+import { genderLabel, languageLabel, seekingLabel } from './theme';
+import {
+  Card,
+  CheckRow,
+  ChipRow,
+  ErrorNote,
+  Field,
+  Hero,
+  MuteNote,
+  PrimaryButton,
+  Screen,
+  SectionLabel,
+  Sheet,
+  GhostButton,
+} from './ui/kit';
 
 const initialForm: JoinFormValues = {
   email: '',
@@ -36,44 +43,40 @@ const initialForm: JoinFormValues = {
   presence: null,
 };
 
-function ChoiceRow<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: readonly T[];
-  value: T;
-  onChange: (next: T) => void;
-}) {
-  return (
-    <View style={styles.row}>
-      {options.map((option) => (
-        <Pressable key={option} onPress={() => onChange(option)}>
-          <Text style={option === value ? styles.chosen : styles.choice}>{option}</Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
-export function JoinScreen() {
+export function JoinScreen({ onSignIn }: { onSignIn: () => void }) {
   const { setSessionToken } = useApp();
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState<string | null>(null);
 
   const onJoin = async () => {
     const result = await completeJoin(form, postJoin, setSessionToken);
-    setError(result.ok ? null : joinRefusalMessage(result.code));
+    setError(
+      result.ok
+        ? null
+        : result.code === 'invalid'
+          ? joinInvalidMessage(form)
+          : joinRefusalMessage(result.code),
+    );
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text>Join</Text>
-      <AccountFields form={form} setForm={setForm} />
-      <GateFields form={form} setForm={setForm} />
-      {error ? <Text>{error}</Text> : null}
-      <Button title="Join" onPress={() => void onJoin()} />
-    </ScrollView>
+    <Screen>
+      <Hero
+        kicker="Republic of Cyprus"
+        title="Create account"
+        subtitle="Dating for people whose primary home is on the island. Not a holiday. Not a stopover."
+      />
+      <Sheet>
+        <Card>
+          <AccountFields form={form} setForm={setForm} />
+          <GateFields form={form} setForm={setForm} />
+          <ErrorNote message={error} />
+          <PrimaryButton title="Request a place" onPress={() => void onJoin()} />
+          <GhostButton title="Sign in" onPress={onSignIn} />
+          <MuteNote>Twenty-one and over. Residents only.</MuteNote>
+        </Card>
+      </Sheet>
+    </Screen>
   );
 }
 
@@ -86,45 +89,49 @@ function AccountFields({
 }) {
   return (
     <>
-      <TextInput
-        autoCapitalize="none"
-        placeholder="email"
+      <SectionLabel>Account</SectionLabel>
+      <Field
+        label="Email"
         value={form.email}
         onChangeText={(email) => setForm((current) => ({ ...current, email }))}
-        style={styles.input}
+        placeholder="you@example.com"
+        autoCapitalize="none"
       />
-      <TextInput
-        placeholder="password"
-        secureTextEntry
+      <Field
+        label="Password"
         value={form.password}
         onChangeText={(password) => setForm((current) => ({ ...current, password }))}
-        style={styles.input}
+        placeholder="At least 8 characters"
+        secure
       />
-      <TextInput
-        placeholder="date of birth YYYY-MM-DD"
+      <Field
+        label="Date of birth"
         value={form.dateOfBirth}
         onChangeText={(dateOfBirth) => setForm((current) => ({ ...current, dateOfBirth }))}
-        style={styles.input}
+        placeholder="YYYY-MM-DD"
       />
-      <Text>Launch language</Text>
-      <ChoiceRow
+      <SectionLabel>Language</SectionLabel>
+      <ChipRow
         options={LAUNCH_LANGUAGES}
         value={form.launchLanguage}
-        onChange={(launchLanguage: LaunchLanguage) =>
-          setForm((current) => ({ ...current, launchLanguage }))
+        labels={languageLabel}
+        onChange={(launchLanguage) =>
+          setForm((current) => ({ ...current, launchLanguage: launchLanguage as LaunchLanguage }))
         }
       />
-      <Text>Gender</Text>
-      <ChoiceRow
+      <ChipRow
+        caption="I am"
         options={GENDERS}
         value={form.gender}
-        onChange={(gender: Gender) => setForm((current) => ({ ...current, gender }))}
+        labels={genderLabel}
+        onChange={(gender) => setForm((current) => ({ ...current, gender: gender as Gender }))}
       />
-      <Text>Seeking</Text>
-      <ChoiceRow
+      <ChipRow
+        caption="I want to meet"
         options={SEEKING}
         value={form.seeking}
-        onChange={(seeking: Seeking) => setForm((current) => ({ ...current, seeking }))}
+        labels={seekingLabel}
+        onChange={(seeking) => setForm((current) => ({ ...current, seeking: seeking as Seeking }))}
       />
     </>
   );
@@ -139,49 +146,46 @@ function GateFields({
 }) {
   return (
     <>
-      <TextInput
-        autoCapitalize="none"
-        placeholder="Cyprus mobile +357..."
+      <SectionLabel>On the island</SectionLabel>
+      <Field
+        label="Cyprus mobile"
         value={form.mobile}
         onChangeText={(mobile) => setForm((current) => ({ ...current, mobile }))}
-        style={styles.input}
+        placeholder="+3579…"
+        autoCapitalize="none"
       />
-      <Pressable
+      <CheckRow
+        label="I am in the Republic of Cyprus now"
+        hint="Checked when you join. We do not operate in Northern Cyprus."
+        on={form.presence !== null}
         onPress={() =>
           setForm((current) => ({
             ...current,
-            presence: { latitude: 34.685, longitude: 33.038 },
+            presence: current.presence ? null : { latitude: 34.685, longitude: 33.038 },
           }))
         }
-      >
-        <Text>
-          {form.presence ? '[x]' : '[ ]'} Presence in the Operating area
-        </Text>
-      </Pressable>
-      <Pressable
+      />
+      <CheckRow
+        label="My primary home is in the Republic of Cyprus"
+        hint="A holiday or short stay is not enough. Your primary home must be here."
+        on={form.primaryHomeAttestation}
         onPress={() =>
           setForm((current) => ({
             ...current,
             primaryHomeAttestation: !current.primaryHomeAttestation,
           }))
         }
-      >
-        <Text>
-          {form.primaryHomeAttestation ? '[x]' : '[ ]'} Primary home is in the Operating area
-        </Text>
-      </Pressable>
-      <Pressable
+      />
+      <CheckRow
+        label="Gender and who I want to meet may be used for matching"
+        on={form.specialCategoryConsent}
         onPress={() =>
           setForm((current) => ({
             ...current,
             specialCategoryConsent: !current.specialCategoryConsent,
           }))
         }
-      >
-        <Text>
-          {form.specialCategoryConsent ? '[x]' : '[ ]'} Consent to gender and who-you-meet
-        </Text>
-      </Pressable>
+      />
     </>
   );
 }
@@ -207,11 +211,3 @@ async function postJoin(values: JoinFormValues) {
     error: error ? { code: joinApiErrorCode(error) } : undefined,
   };
 }
-
-const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 24, gap: 8 },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 8 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  choice: { padding: 4 },
-  chosen: { padding: 4, fontWeight: '700' },
-});

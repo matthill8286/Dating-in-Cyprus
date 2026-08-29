@@ -1,13 +1,13 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { ageInYears } from '../account/age';
 import { apiError } from '../account/contracts';
 import type { Account } from '../account/store';
 import { photoUpload, profilePhoto, profileResponse, profileWrite } from './contracts';
 import type { PhotoStore } from './photos';
+import { presentProfile } from './present';
 import { requireResident } from './resident';
-import type { Profile, ProfileStore } from './store';
+import type { ProfileStore } from './store';
 
 export type ProfileRoutesOpts = {
   accounts: ProfileRoutesOptsAccounts;
@@ -93,7 +93,7 @@ async function saveOwnProfile(
     bio: body.bio,
     photos,
   });
-  return reply.code(existing ? 200 : 201).send(toResponse(saved, account, opts.now()));
+  return reply.code(existing ? 200 : 201).send(presentProfile(saved, account, opts.now()));
 }
 
 async function readOwnProfile(
@@ -105,7 +105,7 @@ async function readOwnProfile(
   if (!account) return;
   const profile = await opts.profiles.findByAccountId(account.id);
   if (!profile) return reply.code(404).send(notFound);
-  return toResponse(profile, account, opts.now());
+  return presentProfile(profile, account, opts.now());
 }
 
 async function readProfile(
@@ -120,7 +120,7 @@ async function readProfile(
   if (!profile) return reply.code(404).send(notFound);
   const owner = await opts.accounts.findById(profile.accountId);
   if (!owner?.residentAdmitted) return reply.code(404).send(notFound);
-  return toResponse(profile, owner, opts.now());
+  return presentProfile(profile, owner, opts.now());
 }
 
 async function uploadPhoto(
@@ -158,15 +158,4 @@ async function resolvePhotos(
   return resolved;
 }
 
-function toResponse(profile: Profile, account: Account, now: Date) {
-  return {
-    profileId: profile.profileId,
-    accountId: profile.accountId,
-    firstName: profile.firstName,
-    age: ageInYears(account.dateOfBirth, now),
-    city: profile.city,
-    languagesSpoken: profile.languagesSpoken,
-    bio: profile.bio,
-    photos: profile.photos,
-  };
-}
+

@@ -8,6 +8,7 @@
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "vitest run --coverage",
+    "seed": "tsx scripts/seed.ts",
     "openapi": "tsx scripts/emit-openapi.ts"
   },
   "dependencies": {

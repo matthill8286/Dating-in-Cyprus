@@ -99,6 +99,15 @@ export class PostgresProfileStore implements ProfileStore {
     return row ? toProfile(row) : null;
   }
 
+  async list(): Promise<Profile[]> {
+    await this.ensure();
+    const result = await this.pool.query<ProfileRow>(
+      `SELECT profile_id, account_id, first_name, city, languages_spoken, bio, photos
+         FROM profiles`,
+    );
+    return result.rows.map(toProfile);
+  }
+
   async close(): Promise<void> {
     await this.pool.end();
   }
