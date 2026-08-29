@@ -36,7 +36,7 @@ describe('seed people', () => {
     expect(mobiles.every((mobile) => /^\+3579\d{7}$/.test(mobile))).toBe(true);
   });
 
-  it('gives every Profile a portrait photo', () => {
+  it('gives every Profile three portrait photos', () => {
     const urls = SEED_PEOPLE.map((item) => item.photoUrl);
     expect(urls.every((url) => url.startsWith('https://images.unsplash.com/'))).toBe(true);
     expect(new Set(urls).size).toBe(urls.length);
@@ -82,5 +82,7 @@ async function expectSeededElena(
   expect(elena?.residentAdmitted).toBe(true);
   const profile = await profiles.findByAccountId(elena?.id ?? '');
   expect(profile?.firstName).toBe('Elena');
+  expect(profile?.photos).toHaveLength(3);
+  expect(new Set(profile?.photos.map((photo) => photo.url)).size).toBe(3);
   expect(profile?.photos[0]?.url).toContain('images.unsplash.com');
 }

@@ -10,11 +10,18 @@ export const interestResponse = z.object({
   matchId: z.string().optional(),
 });
 
+export const lastMessagePreview = z.object({
+  body: z.string(),
+  fromMe: z.boolean(),
+  sentAt: z.string(),
+});
+
 export const matchListResponse = z.object({
   matches: z.array(
     z.object({
       matchId: z.string(),
       profile: profileResponse,
+      lastMessage: lastMessagePreview.nullable(),
     }),
   ),
 });
@@ -30,6 +37,7 @@ export const passResponse = z.object({
 export const matchDetailResponse = z.object({
   matchId: z.string(),
   profile: profileResponse,
+  lastMessage: lastMessagePreview.nullable(),
 });
 
 export const chatMessageResponse = z.object({

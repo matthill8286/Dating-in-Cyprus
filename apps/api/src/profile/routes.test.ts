@@ -205,6 +205,16 @@ describe('Profile photos and R-16', () => {
     expect(saved.json()).toMatchObject({
       photos: [{ photoId: photo.photoId, url: photo.url }],
     });
+    const later = await app.inject({
+      method: 'PATCH',
+      url: '/v1/profiles/me',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { ...leanProfile, bio: 'Still in Limassol.' },
+    });
+    expect(later.json()).toMatchObject({
+      bio: 'Still in Limassol.',
+      photos: [{ photoId: photo.photoId, url: photo.url }],
+    });
     await app.close();
   });
 

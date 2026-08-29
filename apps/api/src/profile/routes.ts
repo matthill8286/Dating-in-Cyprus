@@ -83,9 +83,12 @@ async function saveOwnProfile(
 ) {
   const account = await requireResident(opts.accounts, accountId, reply);
   if (!account) return;
-  const photos = await resolvePhotos(body.photoIds ?? [], opts.photos, reply);
-  if (!photos) return;
   const existing = await opts.profiles.findByAccountId(account.id);
+  const photos =
+    body.photoIds === undefined
+      ? (existing?.photos ?? [])
+      : await resolvePhotos(body.photoIds, opts.photos, reply);
+  if (!photos) return;
   const saved = await opts.profiles.upsert(account.id, {
     firstName: body.firstName,
     city: body.city,

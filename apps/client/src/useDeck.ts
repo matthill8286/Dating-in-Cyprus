@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api } from './api/client';
-import { afterDecision, filterDeck, interestMatched, type MatchedCard } from './match';
+import { afterDecision, ageBandById, filterDeck, interestMatched, type AgeBandId, type MatchedCard } from './match';
 import type { Profile } from './profile';
 
 export function useDeck(sessionToken: string | null) {
   const [people, setPeople] = useState<Profile[]>([]);
   const [city, setCity] = useState('all');
+  const [ageBand, setAgeBand] = useState<AgeBandId>('all');
   const [matched, setMatched] = useState<MatchedCard | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -18,7 +19,8 @@ export function useDeck(sessionToken: string | null) {
       });
   }, [sessionToken]);
 
-  const card = filterDeck(people, city)[0];
+  const band = ageBandById(ageBand);
+  const card = filterDeck(people, city, band.min, band.max)[0];
 
   async function decide(kind: 'pass' | 'like') {
     if (!card || !sessionToken || busy) return;
@@ -37,5 +39,5 @@ export function useDeck(sessionToken: string | null) {
     setBusy(false);
   }
 
-  return { card, city, setCity, matched, setMatched, decide };
+  return { card, city, setCity, ageBand, setAgeBand, matched, setMatched, decide };
 }

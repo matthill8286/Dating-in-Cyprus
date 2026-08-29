@@ -1,36 +1,117 @@
-import { useState } from 'react';
-import { Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { useApp } from './context/AppContext';
-import { CITY_FILTERS, CITY_FILTER_LABELS } from './match';
+import type { AgeBandId, MatchedCard } from './match';
 import type { Profile } from './profile';
+import { PersonScreen } from './PersonScreen';
 import { color, font } from './theme';
 import { ActionRow, Fixed, MatchOverlay } from './ui/deck';
-import { ChipRow, PhotoCard } from './ui/kit';
-import { TabBar } from './ui/tabs';
+import { FilterSheet } from './ui/filters';
+import { SwipeCard } from './ui/swipe';
+import { TabBar, type TabGo } from './ui/tabs';
 import { useDeck } from './useDeck';
 
 export function PoolScreen({
-  onProfile,
-  onMatches,
+  go,
   onChat,
 }: {
-  onProfile: () => void;
-  onMatches: () => void;
+  go: TabGo;
   onChat: (match: { matchId: string; profile: Profile }) => void;
 }) {
-  const { sessionToken } = useApp();
-  const { card, city, setCity, matched, setMatched, decide } = useDeck(sessionToken);
+  const { sessionToken, profile } = useApp();
+  const { card, city, setCity, ageBand, setAgeBand, matched, setMatched, decide } = useDeck(sessionToken);
   const [filters, setFilters] = useState(false);
+  const [open, setOpen] = useState(false);
+  const tabs = <TabBar active="people" go={go} />;
+
+  if (open && card) {
+    return (
+      <PersonScreen
+        profile={card}
+        onBack={() => setOpen(false)}
+        onPass={() => {
+          setOpen(false);
+          void decide('pass');
+        }}
+        onLike={() => {
+          setOpen(false);
+          void decide('like');
+        }}
+        footer={tabs}
+      />
+    );
+  }
 
   return (
-    <Fixed
-      footer={<TabBar active="people" onPeople={() => undefined} onMatches={onMatches} onProfile={onProfile} />}
-    >
+    <DiscoverDeck
+      card={card}
+      city={city}
+      ageBand={ageBand}
+      filters={filters}
+      matched={matched}
+      viewerUri={profile?.photos[0]?.url}
+      footer={tabs}
+      onToggleFilters={() => setFilters((value) => !value)}
+      onCity={setCity}
+      onAge={setAgeBand}
+      onLike={() => void decide('like')}
+      onPass={() => void decide('pass')}
+      onOpen={() => setOpen(true)}
+      onChat={() => {
+        if (!matched) return;
+        onChat(matched);
+        setMatched(null);
+      }}
+      onKeep={() => setMatched(null)}
+    />
+  );
+}
+
+type DeckProps = {
+  card: Profile | undefined;
+  city: string;
+  ageBand: AgeBandId;
+  filters: boolean;
+  matched: MatchedCard | null;
+  viewerUri?: string;
+  footer: ReactNode;
+  onToggleFilters: () => void;
+  onCity: (city: string) => void;
+  onAge: (id: AgeBandId) => void;
+  onLike: () => void;
+  onPass: () => void;
+  onOpen: () => void;
+  onChat: () => void;
+  onKeep: () => void;
+};
+
+function DiscoverDeck({
+  card,
+  city,
+  ageBand,
+  filters,
+  matched,
+  viewerUri,
+  footer,
+  onToggleFilters,
+  onCity,
+  onAge,
+  onLike,
+  onPass,
+  onOpen,
+  onChat,
+  onKeep,
+}: DeckProps) {
+  return (
+    <Fixed footer={footer}>
       <View style={styles.deck}>
         <View style={styles.header}>
-          <Text style={styles.title}>Discover</Text>
+          <View>
+            <Text style={styles.title}>Discover</Text>
+            <Text style={styles.place}>{city === 'all' ? 'Republic of Cyprus' : city}</Text>
+          </View>
           <Pressable
-            onPress={() => setFilters((open) => !open)}
+            onPress={onToggleFilters}
             accessibilityRole="button"
             accessibilityLabel="Filters"
             style={[styles.filter, filters && styles.filterOn]}
@@ -38,42 +119,27 @@ export function PoolScreen({
             <Text style={[styles.filterMark, filters && styles.filterMarkOn]}>☰</Text>
           </Pressable>
         </View>
-        {filters ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <ChipRow
-              options={CITY_FILTERS}
-              value={city}
-              onChange={setCity}
-              labels={CITY_FILTER_LABELS}
-              nowrap
-            />
-          </ScrollView>
-        ) : null}
         {card ? (
           <View style={styles.cardSlot}>
-            <PhotoCard
-              uri={card.photos[0]?.url}
-              name={card.firstName}
-              age={card.age}
-              place={card.city}
-              bio={card.bio}
-            />
+            <SwipeCard card={card} onLike={onLike} onPass={onPass} onOpen={onOpen} />
             <View style={styles.actionsDock}>
-              <ActionRow onPass={() => void decide('pass')} onLike={() => void decide('like')} />
+              <ActionRow onPass={onPass} onLike={onLike} onInfo={onOpen} />
             </View>
           </View>
         ) : (
           <Text style={styles.empty}>No one new right now.</Text>
         )}
       </View>
+      {filters ? (
+        <FilterSheet city={city} ageBand={ageBand} onCity={onCity} onAge={onAge} onDone={onToggleFilters} />
+      ) : null}
       {matched ? (
         <MatchOverlay
           name={matched.profile.firstName}
-          onMessage={() => {
-            onChat(matched);
-            setMatched(null);
-          }}
-          onKeep={() => setMatched(null)}
+          uri={matched.profile.photos[0]?.url}
+          viewerUri={viewerUri}
+          onMessage={onChat}
+          onKeep={onKeep}
         />
       ) : null}
     </Fixed>
@@ -96,12 +162,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingBottom: 12,
   },
-  title: {
-    color: color.ink,
-    fontFamily: font.display,
-    fontSize: 28,
-    fontWeight: '700',
-  },
+  title: { color: color.ink, fontFamily: font.display, fontSize: 28, fontWeight: '700' },
+  place: { color: color.mute, fontFamily: font.body, fontSize: 13, marginTop: 2 },
   filter: {
     width: 44,
     height: 44,
@@ -111,16 +173,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   filterOn: { backgroundColor: color.rose },
-  filterMark: { color: color.ink, fontSize: 18, fontWeight: '800', letterSpacing: -1 },
+  filterMark: { color: color.ink, fontSize: 20, fontWeight: '800', letterSpacing: -2 },
   filterMarkOn: { color: color.onRose },
   cardSlot: { flex: 1, minHeight: 0 },
-  actionsDock: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 18,
-    zIndex: 3,
-  },
+  actionsDock: { position: 'absolute', left: 0, right: 0, bottom: 18, zIndex: 3 },
   empty: {
     fontFamily: font.body,
     fontSize: 15,

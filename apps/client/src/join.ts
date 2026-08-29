@@ -143,3 +143,92 @@ export async function completeJoin(
   }
   return storeJoinSession(setSessionToken, { ok: false, code: error?.code ?? 'error' });
 }
+
+export const JOIN_STEPS = [
+  'email',
+  'mobile',
+  'identity',
+  'seeking',
+  'birthday',
+  'island',
+] as const;
+
+export type JoinStep = (typeof JOIN_STEPS)[number];
+
+export function nextJoinStep(step: JoinStep): JoinStep | 'done' {
+  return JOIN_STEPS[JOIN_STEPS.indexOf(step) + 1] ?? 'done';
+}
+
+export function prevJoinStep(step: JoinStep): JoinStep | 'exit' {
+  const index = JOIN_STEPS.indexOf(step);
+  return index <= 0 ? 'exit' : (JOIN_STEPS[index - 1] ?? 'exit');
+}
+
+export function joinStepComplete(
+  step: JoinStep,
+  values: JoinFormValues,
+  now: Date = new Date(),
+): boolean {
+  return STEP_READY[step](values, now);
+}
+
+const STEP_READY: Record<JoinStep, (values: JoinFormValues, now: Date) => boolean> = {
+  email: (values) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email) && values.password.length >= 8,
+  mobile: (values) => /^\+3579\d{7}$/.test(values.mobile),
+  identity: (values) => values.gender === 'man' || values.gender === 'woman',
+  seeking: (values) => values.seeking === 'men' || values.seeking === 'women',
+  birthday: (values, now) => joinAgeStatus(values.dateOfBirth, now) === 'ok',
+  island: (values) =>
+    Boolean(values.presence && values.primaryHomeAttestation && values.specialCategoryConsent),
+};
+
+export function localFromMobile(mobile: string): string {
+  return mobile.startsWith('+357') ? mobile.slice(4) : mobile.replace(/\D/g, '');
+}
+
+export function mobileFromLocal(digits: string): string {
+  return `+357${digits.replace(/\D/g, '').slice(0, 8)}`;
+}
+
+export function parseIsoDate(iso: string): { year: number; month: number; day: number } | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return { year, month, day };
+}
+
+export function isoDate(year: number, month: number, day: number): string {
+  const last = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const clipped = Math.min(day, last);
+  return `${year}-${String(month).padStart(2, '0')}-${String(clipped).padStart(2, '0')}`;
+}
+
+export function shiftCalendarMonth(iso: string, delta: number): string {
+  const parsed = parseIsoDate(iso) ?? { year: 2000, month: 7, day: 11 };
+  const shifted = new Date(Date.UTC(parsed.year, parsed.month - 1 + delta, 1));
+  return isoDate(shifted.getUTCFullYear(), shifted.getUTCMonth() + 1, parsed.day);
+}
+
+export function monthDays(iso: string): Array<number | null> {
+  const parsed = parseIsoDate(iso) ?? { year: 2000, month: 7, day: 1 };
+  const first = new Date(Date.UTC(parsed.year, parsed.month - 1, 1)).getUTCDay();
+  const last = new Date(Date.UTC(parsed.year, parsed.month, 0)).getUTCDate();
+  const cells: Array<number | null> = Array.from({ length: first }, () => null);
+  for (let day = 1; day <= last; day += 1) cells.push(day);
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+
+export function birthdayLabel(iso: string): string {
+  const parsed = parseIsoDate(iso);
+  if (!parsed) return 'Choose birthday date';
+  const month = new Date(Date.UTC(parsed.year, parsed.month - 1, 1)).toLocaleString('en-GB', {
+    month: 'long',
+    timeZone: 'UTC',
+  });
+  return `${parsed.day} ${month} ${parsed.year}`;
+}
