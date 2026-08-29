@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet } from 'react-native';
 import { useApp } from './context/AppContext';
-import { IslandMap } from './IslandMap';
+import { DiscoverHeader, MapStage } from './discoverChrome';
 import type { AgeBandId, MatchedCard } from './match';
 import type { Profile } from './profile';
 import { PersonScreen } from './PersonScreen';
@@ -116,40 +116,28 @@ function DiscoverDeck({
 }: DeckProps) {
   return (
     <Fixed footer={footer}>
-      <View style={styles.deck}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.title}>Discover</Text>
-            <Text style={styles.place}>{city === 'all' ? 'Republic of Cyprus' : city}</Text>
-          </View>
-          <View style={styles.tools}>
-            <Pressable
-              onPress={onToggleMap}
-              accessibilityRole="button"
-              accessibilityLabel="Map"
-              style={[styles.tool, map && styles.toolOn]}
-            >
-              <Text style={[styles.toolMark, map && styles.toolMarkOn]}>◎</Text>
-            </Pressable>
-            <Pressable
-              onPress={onToggleFilters}
-              accessibilityRole="button"
-              accessibilityLabel="Filters"
-              style={[styles.tool, filters && styles.toolOn]}
-            >
-              <Text style={[styles.toolMark, filters && styles.toolMarkOn]}>☰</Text>
-            </Pressable>
-          </View>
-        </View>
-        <DiscoverBody
-          map={map}
-          card={card}
-          visible={visible}
-          onOpen={onOpen}
-          onLike={onLike}
-          onPass={onPass}
+      {map ? (
+        <MapStage
+          people={visible}
+          city={city}
+          mapOn={map}
+          filtersOn={filters}
+          onToggleMap={onToggleMap}
+          onToggleFilters={onToggleFilters}
+          onOpen={(person) => onOpen(person)}
         />
-      </View>
+      ) : (
+        <View style={styles.deck}>
+          <DiscoverHeader
+            city={city}
+            mapOn={map}
+            filtersOn={filters}
+            onToggleMap={onToggleMap}
+            onToggleFilters={onToggleFilters}
+          />
+          <DiscoverBody card={card} onOpen={onOpen} onLike={onLike} onPass={onPass} />
+        </View>
+      )}
       {filters ? (
         <FilterSheet city={city} ageBand={ageBand} onCity={onCity} onAge={onAge} onDone={onToggleFilters} />
       ) : null}
@@ -167,21 +155,16 @@ function DiscoverDeck({
 }
 
 function DiscoverBody({
-  map,
   card,
-  visible,
   onOpen,
   onLike,
   onPass,
 }: {
-  map: boolean;
   card: Profile | undefined;
-  visible: Profile[];
   onOpen: (profile?: Profile) => void;
   onLike: () => void;
   onPass: () => void;
 }) {
-  if (map) return <IslandMap people={visible} onOpen={onOpen} />;
   if (!card) return <Text style={styles.empty}>No one new right now.</Text>;
   return (
     <View style={styles.cardSlot}>
@@ -202,27 +185,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 4,
-    paddingBottom: 12,
-  },
-  title: { color: color.ink, fontFamily: font.display, fontSize: 28, fontWeight: '700' },
-  place: { color: color.mute, fontFamily: font.body, fontSize: 13, marginTop: 2 },
-  tools: { flexDirection: 'row', gap: 8 },
-  tool: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: color.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  toolOn: { backgroundColor: color.rose },
-  toolMark: { color: color.ink, fontSize: 20, fontWeight: '800' },
-  toolMarkOn: { color: color.onRose },
   cardSlot: { flex: 1, minHeight: 0 },
   actionsDock: { position: 'absolute', left: 0, right: 0, bottom: 18, zIndex: 3 },
   empty: {

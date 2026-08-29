@@ -9,7 +9,15 @@
     "userInterfaceStyle": "light",
     "backgroundColor": "#FFFFFF",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.here.cyprusdating",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Here talks to your computer so you can discover people on this island.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true,
+          "NSAllowsArbitraryLoads": true
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
