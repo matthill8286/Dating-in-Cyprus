@@ -58,6 +58,7 @@ async function resident(
     },
   });
   const { token, accountId } = join.json() as { token: string; accountId: string };
+  const photoId = await uploadPhoto(app, token);
   const saved = await app.inject({
     method: 'PATCH',
     url: '/v1/profiles/me',
@@ -67,10 +68,24 @@ async function resident(
       city: 'Limassol',
       languagesSpoken: ['en'],
       bio: 'Lives in Limassol.',
+      photoIds: [photoId],
     },
   });
   const { profileId } = saved.json() as { profileId: string };
   return { token, accountId, profileId };
+}
+
+async function uploadPhoto(app: Awaited<ReturnType<typeof build>>, token: string) {
+  const uploaded = await app.inject({
+    method: 'POST',
+    url: '/v1/profiles/me/photos',
+    headers: { authorization: `Bearer ${token}` },
+    payload: {
+      contentType: 'image/jpeg',
+      data: Buffer.from('portrait').toString('base64'),
+    },
+  });
+  return (uploaded.json() as { photoId: string }).photoId;
 }
 
 function auth(token: string) {
@@ -111,6 +126,7 @@ describe('Interest and Match', () => {
     const listed = hisMatches.json() as { matches: Array<{ profile: { firstName: string } }> };
     expect(listed.matches).toHaveLength(1);
     expect(listed.matches[0]?.profile.firstName).toBe('Elena');
+    expect(listed.matches[0]).toMatchObject({ lastMessage: null });
     await app.close();
   });
 
@@ -133,6 +149,47 @@ describe('Interest and Match', () => {
       payload: { profileId: man.profileId },
     });
     expect(self.statusCode).toBe(403);
+    await app.close();
+  });
+
+  it('refuses Interest in a Profile with no photos', async () => {
+    const app = await build();
+    const man = await resident(app, 'man', 'women', 'Alex');
+    const join = await app.inject({
+      method: 'POST',
+      url: '/v1/accounts',
+      payload: {
+        email: `${randomUUID()}@example.com`,
+        password: 'password1',
+        dateOfBirth: '2005-08-28',
+        launchLanguage: 'en',
+        gender: 'woman',
+        seeking: 'men',
+        specialCategoryConsent: true,
+        mobile: nextMobile(),
+        primaryHomeAttestation: true,
+        presence: { latitude: 34.685, longitude: 33.038 },
+      },
+    });
+    const token = (join.json() as { token: string }).token;
+    const saved = await app.inject({
+      method: 'PATCH',
+      url: '/v1/profiles/me',
+      headers: auth(token),
+      payload: {
+        firstName: 'Elena',
+        city: 'Limassol',
+        languagesSpoken: ['en'],
+        bio: 'Lives in Limassol.',
+      },
+    });
+    const refused = await app.inject({
+      method: 'POST',
+      url: '/v1/interests',
+      headers: auth(man.token),
+      payload: { profileId: (saved.json() as { profileId: string }).profileId },
+    });
+    expect(refused.statusCode).toBe(403);
     await app.close();
   });
 });

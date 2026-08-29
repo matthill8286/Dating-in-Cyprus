@@ -9,6 +9,7 @@ import { PoolScreen } from './src/PoolScreen';
 import { ProfileEditScreen } from './src/ProfileEditScreen';
 import { ProfileViewScreen } from './src/ProfileViewScreen';
 import { ChatScreen } from './src/ChatScreen';
+import { PersonScreen } from './src/PersonScreen';
 import { SignInScreen } from './src/SignInScreen';
 import type { Profile } from './src/profile';
 import { color, ensureWebFonts, font } from './src/theme';
@@ -22,6 +23,7 @@ function ProfileGate() {
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState<MainTab>('people');
   const [chat, setChat] = useState<{ matchId: string; profile: Profile } | null>(null);
+  const [person, setPerson] = useState<{ matchId?: string; profile: Profile } | null>(null);
 
   useEffect(() => {
     if (!sessionToken) return;
@@ -37,8 +39,23 @@ function ProfileGate() {
   if (!profile || editing) {
     return <ProfileEditScreen onSaved={() => setEditing(false)} />;
   }
+  if (person) {
+    return (
+      <PersonScreen
+        profile={person.profile}
+        onBack={() => setPerson(null)}
+        onMessage={messageAction(person, setChat, setPerson)}
+      />
+    );
+  }
   if (chat) {
-    return <ChatScreen match={chat} onBack={() => setChat(null)} />;
+    return (
+      <ChatScreen
+        match={chat}
+        onBack={() => setChat(null)}
+        onProfile={() => setPerson({ matchId: chat.matchId, profile: chat.profile })}
+      />
+    );
   }
   if (tab === 'profile') {
     return (
@@ -53,6 +70,7 @@ function ProfileGate() {
     return (
       <MatchesScreen
         onOpen={setChat}
+        onProfileOf={(item) => setPerson({ matchId: item.matchId, profile: item.profile })}
         onPeople={() => setTab('people')}
         onProfile={() => setTab('profile')}
       />
@@ -68,6 +86,19 @@ function ProfileGate() {
       }}
     />
   );
+}
+
+function messageAction(
+  person: { matchId?: string; profile: Profile },
+  setChat: (value: { matchId: string; profile: Profile } | null) => void,
+  setPerson: (value: null) => void,
+) {
+  const matchId = person.matchId;
+  if (!matchId) return undefined;
+  return () => {
+    setChat({ matchId, profile: person.profile });
+    setPerson(null);
+  };
 }
 
 function Loading() {

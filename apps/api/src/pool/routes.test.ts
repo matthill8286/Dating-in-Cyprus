@@ -84,6 +84,7 @@ describe('Pool photos', () => {
     };
     expect(pool.statusCode).toBe(200);
     expect(body.profiles).toHaveLength(womenSeekingMen().length);
+    expect(body.profiles.every((item) => item.photos.length === 3)).toBe(true);
     expect(body.profiles.every((item) => item.photos[0]?.url.startsWith('https://'))).toBe(true);
     await app.close();
   });
@@ -142,6 +143,16 @@ describe('Pool after a decision', () => {
     });
     const viewerToken = (viewer.json() as { token: string }).token;
     const otherToken = (other.json() as { token: string }).token;
+    const uploaded = await app.inject({
+      method: 'POST',
+      url: '/v1/profiles/me/photos',
+      headers: { authorization: `Bearer ${otherToken}` },
+      payload: {
+        contentType: 'image/jpeg',
+        data: Buffer.from('portrait').toString('base64'),
+      },
+    });
+    const photoId = (uploaded.json() as { photoId: string }).photoId;
     const saved = await app.inject({
       method: 'PATCH',
       url: '/v1/profiles/me',
@@ -151,6 +162,7 @@ describe('Pool after a decision', () => {
         city: 'Limassol',
         languagesSpoken: ['en'],
         bio: 'Lives in Limassol.',
+        photoIds: [photoId],
       },
     });
     const { profileId } = saved.json() as { profileId: string };
@@ -166,6 +178,51 @@ describe('Pool after a decision', () => {
       headers: { authorization: `Bearer ${viewerToken}` },
     });
     expect((after.json() as { profiles: unknown[] }).profiles).toEqual([]);
+    await app.close();
+  });
+});
+
+describe('Pool without photos', () => {
+  it('hides a Profile that has no photos', async () => {
+    const app = await buildApp({
+      config: testConfig(),
+      accounts: new MemoryAccountStore(),
+      profiles: new MemoryProfileStore(),
+      now: () => NOW,
+    });
+    const viewer = await app.inject({
+      method: 'POST',
+      url: '/v1/accounts',
+      payload: { ...residentJoin, email: 'viewer-empty@example.com', mobile: '+35799777011' },
+    });
+    const other = await app.inject({
+      method: 'POST',
+      url: '/v1/accounts',
+      payload: {
+        ...residentJoin,
+        email: 'empty-card@example.com',
+        mobile: '+35799777012',
+        gender: 'woman',
+        seeking: 'men',
+      },
+    });
+    await app.inject({
+      method: 'PATCH',
+      url: '/v1/profiles/me',
+      headers: { authorization: `Bearer ${(other.json() as { token: string }).token}` },
+      payload: {
+        firstName: 'Elena',
+        city: 'Limassol',
+        languagesSpoken: ['en'],
+        bio: 'Lives in Limassol.',
+      },
+    });
+    const pool = await app.inject({
+      method: 'GET',
+      url: '/v1/pool',
+      headers: { authorization: `Bearer ${(viewer.json() as { token: string }).token}` },
+    });
+    expect((pool.json() as { profiles: unknown[] }).profiles).toEqual([]);
     await app.close();
   });
 });

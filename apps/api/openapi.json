@@ -1400,11 +1400,33 @@
                               "photos"
                             ],
                             "additionalProperties": false
+                          },
+                          "lastMessage": {
+                            "type": "object",
+                            "properties": {
+                              "body": {
+                                "type": "string"
+                              },
+                              "fromMe": {
+                                "type": "boolean"
+                              },
+                              "sentAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "body",
+                              "fromMe",
+                              "sentAt"
+                            ],
+                            "additionalProperties": false,
+                            "nullable": true
                           }
                         },
                         "required": [
                           "matchId",
-                          "profile"
+                          "profile",
+                          "lastMessage"
                         ],
                         "additionalProperties": false
                       }
@@ -1544,11 +1566,33 @@
                         "photos"
                       ],
                       "additionalProperties": false
+                    },
+                    "lastMessage": {
+                      "type": "object",
+                      "properties": {
+                        "body": {
+                          "type": "string"
+                        },
+                        "fromMe": {
+                          "type": "boolean"
+                        },
+                        "sentAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "body",
+                        "fromMe",
+                        "sentAt"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
                     }
                   },
                   "required": [
                     "matchId",
-                    "profile"
+                    "profile",
+                    "lastMessage"
                   ],
                   "additionalProperties": false
                 }

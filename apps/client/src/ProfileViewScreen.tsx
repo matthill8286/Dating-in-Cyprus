@@ -1,4 +1,4 @@
-import { Text, StyleSheet } from 'react-native';
+import { Image, ScrollView, Text, StyleSheet } from 'react-native';
 import { useApp } from './context/AppContext';
 import { color, font, languageLabel } from './theme';
 import {
@@ -42,7 +42,20 @@ export function ProfileViewScreen({
         subtitle="Republic of Cyprus"
       />
       <Sheet>
-        <Portrait uri={profile.photos[0]?.url} name={profile.firstName} />
+        {profile.photos.length > 1 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {profile.photos.map((photo) => (
+              <Image
+                key={photo.photoId}
+                source={{ uri: photo.url }}
+                style={styles.shot}
+                accessibilityLabel={profile.firstName}
+              />
+            ))}
+          </ScrollView>
+        ) : (
+          <Portrait uri={profile.photos[0]?.url} name={profile.firstName} />
+        )}
         <Text style={styles.bio}>{profile.bio}</Text>
         <ChipRow
           options={profile.languagesSpoken}
@@ -63,5 +76,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     color: color.ink,
+  },
+  shot: {
+    width: 220,
+    height: 300,
+    borderRadius: 24,
+    marginRight: 12,
+    backgroundColor: color.surface,
   },
 });

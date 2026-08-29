@@ -32,3 +32,28 @@ export function interestMatched(
   if (!data?.matched || !data.matchId) return null;
   return { matchId: data.matchId, profile };
 }
+
+export function swipeDecision(dx: number, threshold = 110): 'like' | 'pass' | null {
+  if (dx >= threshold) return 'like';
+  if (dx <= -threshold) return 'pass';
+  return null;
+}
+
+export function nextPhotoIndex(current: number, count: number, step: 1 | -1): number {
+  if (count <= 0) return 0;
+  return (current + step + count) % count;
+}
+
+export function photoTap(x: number, width: number): 1 | -1 {
+  return x < width * 0.35 ? -1 : 1;
+}
+
+export function deckTap(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): 'open' | 'photo-prev' | 'photo-next' {
+  if (height > 0 && y > height * 0.72) return 'open';
+  return photoTap(x, width) === -1 ? 'photo-prev' : 'photo-next';
+}

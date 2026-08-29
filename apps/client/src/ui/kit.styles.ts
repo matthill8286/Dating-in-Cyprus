@@ -202,6 +202,9 @@ export const styles = StyleSheet.create({
   },
   photoPlace: { color: color.onRose, fontFamily: font.body, fontSize: 15, marginTop: 6, opacity: 0.95 },
   photoBio: { color: color.onRose, fontFamily: font.body, fontSize: 14, marginTop: 6, opacity: 0.88 },
+  photoDots: { position: 'absolute', top: 10, left: 12, right: 12, flexDirection: 'row', gap: 4, zIndex: 2 },
+  photoDot: { flex: 1, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.4)' },
+  photoDotOn: { backgroundColor: '#FFFFFF' },
   fixed: { flex: 1, minHeight: 0, overflow: 'hidden' },
   actions: {
     flexDirection: 'row',
@@ -267,6 +270,7 @@ export const styles = StyleSheet.create({
     borderBottomColor: color.line,
   },
   matchAvatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: color.surface },
+  matchRowBody: { flex: 1 },
   matchName: { fontFamily: font.display, fontSize: 18, fontWeight: '700', color: color.ink },
   matchHint: { fontFamily: font.body, fontSize: 13, color: color.mute, marginTop: 2 },
   bubbleMe: {

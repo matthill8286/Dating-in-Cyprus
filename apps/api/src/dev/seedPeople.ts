@@ -84,6 +84,7 @@ export async function applySeed(
 ): Promise<{ created: number; reused: number; inbound: number }> {
   let created = 0;
   let reused = 0;
+  let index = 0;
   for (const item of SEED_PEOPLE) {
     const existing = await accounts.findByEmail(item.email);
     const account = existing ?? (await accounts.create(toNewAccount(item, hash)));
@@ -94,8 +95,9 @@ export async function applySeed(
       city: item.city,
       languagesSpoken: item.languagesSpoken,
       bio: item.bio,
-      photos: [{ photoId: `seed-${item.firstName.toLowerCase()}`, url: item.photoUrl }],
+      photos: photosFor(item, index),
     });
+    index += 1;
   }
   const inbound = loop ? await seedInboundInterest(accounts, loop) : 0;
   return { created, reused, inbound };
@@ -145,8 +147,34 @@ function person(
     city,
     languagesSpoken,
     bio,
-    photoUrl: `https://images.unsplash.com/${unsplashId}?auto=format&fit=crop&w=900&h=1200&q=80`,
+    photoUrl: portraitUrl(unsplashId),
   };
+}
+
+const EXTRA_UNSPLASH = [
+  'photo-1438761681033-6461ffad8d80',
+  'photo-1463453091185-61582044d556',
+  'photo-1507003211169-0a1dd7228f2d',
+  'photo-1521119989659-a83eee488004',
+  'photo-1531123897727-8f129e1688ce',
+  'photo-1539571696357-5a69c17a67c6',
+  'photo-1554151228-14d9def656e4',
+  'photo-1547425260-76bcadfb4f2c',
+];
+
+function portraitUrl(unsplashId: string): string {
+  return `https://images.unsplash.com/${unsplashId}?auto=format&fit=crop&w=900&h=1200&q=80`;
+}
+
+function photosFor(item: SeedPerson, index: number) {
+  const extras = [
+    EXTRA_UNSPLASH[index % EXTRA_UNSPLASH.length],
+    EXTRA_UNSPLASH[(index + 3) % EXTRA_UNSPLASH.length],
+  ];
+  return [item.photoUrl, ...extras.map((id) => portraitUrl(id ?? ''))].map((url, photoIndex) => ({
+    photoId: `seed-${item.firstName.toLowerCase()}-${photoIndex}`,
+    url,
+  }));
 }
 
 function toNewAccount(item: SeedPerson, hash: (password: string) => string) {

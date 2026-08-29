@@ -799,6 +799,11 @@ export interface paths {
                                         url: string;
                                     }[];
                                 };
+                                lastMessage: {
+                                    body: string;
+                                    fromMe: boolean;
+                                    sentAt: string;
+                                } | null;
                             }[];
                         };
                     };
@@ -868,6 +873,11 @@ export interface paths {
                                     url: string;
                                 }[];
                             };
+                            lastMessage: {
+                                body: string;
+                                fromMe: boolean;
+                                sentAt: string;
+                            } | null;
                         };
                     };
                 };

@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
 import { useApp } from './context/AppContext';
-import { CITY_FILTERS, CITY_FILTER_LABELS } from './match';
+import { CITY_FILTERS, CITY_FILTER_LABELS, type MatchedCard } from './match';
 import type { Profile } from './profile';
+import { PersonScreen } from './PersonScreen';
 import { color, font } from './theme';
 import { ActionRow, Fixed, MatchOverlay } from './ui/deck';
-import { ChipRow, PhotoCard } from './ui/kit';
+import { ChipRow } from './ui/kit';
+import { SwipeCard } from './ui/swipe';
 import { TabBar } from './ui/tabs';
 import { useDeck } from './useDeck';
 
@@ -21,16 +23,83 @@ export function PoolScreen({
   const { sessionToken } = useApp();
   const { card, city, setCity, matched, setMatched, decide } = useDeck(sessionToken);
   const [filters, setFilters] = useState(false);
+  const [open, setOpen] = useState(false);
+  const tabs = <TabBar active="people" onPeople={() => undefined} onMatches={onMatches} onProfile={onProfile} />;
+
+  if (open && card) {
+    return (
+      <PersonScreen
+        profile={card}
+        onBack={() => setOpen(false)}
+        onPass={() => {
+          setOpen(false);
+          void decide('pass');
+        }}
+        onLike={() => {
+          setOpen(false);
+          void decide('like');
+        }}
+        footer={tabs}
+      />
+    );
+  }
 
   return (
-    <Fixed
-      footer={<TabBar active="people" onPeople={() => undefined} onMatches={onMatches} onProfile={onProfile} />}
-    >
+    <DiscoverDeck
+      card={card}
+      city={city}
+      filters={filters}
+      matched={matched}
+      footer={tabs}
+      onToggleFilters={() => setFilters((value) => !value)}
+      onCity={setCity}
+      onLike={() => void decide('like')}
+      onPass={() => void decide('pass')}
+      onOpen={() => setOpen(true)}
+      onChat={() => {
+        if (!matched) return;
+        onChat(matched);
+        setMatched(null);
+      }}
+      onKeep={() => setMatched(null)}
+    />
+  );
+}
+
+function DiscoverDeck({
+  card,
+  city,
+  filters,
+  matched,
+  footer,
+  onToggleFilters,
+  onCity,
+  onLike,
+  onPass,
+  onOpen,
+  onChat,
+  onKeep,
+}: {
+  card: Profile | undefined;
+  city: string;
+  filters: boolean;
+  matched: MatchedCard | null;
+  footer: ReactNode;
+  onToggleFilters: () => void;
+  onCity: (city: string) => void;
+  onLike: () => void;
+  onPass: () => void;
+  onOpen: () => void;
+  onChat: () => void;
+  onKeep: () => void;
+}) {
+  return (
+    <Fixed footer={footer}>
       <View style={styles.deck}>
         <View style={styles.header}>
           <Text style={styles.title}>Discover</Text>
           <Pressable
-            onPress={() => setFilters((open) => !open)}
+            onPress={onToggleFilters}
             accessibilityRole="button"
             accessibilityLabel="Filters"
             style={[styles.filter, filters && styles.filterOn]}
@@ -43,7 +112,7 @@ export function PoolScreen({
             <ChipRow
               options={CITY_FILTERS}
               value={city}
-              onChange={setCity}
+              onChange={onCity}
               labels={CITY_FILTER_LABELS}
               nowrap
             />
@@ -51,15 +120,9 @@ export function PoolScreen({
         ) : null}
         {card ? (
           <View style={styles.cardSlot}>
-            <PhotoCard
-              uri={card.photos[0]?.url}
-              name={card.firstName}
-              age={card.age}
-              place={card.city}
-              bio={card.bio}
-            />
+            <SwipeCard card={card} onLike={onLike} onPass={onPass} onOpen={onOpen} />
             <View style={styles.actionsDock}>
-              <ActionRow onPass={() => void decide('pass')} onLike={() => void decide('like')} />
+              <ActionRow onPass={onPass} onLike={onLike} onInfo={onOpen} />
             </View>
           </View>
         ) : (
@@ -69,11 +132,9 @@ export function PoolScreen({
       {matched ? (
         <MatchOverlay
           name={matched.profile.firstName}
-          onMessage={() => {
-            onChat(matched);
-            setMatched(null);
-          }}
-          onKeep={() => setMatched(null)}
+          uri={matched.profile.photos[0]?.url}
+          onMessage={onChat}
+          onKeep={onKeep}
         />
       ) : null}
     </Fixed>

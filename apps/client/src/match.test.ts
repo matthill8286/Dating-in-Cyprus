@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { afterDecision, filterDeck, interestMatched, type MatchedCard } from './match';
+import { afterDecision, deckTap, filterDeck, interestMatched, nextPhotoIndex, photoTap, swipeDecision, type MatchedCard } from './match';
 import type { Profile } from './profile';
 
 const elena: Profile = {
@@ -33,5 +33,19 @@ describe('discovery deck', () => {
     const opened = interestMatched({ matched: true, matchId: 'm1' }, elena) as MatchedCard;
     expect(opened.matchId).toBe('m1');
     expect(opened.profile.firstName).toBe('Elena');
+  });
+
+  it('swipes right to like, left to pass, and taps to change photo', () => {
+    expect(swipeDecision(120)).toBe('like');
+    expect(swipeDecision(-120)).toBe('pass');
+    expect(swipeDecision(20)).toBeNull();
+    expect(nextPhotoIndex(0, 3, 1)).toBe(1);
+    expect(nextPhotoIndex(2, 3, 1)).toBe(0);
+    expect(nextPhotoIndex(0, 3, -1)).toBe(2);
+    expect(photoTap(20, 300)).toBe(-1);
+    expect(photoTap(200, 300)).toBe(1);
+    expect(deckTap(20, 50, 300, 400)).toBe('photo-prev');
+    expect(deckTap(200, 50, 300, 400)).toBe('photo-next');
+    expect(deckTap(150, 320, 300, 400)).toBe('open');
   });
 });

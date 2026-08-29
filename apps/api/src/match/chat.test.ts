@@ -58,6 +58,16 @@ async function resident(
     },
   });
   const { token } = join.json() as { token: string };
+  const uploaded = await app.inject({
+    method: 'POST',
+    url: '/v1/profiles/me/photos',
+    headers: { authorization: `Bearer ${token}` },
+    payload: {
+      contentType: 'image/jpeg',
+      data: Buffer.from('portrait').toString('base64'),
+    },
+  });
+  const photoId = (uploaded.json() as { photoId: string }).photoId;
   const saved = await app.inject({
     method: 'PATCH',
     url: '/v1/profiles/me',
@@ -67,6 +77,7 @@ async function resident(
       city: 'Limassol',
       languagesSpoken: ['en'],
       bio: 'Lives in Limassol.',
+      photoIds: [photoId],
     },
   });
   return { token, profileId: (saved.json() as { profileId: string }).profileId };
@@ -105,7 +116,11 @@ describe('Chat after Match', () => {
       headers: auth(man.token),
     });
     expect(detail.statusCode).toBe(200);
-    expect(detail.json()).toMatchObject({ matchId, profile: { firstName: 'Elena' } });
+    expect(detail.json()).toMatchObject({
+      matchId,
+      profile: { firstName: 'Elena' },
+      lastMessage: null,
+    });
     const sent = await app.inject({
       method: 'POST',
       url: `/v1/matches/${matchId}/messages`,
@@ -122,6 +137,14 @@ describe('Chat after Match', () => {
     const listed = hers.json() as { messages: Array<{ fromMe: boolean; body: string }> };
     expect(listed.messages).toHaveLength(1);
     expect(listed.messages[0]).toMatchObject({ fromMe: false, body: 'Hello from Limassol' });
+    const preview = await app.inject({
+      method: 'GET',
+      url: '/v1/matches',
+      headers: auth(woman.token),
+    });
+    expect(preview.json()).toMatchObject({
+      matches: [{ lastMessage: { body: 'Hello from Limassol', fromMe: false } }],
+    });
     await app.close();
   });
 

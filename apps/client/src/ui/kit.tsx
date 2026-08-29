@@ -56,22 +56,28 @@ export function Card({ children }: { children: ReactNode }) {
 
 export function PhotoCard({
   uri,
+  photos,
+  photoIndex = 0,
   name,
   age,
   place,
   bio,
 }: {
   uri?: string;
+  photos?: string[];
+  photoIndex?: number;
   name: string;
   age: number;
   place: string;
   bio?: string;
 }) {
+  const urls = photos?.length ? photos : uri ? [uri] : [];
+  const shown = urls[photoIndex] ?? urls[0];
   return (
     <View style={styles.photoCard}>
-      {uri ? (
+      {shown ? (
         <Image
-          source={{ uri }}
+          source={{ uri: shown }}
           style={styles.photoFill}
           resizeMode="cover"
           accessibilityLabel={name}
@@ -81,6 +87,16 @@ export function PhotoCard({
           <Text style={styles.portraitInitial}>{name.slice(0, 1).toUpperCase()}</Text>
         </View>
       )}
+      {urls.length > 1 ? (
+        <View style={styles.photoDots}>
+          {urls.map((url, i) => (
+            <View
+              key={`${i}-${url}`}
+              style={[styles.photoDot, i === photoIndex ? styles.photoDotOn : null]}
+            />
+          ))}
+        </View>
+      ) : null}
       <View style={styles.photoCaption}>
         <Text style={styles.photoName}>
           {name}, {age}

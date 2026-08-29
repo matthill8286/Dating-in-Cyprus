@@ -148,5 +148,17 @@ async function presentMatch(matchId: string, viewerId: string, opts: LoopDeps) {
     opts.profiles.findByAccountId(otherId),
   ]);
   if (!account || !profile) return null;
-  return { matchId, profile: presentProfile(profile, account, opts.now()) };
+  const rows = await opts.loop.listMessages(matchId);
+  const last = rows[rows.length - 1];
+  return {
+    matchId,
+    profile: presentProfile(profile, account, opts.now()),
+    lastMessage: last
+      ? {
+          body: last.body,
+          fromMe: last.fromId === viewerId,
+          sentAt: new Date(last.sentAt).toISOString(),
+        }
+      : null,
+  };
 }

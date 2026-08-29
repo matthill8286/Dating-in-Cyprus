@@ -1,3 +1,5 @@
+export const CHAT_POLL_MS = 4000;
+
 export type ChatLine = {
   messageId: string;
   fromMe: boolean;
@@ -16,6 +18,10 @@ export function appendLine(lines: ChatLine[], line: ChatLine): ChatLine[] {
 
 export function threadPreview(lines: ChatLine[]): string {
   const last = lines[lines.length - 1];
+  return lastMessagePreview(last);
+}
+
+export function lastMessagePreview(last: { body: string } | null | undefined): string {
   return last?.body ?? 'Say hello';
 }
 

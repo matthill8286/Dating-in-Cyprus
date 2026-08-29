@@ -21,7 +21,8 @@ export async function listVisibleProfiles(viewer: Account, opts: PoolDeps) {
   return admitted.flatMap((other) => {
     if (hidden.has(other.id) || !accountsMatch(viewer, other)) return [];
     const profile = byAccount.get(other.id);
-    return profile ? [presentProfile(profile, other, opts.now())] : [];
+    if (!profile || profile.photos.length === 0) return [];
+    return [presentProfile(profile, other, opts.now())];
   });
 }
 
@@ -31,7 +32,7 @@ export async function matchingTarget(
   opts: { accounts: AccountStore; profiles: ProfileStore },
 ): Promise<{ profile: Profile; account: Account } | null> {
   const profile = await opts.profiles.findById(profileId);
-  if (!profile || profile.accountId === viewer.id) return null;
+  if (!profile || profile.accountId === viewer.id || profile.photos.length === 0) return null;
   const account = await opts.accounts.findById(profile.accountId);
   if (!account?.residentAdmitted) return null;
   if (!accountsMatch(viewer, account)) return null;
