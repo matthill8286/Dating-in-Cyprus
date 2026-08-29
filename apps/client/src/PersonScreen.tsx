@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
+import { useApp } from './context/AppContext';
 import { bioHasMore } from './match';
 import { PhotoStory } from './PhotoStory';
 import type { Profile, ProfilePhoto } from './profile';
+import { PersonSafety } from './SafetySheet';
 import { languageLabel, color, font } from './theme';
 import { ActionRow, Fixed } from './ui/deck';
 import { ChipRow } from './ui/kit';
@@ -15,6 +17,7 @@ export function PersonScreen({
   onPass,
   onMessage,
   onEdit,
+  onBlocked,
   footer,
 }: {
   profile: Profile;
@@ -23,10 +26,13 @@ export function PersonScreen({
   onPass?: () => void;
   onMessage?: () => void;
   onEdit?: () => void;
+  onBlocked?: () => void;
   footer?: ReactNode;
 }) {
+  const { sessionToken } = useApp();
   const [story, setStory] = useState<number | null>(null);
   const [openBio, setOpenBio] = useState(false);
+  const own = Boolean(onEdit);
   if (story !== null) {
     return (
       <PhotoStory
@@ -61,6 +67,13 @@ export function PersonScreen({
             onEdit={onEdit}
           />
           <Gallery photos={profile.photos} name={profile.firstName} onOpen={setStory} />
+          <PersonSafety
+            own={own}
+            name={profile.firstName}
+            profileId={profile.profileId}
+            token={sessionToken}
+            onBlocked={onBlocked}
+          />
         </View>
       </ScrollView>
     </Fixed>

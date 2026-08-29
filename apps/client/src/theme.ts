@@ -42,11 +42,19 @@ export const seekingLabel: Record<string, string> = {
 
 export function ensureWebFonts(): void {
   if (Platform.OS !== 'web' || typeof document === 'undefined') return;
-  if (document.getElementById('here-fonts')) return;
-  const link = document.createElement('link');
-  link.id = 'here-fonts';
-  link.rel = 'stylesheet';
-  link.href =
-    'https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap';
-  document.head.appendChild(link);
+  if (!document.getElementById('here-fonts')) {
+    const link = document.createElement('link');
+    link.id = 'here-fonts';
+    link.rel = 'stylesheet';
+    link.href =
+      'https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap';
+    document.head.appendChild(link);
+  }
+  if (document.getElementById('here-web-reset')) return;
+  const reset = document.createElement('style');
+  reset.id = 'here-web-reset';
+  reset.textContent =
+    'button{appearance:none;-webkit-appearance:none;background:transparent;border:0;margin:0;padding:0;font:inherit;color:inherit}' +
+    'div[dir="auto"]{background-color:transparent!important}';
+  document.head.appendChild(reset);
 }

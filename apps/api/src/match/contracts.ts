@@ -51,3 +51,19 @@ export const chatMessageResponse = z.object({
 export const messageListResponse = z.object({
   messages: z.array(chatMessageResponse),
 });
+
+export const REPORT_REASONS = ['fake', 'harassment', 'visitor', 'other'] as const;
+
+export const reportBody = z.object({
+  profileId: z.string().min(1),
+  reason: z.enum(REPORT_REASONS),
+});
+
+export const blockResponse = z.object({
+  ok: z.literal(true),
+});
+
+export const reportResponse = z.object({
+  reportId: z.string(),
+  reason: z.enum(REPORT_REASONS),
+});

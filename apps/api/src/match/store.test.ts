@@ -27,6 +27,10 @@ describe('MemoryLoopStore', () => {
     expect(hidden.has('skip')).toBe(true);
     expect(hidden.has('like')).toBe(true);
     expect(hidden.has('pair')).toBe(true);
+    await loop.recordBlock('a', 'blocked');
+    const after = await loop.hiddenIds('a');
+    expect(after.has('blocked')).toBe(true);
+    expect(await loop.isBlocked('blocked', 'a')).toBe(true);
     expect(await loop.hasPass('a', 'skip')).toBe(true);
     await loop.close();
   });

@@ -41,5 +41,9 @@ export function useDeck(sessionToken: string | null) {
     setBusy(false);
   }
 
-  return { card, visible, city, setCity, ageBand, setAgeBand, matched, setMatched, decide };
+  function hide(profileId: string) {
+    setPeople((prev) => afterDecision(prev, profileId));
+  }
+
+  return { card, visible, city, setCity, ageBand, setAgeBand, matched, setMatched, decide, hide };
 }
