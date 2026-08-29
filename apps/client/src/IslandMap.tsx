@@ -1,134 +1,152 @@
-import { useState } from 'react';
-import { Image, Pressable, Text, View, StyleSheet } from 'react-native';
-import { cityMarks, mapPins, mapTiles } from './map';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { PanResponder, Platform, Text, View, StyleSheet } from 'react-native';
+import { MapBackdrop, MapPin, PeekCard, ZoomPad } from './islandMapChrome';
+import {
+  approximatePoint,
+  cityMarks,
+  clampView,
+  islandView,
+  mapPins,
+  panView,
+  viewForCity,
+  zoomAt,
+  type MapView,
+} from './map';
 import type { Profile } from './profile';
 import { color, font } from './theme';
 
 export function IslandMap({
   people,
+  city,
   onOpen,
 }: {
   people: Profile[];
+  city: string;
   onOpen: (profile: Profile) => void;
 }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [picked, setPicked] = useState<string | null>(null);
-  const pins = mapPins(people, size.width, size.height);
+  const camera = useMapCamera(size.width, size.height, city);
+  const pins = mapPins(people, camera.view, size.width, size.height);
   const selected = people.find((person) => person.profileId === picked) ?? people[0];
 
   return (
     <View style={styles.wrap}>
       <View
+        ref={camera.boardRef}
+        collapsable={false}
         style={styles.board}
         onLayout={(event) => setSize(event.nativeEvent.layout)}
+        {...camera.pan.panHandlers}
       >
-        <MapBackdrop width={size.width} height={size.height} />
-        <View style={styles.veil} pointerEvents="none" />
-        {cityMarks(size.width, size.height).map((mark) => (
-          <Text
-            key={mark.name}
-            pointerEvents="none"
-            style={[styles.city, { left: mark.x - 36, top: mark.y + 14 }]}
-          >
-            {mark.name}
-          </Text>
-        ))}
-        {pins.map((pin) => (
-          <MapPin
-            key={pin.profile.profileId}
-            profile={pin.profile}
-            x={pin.x}
-            y={pin.y}
-            active={selected?.profileId === pin.profile.profileId}
-            onPress={() => setPicked(pin.profile.profileId)}
-          />
-        ))}
+        <View
+          pointerEvents="box-none"
+          style={[styles.layer, { transform: [{ translateX: camera.drag.x }, { translateY: camera.drag.y }] }]}
+        >
+          <MapBackdrop view={camera.view} width={size.width} height={size.height} />
+          {cityMarks(camera.view, size.width, size.height).map((mark) => (
+            <Text key={mark.name} pointerEvents="none" style={[styles.city, { left: mark.x - 36, top: mark.y + 14 }]}>
+              {mark.name}
+            </Text>
+          ))}
+          {pins.map((pin) => (
+            <MapPin
+              key={pin.profile.profileId}
+              profile={pin.profile}
+              x={pin.x}
+              y={pin.y}
+              active={selected?.profileId === pin.profile.profileId}
+              onPress={() => {
+                setPicked(pin.profile.profileId);
+                camera.focus(pin.profile);
+              }}
+            />
+          ))}
+        </View>
+        <ZoomPad zoom={camera.view.zoom} onIn={() => camera.zoomBy(1)} onOut={() => camera.zoomBy(-1)} onFit={camera.fit} />
         <Text style={styles.credit} pointerEvents="none">
-          © Esri
+          © Esri · drag or scroll
         </Text>
       </View>
       <Text style={styles.note}>Approximate area in their city. Never a home address.</Text>
-      {selected ? (
-        <PeekCard profile={selected} onOpen={() => onOpen(selected)} />
-      ) : (
-        <Text style={styles.empty}>No one new right now.</Text>
-      )}
+      {selected ? <PeekCard profile={selected} onOpen={() => onOpen(selected)} /> : <Text style={styles.empty}>No one new right now.</Text>}
     </View>
   );
 }
 
-function MapBackdrop({ width, height }: { width: number; height: number }) {
-  return (
-    <View style={styles.sea} pointerEvents="none">
-      {mapTiles(width, height).map((tile) => (
-        <Image
-          key={tile.key}
-          source={{ uri: tile.url }}
-          style={{
-            position: 'absolute',
-            left: tile.x,
-            top: tile.y,
-            width: tile.width,
-            height: tile.height,
-          }}
-        />
-      ))}
-    </View>
+function useMapCamera(width: number, height: number, city: string) {
+  const boardRef = useRef<View>(null);
+  const [view, setView] = useState<MapView>(() => islandView(width, height));
+  const [drag, setDrag] = useState({ x: 0, y: 0 });
+  const zoomByRef = useRef<(delta: number, x?: number, y?: number) => void>(() => undefined);
+
+  zoomByRef.current = (delta, x = width / 2, y = height / 2) => {
+    setView((current) => clampView(zoomAt(current, current.zoom + delta, x ?? width / 2, y ?? height / 2, width, height), width, height));
+  };
+
+  useEffect(() => {
+    if (width <= 0) return;
+    setView(city === 'all' ? islandView(width, height) : viewForCity(city, width, height));
+    setDrag({ x: 0, y: 0 });
+  }, [width, height, city]);
+
+  useEffect(() => bindWheel(boardRef.current, (delta, x, y) => zoomByRef.current(delta, x, y)), [width, height]);
+
+  const pan = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_event, gesture) => Math.abs(gesture.dx) > 8 || Math.abs(gesture.dy) > 8,
+        onPanResponderMove: (_event, gesture) => setDrag({ x: gesture.dx, y: gesture.dy }),
+        onPanResponderRelease: (_event, gesture) => {
+          setView((current) => clampView(panView(current, gesture.dx, gesture.dy), width, height));
+          setDrag({ x: 0, y: 0 });
+        },
+      }),
+    [height, width],
   );
+
+  return {
+    boardRef,
+    view,
+    drag,
+    pan,
+    zoomBy(delta: number, x = width / 2, y = height / 2) {
+      zoomByRef.current(delta, x, y);
+    },
+    fit() {
+      setView(islandView(width, height));
+    },
+    focus(profile: Profile) {
+      const point = approximatePoint(profile.city, profile.profileId);
+      if (!point) return;
+      setView((current) =>
+        clampView({ zoom: Math.max(current.zoom, 11), centerLat: point.lat, centerLng: point.lng }, width, height),
+      );
+    },
+  };
 }
 
-function MapPin({
-  profile,
-  x,
-  y,
-  active,
-  onPress,
-}: {
-  profile: Profile;
-  x: number;
-  y: number;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${profile.firstName}, ${profile.city}`}
-      style={[styles.pin, active && styles.pinOn, { left: x - 28, top: y - 28 }]}
-    >
-      <View style={[styles.halo, active && styles.haloOn]} />
-      {profile.photos[0]?.url ? (
-        <Image source={{ uri: profile.photos[0].url }} style={styles.face} />
-      ) : (
-        <View style={styles.face} />
-      )}
-    </Pressable>
-  );
+function bindWheel(
+  host: View | null,
+  zoomBy: (delta: number, x: number, y: number) => void,
+): (() => void) | undefined {
+  if (Platform.OS !== 'web' || !host) return undefined;
+  const node = webNode(host);
+  if (!node) return undefined;
+  const onWheel = (event: WheelEvent) => {
+    event.preventDefault();
+    const rect = node.getBoundingClientRect();
+    zoomBy(event.deltaY < 0 ? 1 : -1, event.clientX - rect.left, event.clientY - rect.top);
+  };
+  node.addEventListener('wheel', onWheel, { passive: false });
+  return () => node.removeEventListener('wheel', onWheel);
 }
 
-function PeekCard({ profile, onOpen }: { profile: Profile; onOpen: () => void }) {
-  return (
-    <Pressable
-      onPress={onOpen}
-      accessibilityRole="button"
-      accessibilityLabel={`${profile.firstName} profile`}
-      style={styles.peek}
-    >
-      {profile.photos[0]?.url ? (
-        <Image source={{ uri: profile.photos[0].url }} style={styles.peekPhoto} />
-      ) : (
-        <View style={styles.peekPhoto} />
-      )}
-      <View style={styles.peekCopy}>
-        <Text style={styles.peekName}>
-          {profile.firstName}, {profile.age}
-        </Text>
-        <Text style={styles.peekPlace}>{profile.city} · Republic of Cyprus</Text>
-      </View>
-      <Text style={styles.peekGo}>View</Text>
-    </Pressable>
-  );
+function webNode(host: View): HTMLElement | null {
+  const node = host as unknown as HTMLElement & { _nativeNode?: HTMLElement };
+  if (typeof node.addEventListener === 'function') return node;
+  if (node._nativeNode && typeof node._nativeNode.addEventListener === 'function') return node._nativeNode;
+  return null;
 }
 
 const styles = StyleSheet.create({
@@ -140,8 +158,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#d7e6ee',
   },
-  sea: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: '#d7e6ee' },
-  veil: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.04)' },
+  layer: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
   city: {
     position: 'absolute',
     width: 72,
@@ -150,39 +167,8 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: '#4a5560',
-    letterSpacing: 0.2,
   },
-  pin: { position: 'absolute', width: 56, height: 56, alignItems: 'center', justifyContent: 'center', zIndex: 1 },
-  pinOn: { zIndex: 4, transform: [{ scale: 1.08 }] },
-  halo: {
-    position: 'absolute',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(233, 64, 87, 0.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(233, 64, 87, 0.28)',
-  },
-  haloOn: { backgroundColor: 'rgba(233, 64, 87, 0.32)', borderColor: color.rose },
-  face: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: color.paper, backgroundColor: color.surface },
   note: { fontFamily: font.body, fontSize: 12, color: color.mute, textAlign: 'center' },
-  peek: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: color.paper,
-    borderRadius: 20,
-    padding: 10,
-    shadowColor: '#1A1A1A',
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-  },
-  peekPhoto: { width: 56, height: 56, borderRadius: 14, backgroundColor: color.surface },
-  peekCopy: { flex: 1 },
-  peekName: { fontFamily: font.display, fontSize: 18, fontWeight: '700', color: color.ink },
-  peekPlace: { fontFamily: font.body, fontSize: 13, color: color.mute, marginTop: 2 },
-  peekGo: { fontFamily: font.body, fontSize: 14, fontWeight: '700', color: color.rose, paddingRight: 8 },
   empty: { fontFamily: font.body, fontSize: 15, color: color.mute, textAlign: 'center', paddingVertical: 12 },
   credit: {
     position: 'absolute',

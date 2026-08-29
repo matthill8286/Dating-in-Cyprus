@@ -145,6 +145,7 @@ function DiscoverDeck({
           map={map}
           card={card}
           visible={visible}
+          city={city}
           onOpen={onOpen}
           onLike={onLike}
           onPass={onPass}
@@ -170,6 +171,7 @@ function DiscoverBody({
   map,
   card,
   visible,
+  city,
   onOpen,
   onLike,
   onPass,
@@ -177,11 +179,12 @@ function DiscoverBody({
   map: boolean;
   card: Profile | undefined;
   visible: Profile[];
+  city: string;
   onOpen: (profile?: Profile) => void;
   onLike: () => void;
   onPass: () => void;
 }) {
-  if (map) return <IslandMap people={visible} onOpen={onOpen} />;
+  if (map) return <IslandMap people={visible} city={city} onOpen={onOpen} />;
   if (!card) return <Text style={styles.empty}>No one new right now.</Text>;
   return (
     <View style={styles.cardSlot}>
