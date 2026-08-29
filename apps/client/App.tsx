@@ -4,6 +4,7 @@ import { Text, View, StyleSheet } from 'react-native';
 import { api } from './src/api/client';
 import { AppProvider, useApp } from './src/context/AppContext';
 import { JoinScreen } from './src/JoinScreen';
+import { OnboardingScreen } from './src/OnboardingScreen';
 import { MatchesScreen } from './src/MatchesScreen';
 import { PoolScreen } from './src/PoolScreen';
 import { ProfileEditScreen } from './src/ProfileEditScreen';
@@ -114,10 +115,17 @@ function Loading() {
 
 function Root() {
   const { sessionToken } = useApp();
-  const [entry, setEntry] = useState<'join' | 'signin'>('join');
+  const [entry, setEntry] = useState<'welcome' | 'join' | 'signin'>('welcome');
   if (sessionToken) return <ProfileGate />;
-  if (entry === 'signin') return <SignInScreen onJoin={() => setEntry('join')} />;
-  return <JoinScreen onSignIn={() => setEntry('signin')} />;
+  if (entry === 'signin') {
+    return <SignInScreen onJoin={() => setEntry('join')} onBack={() => setEntry('welcome')} />;
+  }
+  if (entry === 'join') {
+    return <JoinScreen onSignIn={() => setEntry('signin')} onBack={() => setEntry('welcome')} />;
+  }
+  return (
+    <OnboardingScreen onCreate={() => setEntry('join')} onSignIn={() => setEntry('signin')} />
+  );
 }
 
 export default function App() {

@@ -43,7 +43,13 @@ const initialForm: JoinFormValues = {
   presence: null,
 };
 
-export function JoinScreen({ onSignIn }: { onSignIn: () => void }) {
+export function JoinScreen({
+  onSignIn,
+  onBack,
+}: {
+  onSignIn: () => void;
+  onBack?: () => void;
+}) {
   const { setSessionToken } = useApp();
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +73,7 @@ export function JoinScreen({ onSignIn }: { onSignIn: () => void }) {
         subtitle="Dating for people whose primary home is on the island. Not a holiday. Not a stopover."
       />
       <Sheet>
+        {onBack ? <GhostButton title="Back" onPress={onBack} /> : null}
         <Card>
           <AccountFields form={form} setForm={setForm} />
           <GateFields form={form} setForm={setForm} />

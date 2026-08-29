@@ -15,7 +15,13 @@ import {
   Sheet,
 } from './ui/kit';
 
-export function SignInScreen({ onJoin }: { onJoin: () => void }) {
+export function SignInScreen({
+  onJoin,
+  onBack,
+}: {
+  onJoin: () => void;
+  onBack?: () => void;
+}) {
   const { setSessionToken } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,6 +40,7 @@ export function SignInScreen({ onJoin }: { onJoin: () => void }) {
         subtitle="Welcome back."
       />
       <Sheet>
+        {onBack ? <GhostButton title="Back" onPress={onBack} /> : null}
         <Card>
           <Field
             label="Email"
@@ -51,7 +58,7 @@ export function SignInScreen({ onJoin }: { onJoin: () => void }) {
           />
           <ErrorNote message={error} />
           <PrimaryButton title="Sign in" onPress={() => void onSignIn()} />
-          <GhostButton title="Request a place" onPress={onJoin} />
+          <GhostButton title="Create an account" onPress={onJoin} />
           <MuteNote>Twenty-one and over. Residents only.</MuteNote>
         </Card>
       </Sheet>
