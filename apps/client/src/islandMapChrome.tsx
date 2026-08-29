@@ -103,35 +103,40 @@ export function PeekStrip({
     list.current?.scrollTo({ x: index * snap, animated: true });
   }, [selectedId, snap, ids]);
 
-  if (people.length === 0) return <Text style={styles.empty}>{empty}</Text>;
   return (
-    <ScrollView
-      ref={list}
-      horizontal
-      nestedScrollEnabled
-      showsHorizontalScrollIndicator={false}
-      decelerationRate="fast"
-      snapToInterval={snap}
-      snapToAlignment="start"
-      disableIntervalMomentum
-      contentContainerStyle={styles.strip}
-      accessibilityLabel="People on the map"
-      onMomentumScrollEnd={(event) => {
-        const index = Math.round(event.nativeEvent.contentOffset.x / snap);
-        const person = people[index];
-        if (person) onPick(person);
-      }}
-    >
-      {people.map((profile) => (
-        <PeekCard
-          key={profile.profileId}
-          profile={profile}
-          active={profile.profileId === selectedId}
-          onPick={() => onPick(profile)}
-          onOpen={() => onOpen(profile)}
-        />
-      ))}
-    </ScrollView>
+    <View style={styles.dock} pointerEvents="box-none">
+      {people.length === 0 ? (
+        <Text style={styles.empty}>{empty}</Text>
+      ) : (
+        <ScrollView
+          ref={list}
+          horizontal
+          nestedScrollEnabled
+          showsHorizontalScrollIndicator={false}
+          decelerationRate="fast"
+          snapToInterval={snap}
+          snapToAlignment="start"
+          disableIntervalMomentum
+          contentContainerStyle={styles.strip}
+          accessibilityLabel="People on the map"
+          onMomentumScrollEnd={(event) => {
+            const index = Math.round(event.nativeEvent.contentOffset.x / snap);
+            const person = people[index];
+            if (person) onPick(person);
+          }}
+        >
+          {people.map((profile) => (
+            <PeekCard
+              key={profile.profileId}
+              profile={profile}
+              active={profile.profileId === selectedId}
+              onPick={() => onPick(profile)}
+              onOpen={() => onOpen(profile)}
+            />
+          ))}
+        </ScrollView>
+      )}
+    </View>
   );
 }
 
@@ -186,7 +191,7 @@ const styles = StyleSheet.create({
   },
   haloOn: { backgroundColor: 'rgba(233, 64, 87, 0.32)', borderColor: color.rose },
   face: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: color.paper, backgroundColor: color.surface },
-  zoom: { position: 'absolute', right: 10, top: 10, gap: 6, zIndex: 5 },
+  zoom: { position: 'absolute', right: 12, top: 64, gap: 6, zIndex: 5 },
   zoomBtn: {
     width: 36,
     height: 36,
@@ -200,25 +205,43 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
   },
   zoomMark: { fontFamily: font.display, fontSize: 20, fontWeight: '700', color: color.ink },
+  dock: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 6, paddingBottom: 12 },
   peek: {
     width: PEEK_WIDTH,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     backgroundColor: color.paper,
-    borderRadius: 20,
-    padding: 10,
+    borderRadius: 18,
+    padding: 8,
+    paddingRight: 12,
     shadowColor: '#1A1A1A',
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+  peekOn: { borderWidth: 2, borderColor: color.rose },
+  strip: { gap: PEEK_GAP, paddingHorizontal: 12 },
+  empty: {
+    alignSelf: 'center',
+    fontFamily: font.body,
+    fontSize: 13,
+    color: color.ink,
+    textAlign: 'center',
+    backgroundColor: color.paper,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#1A1A1A',
+    shadowOpacity: 0.12,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
   },
-  peekOn: { borderWidth: 2, borderColor: color.rose },
-  strip: { gap: PEEK_GAP, paddingRight: 16, paddingVertical: 2 },
-  empty: { fontFamily: font.body, fontSize: 15, color: color.mute, textAlign: 'center', paddingVertical: 12 },
-  peekPhoto: { width: 56, height: 56, borderRadius: 14, backgroundColor: color.surface },
+  peekPhoto: { width: 48, height: 48, borderRadius: 12, backgroundColor: color.surface },
   peekCopy: { flex: 1 },
-  peekName: { fontFamily: font.display, fontSize: 18, fontWeight: '700', color: color.ink },
-  peekPlace: { fontFamily: font.body, fontSize: 13, color: color.mute, marginTop: 2 },
-  peekGo: { fontFamily: font.body, fontSize: 14, fontWeight: '700', color: color.rose, paddingRight: 8 },
+  peekName: { fontFamily: font.display, fontSize: 16, fontWeight: '700', color: color.ink },
+  peekPlace: { fontFamily: font.body, fontSize: 12, color: color.mute, marginTop: 1 },
+  peekGo: { fontFamily: font.body, fontSize: 14, fontWeight: '700', color: color.rose },
 });

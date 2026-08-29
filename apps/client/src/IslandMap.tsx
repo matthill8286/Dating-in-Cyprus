@@ -15,7 +15,7 @@ import {
   type MapView,
 } from './map';
 import type { Profile } from './profile';
-import { color, font } from './theme';
+import { font } from './theme';
 
 export function IslandMap({
   people,
@@ -69,17 +69,16 @@ export function IslandMap({
         </View>
         <ZoomPad zoom={camera.view.zoom} onIn={() => camera.zoomBy(1)} onOut={() => camera.zoomBy(-1)} onFit={camera.fit} />
         <Text style={styles.credit} pointerEvents="none">
-          © Esri · drag or scroll
+          © Esri · approximate city area
         </Text>
+        <PeekStrip
+          people={inView}
+          selectedId={selected?.profileId}
+          empty="No one in this part of the island."
+          onPick={(profile) => setPicked(profile.profileId)}
+          onOpen={onOpen}
+        />
       </View>
-      <Text style={styles.note}>Approximate area in their city. Never a home address.</Text>
-      <PeekStrip
-        people={inView}
-        selectedId={selected?.profileId}
-        empty="No one in this part of the island."
-        onPick={(profile) => setPicked(profile.profileId)}
-        onOpen={onOpen}
-      />
     </View>
   );
 }
@@ -177,14 +176,8 @@ function webNode(host: View): HTMLElement | null {
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, minHeight: 0, gap: 10 },
-  board: {
-    flex: 1,
-    minHeight: 280,
-    borderRadius: 24,
-    overflow: 'hidden',
-    backgroundColor: '#d7e6ee',
-  },
+  wrap: { flex: 1, minHeight: 0 },
+  board: { flex: 1, minHeight: 0, overflow: 'hidden', backgroundColor: '#d7e6ee' },
   layer: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
   city: {
     position: 'absolute',
@@ -195,13 +188,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#4a5560',
   },
-  note: { fontFamily: font.body, fontSize: 12, color: color.mute, textAlign: 'center' },
   credit: {
     position: 'absolute',
-    left: 10,
-    bottom: 8,
+    left: 12,
+    bottom: 102,
     fontFamily: font.body,
     fontSize: 9,
     color: '#5a6570',
+    zIndex: 5,
   },
 });
