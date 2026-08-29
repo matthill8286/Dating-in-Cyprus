@@ -16,12 +16,13 @@ import { PersonScreen } from './src/PersonScreen';
 import { SignInScreen } from './src/SignInScreen';
 import type { Profile } from './src/profile';
 import { color, ensureWebFonts, font } from './src/theme';
+import { sessionExpired } from './src/session';
 import type { MainTab, TabGo } from './src/ui/tabs';
 
 ensureWebFonts();
 
 function ProfileGate() {
-  const { sessionToken, profile, setProfile } = useApp();
+  const { sessionToken, profile, setProfile, setSessionToken } = useApp();
   const [ready, setReady] = useState(false);
   const [editing, setEditing] = useState(false);
   const [notify, setNotify] = useState(false);
@@ -33,11 +34,12 @@ function ProfileGate() {
     if (!sessionToken) return;
     void api
       .GET('/v1/profiles/me', { headers: { authorization: `Bearer ${sessionToken}` } })
-      .then(({ data }) => {
+      .then(({ data, response }) => {
         if (data) setProfile(data as Profile);
+        else if (sessionExpired(response?.status)) setSessionToken(null);
       })
       .finally(() => setReady(true));
-  }, [sessionToken, setProfile]);
+  }, [sessionToken, setProfile, setSessionToken]);
 
   if (!ready) return <Loading />;
   if (!profile) return <ProfileEditScreen onSaved={() => setNotify(true)} />;
