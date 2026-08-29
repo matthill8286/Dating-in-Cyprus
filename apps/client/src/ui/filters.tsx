@@ -41,7 +41,7 @@ export function FilterSheet({
           onChange={(next) => onAge(next as AgeBandId)}
           labels={AGE_BAND_LABELS}
         />
-        <MuteNote>Distance is not shown. Filter by city and age on this island.</MuteNote>
+        <MuteNote>City and age only. The map shows an approximate area, never a home.</MuteNote>
         <PrimaryButton title="Continue" onPress={onDone} />
       </View>
     </View>

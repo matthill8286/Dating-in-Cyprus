@@ -20,24 +20,26 @@ export function useDeck(sessionToken: string | null) {
   }, [sessionToken]);
 
   const band = ageBandById(ageBand);
-  const card = filterDeck(people, city, band.min, band.max)[0];
+  const visible = filterDeck(people, city, band.min, band.max);
+  const card = visible[0];
 
-  async function decide(kind: 'pass' | 'like') {
-    if (!card || !sessionToken || busy) return;
+  async function decide(kind: 'pass' | 'like', target?: Profile) {
+    const chosen = target ?? card;
+    if (!chosen || !sessionToken || busy) return;
     setBusy(true);
     const headers = { authorization: `Bearer ${sessionToken}` };
     if (kind === 'pass') {
-      await api.POST('/v1/passes', { headers, body: { profileId: card.profileId } });
+      await api.POST('/v1/passes', { headers, body: { profileId: chosen.profileId } });
     } else {
       const { data } = await api.POST('/v1/interests', {
         headers,
-        body: { profileId: card.profileId },
+        body: { profileId: chosen.profileId },
       });
-      setMatched(interestMatched(data, card));
+      setMatched(interestMatched(data, chosen));
     }
-    setPeople((prev) => afterDecision(prev, card.profileId));
+    setPeople((prev) => afterDecision(prev, chosen.profileId));
     setBusy(false);
   }
 
-  return { card, city, setCity, ageBand, setAgeBand, matched, setMatched, decide };
+  return { card, visible, city, setCity, ageBand, setAgeBand, matched, setMatched, decide };
 }
