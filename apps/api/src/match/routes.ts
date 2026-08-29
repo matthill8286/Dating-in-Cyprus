@@ -11,6 +11,9 @@ import {
   messageListResponse,
   passResponse,
   profileIdBody,
+  reportBody,
+  reportResponse,
+  blockResponse,
 } from './contracts';
 import {
   expressInterest,
@@ -21,6 +24,7 @@ import {
   sendChat,
   type LoopDeps,
 } from './actions';
+import { fileBlock, fileReport } from './safety';
 
 const matchIdParam = z.object({ matchId: z.string() });
 
@@ -95,5 +99,27 @@ export async function matchRoutes(app: FastifyInstance, opts: LoopDeps): Promise
       if (!sent) return;
       return reply.code(201).send(sent);
     },
+  );
+
+  typed.post(
+    '/v1/blocks',
+    {
+      schema: {
+        body: profileIdBody,
+        response: { 200: blockResponse, 403: apiError },
+      },
+    },
+    async (req, reply) => fileBlock(req.accountId, req.body.profileId, reply, opts),
+  );
+
+  typed.post(
+    '/v1/reports',
+    {
+      schema: {
+        body: reportBody,
+        response: { 200: reportResponse, 403: apiError },
+      },
+    },
+    async (req, reply) => fileReport(req.accountId, req.body.profileId, req.body.reason, reply, opts),
   );
 }

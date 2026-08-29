@@ -51,21 +51,13 @@ function ProfileGate() {
     messages: () => setTab('messages'),
     profile: () => setTab('profile'),
   };
-  if (person) {
+  if (person || chat) {
     return (
-      <PersonScreen
-        profile={person.profile}
-        onBack={() => setPerson(null)}
-        onMessage={messageAction(person, setChat, setPerson)}
-      />
-    );
-  }
-  if (chat) {
-    return (
-      <ChatScreen
-        match={chat}
-        onBack={() => setChat(null)}
-        onProfile={() => setPerson({ matchId: chat.matchId, profile: chat.profile })}
+      <OpenMatch
+        person={person}
+        chat={chat}
+        onPerson={setPerson}
+        onChat={setChat}
       />
     );
   }
@@ -90,6 +82,42 @@ function ProfileGate() {
         setTab('messages');
         setChat(item);
       }}
+    />
+  );
+}
+
+function OpenMatch({
+  person,
+  chat,
+  onPerson,
+  onChat,
+}: {
+  person: { matchId?: string; profile: Profile } | null;
+  chat: { matchId: string; profile: Profile } | null;
+  onPerson: (value: { matchId?: string; profile: Profile } | null) => void;
+  onChat: (value: { matchId: string; profile: Profile } | null) => void;
+}) {
+  const leave = () => {
+    onPerson(null);
+    onChat(null);
+  };
+  if (person) {
+    return (
+      <PersonScreen
+        profile={person.profile}
+        onBack={() => onPerson(null)}
+        onMessage={messageAction(person, onChat, () => onPerson(null))}
+        onBlocked={leave}
+      />
+    );
+  }
+  if (!chat) return null;
+  return (
+    <ChatScreen
+      match={chat}
+      onBack={() => onChat(null)}
+      onProfile={() => onPerson({ matchId: chat.matchId, profile: chat.profile })}
+      onBlocked={leave}
     />
   );
 }

@@ -12,6 +12,13 @@ export type ChatMessage = {
   sentAt: string;
 };
 
+export type SafetyReport = {
+  reportId: string;
+  reporterId: string;
+  subjectId: string;
+  reason: string;
+};
+
 export interface LoopStore {
   recordInterest(fromId: string, toId: string): Promise<boolean>;
   hasInterest(fromId: string, toId: string): Promise<boolean>;
@@ -23,6 +30,9 @@ export interface LoopStore {
   findMatch(matchId: string): Promise<MatchRecord | null>;
   addMessage(matchId: string, fromId: string, body: string): Promise<ChatMessage>;
   listMessages(matchId: string): Promise<ChatMessage[]>;
+  recordBlock(fromId: string, toId: string): Promise<void>;
+  isBlocked(aId: string, bId: string): Promise<boolean>;
+  recordReport(reporterId: string, subjectId: string, reason: string): Promise<SafetyReport>;
   close(): Promise<void>;
 }
 
@@ -36,6 +46,8 @@ export class MemoryLoopStore implements LoopStore {
   private readonly matches = new Map<string, MatchRecord>();
   private readonly byPair = new Map<string, string>();
   private readonly messages = new Map<string, ChatMessage[]>();
+  private readonly blocks = new Set<string>();
+  private readonly reports: SafetyReport[] = [];
 
   async recordInterest(fromId: string, toId: string): Promise<boolean> {
     const key = `${fromId}>${toId}`;
@@ -67,6 +79,11 @@ export class MemoryLoopStore implements LoopStore {
     for (const match of this.matches.values()) {
       if (match.aId === fromId) hidden.add(match.bId);
       if (match.bId === fromId) hidden.add(match.aId);
+    }
+    for (const key of this.blocks) {
+      const [blocker, blocked] = key.split('>');
+      if (blocker === fromId && blocked) hidden.add(blocked);
+      if (blocked === fromId && blocker) hidden.add(blocker);
     }
     return hidden;
   }
@@ -112,12 +129,33 @@ export class MemoryLoopStore implements LoopStore {
     return [...(this.messages.get(matchId) ?? [])];
   }
 
+  async recordBlock(fromId: string, toId: string): Promise<void> {
+    this.blocks.add(`${fromId}>${toId}`);
+  }
+
+  async isBlocked(aId: string, bId: string): Promise<boolean> {
+    return this.blocks.has(`${aId}>${bId}`) || this.blocks.has(`${bId}>${aId}`);
+  }
+
+  async recordReport(reporterId: string, subjectId: string, reason: string): Promise<SafetyReport> {
+    const report: SafetyReport = {
+      reportId: crypto.randomUUID(),
+      reporterId,
+      subjectId,
+      reason,
+    };
+    this.reports.push(report);
+    return report;
+  }
+
   async close(): Promise<void> {
     this.interests.clear();
     this.passes.clear();
     this.matches.clear();
     this.byPair.clear();
     this.messages.clear();
+    this.blocks.clear();
+    this.reports.length = 0;
   }
 }
 

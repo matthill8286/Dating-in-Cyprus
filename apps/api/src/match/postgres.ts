@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import type { ChatMessage, LoopStore, MatchRecord } from './store';
+import type { ChatMessage, LoopStore, MatchRecord, SafetyReport } from './store';
 
 const DDL = `
   CREATE TABLE IF NOT EXISTS interests (
@@ -24,6 +24,18 @@ const DDL = `
     from_id UUID NOT NULL,
     body TEXT NOT NULL,
     sent_at TIMESTAMPTZ NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS blocks (
+    from_id UUID NOT NULL,
+    to_id UUID NOT NULL,
+    PRIMARY KEY (from_id, to_id)
+  );
+  CREATE TABLE IF NOT EXISTS reports (
+    report_id UUID PRIMARY KEY,
+    reporter_id UUID NOT NULL,
+    subject_id UUID NOT NULL,
+    reason TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL
   );
 `;
 
@@ -81,7 +93,9 @@ export class PostgresLoopStore implements LoopStore {
       `SELECT to_id AS id FROM interests WHERE from_id = $1
        UNION SELECT to_id AS id FROM passes WHERE from_id = $1
        UNION SELECT b_id AS id FROM matches WHERE a_id = $1
-       UNION SELECT a_id AS id FROM matches WHERE b_id = $1`,
+       UNION SELECT a_id AS id FROM matches WHERE b_id = $1
+       UNION SELECT to_id AS id FROM blocks WHERE from_id = $1
+       UNION SELECT from_id AS id FROM blocks WHERE to_id = $1`,
       [fromId],
     );
     return new Set(result.rows.map((row) => row.id));
@@ -153,6 +167,39 @@ export class PostgresLoopStore implements LoopStore {
       ...row,
       sentAt: new Date(row.sentAt).toISOString(),
     }));
+  }
+
+  async recordBlock(fromId: string, toId: string): Promise<void> {
+    await this.ensure();
+    await this.pool.query(
+      `INSERT INTO blocks (from_id, to_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+      [fromId, toId],
+    );
+  }
+
+  async isBlocked(aId: string, bId: string): Promise<boolean> {
+    await this.ensure();
+    const result = await this.pool.query(
+      `SELECT 1 FROM blocks WHERE (from_id = $1 AND to_id = $2) OR (from_id = $2 AND to_id = $1)`,
+      [aId, bId],
+    );
+    return Boolean(result.rows[0]);
+  }
+
+  async recordReport(reporterId: string, subjectId: string, reason: string): Promise<SafetyReport> {
+    await this.ensure();
+    const report: SafetyReport = {
+      reportId: crypto.randomUUID(),
+      reporterId,
+      subjectId,
+      reason,
+    };
+    await this.pool.query(
+      `INSERT INTO reports (report_id, reporter_id, subject_id, reason, created_at)
+       VALUES ($1, $2, $3, $4, NOW())`,
+      [report.reportId, reporterId, subjectId, reason],
+    );
+    return report;
   }
 
   async close(): Promise<void> {

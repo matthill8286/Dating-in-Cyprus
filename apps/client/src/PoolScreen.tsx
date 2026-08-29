@@ -20,7 +20,7 @@ export function PoolScreen({
   onChat: (match: { matchId: string; profile: Profile }) => void;
 }) {
   const { sessionToken, profile } = useApp();
-  const { card, visible, city, setCity, ageBand, setAgeBand, matched, setMatched, decide } =
+  const { card, visible, city, setCity, ageBand, setAgeBand, matched, setMatched, decide, hide } =
     useDeck(sessionToken);
   const [filters, setFilters] = useState(false);
   const [map, setMap] = useState(false);
@@ -39,6 +39,10 @@ export function PoolScreen({
         onLike={() => {
           setOpen(null);
           void decide('like', open);
+        }}
+        onBlocked={() => {
+          hide(open.profileId);
+          setOpen(null);
         }}
         footer={tabs}
       />

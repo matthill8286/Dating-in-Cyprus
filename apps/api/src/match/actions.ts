@@ -31,6 +31,9 @@ export async function expressInterest(
   if (!target || (await opts.loop.hasPass(viewer.id, target.account.id))) {
     return reply.code(403).send(notAllowed);
   }
+  if (await opts.loop.isBlocked(viewer.id, target.account.id)) {
+    return reply.code(403).send(notAllowed);
+  }
   await opts.loop.recordInterest(viewer.id, target.account.id);
   const mutual = await opts.loop.hasInterest(target.account.id, viewer.id);
   if (!mutual) return { matched: false as const };
@@ -136,6 +139,14 @@ async function requireMatchParty(
     await reply.code(404).send({ code: 'not_found', message: 'Match not found.' });
     return null;
   }
+  const otherId = otherParty(match, viewer.id);
+  if (await opts.loop.isBlocked(viewer.id, otherId)) {
+    await reply.code(403).send({
+      code: 'chat_not_allowed',
+      message: 'Chat is not allowed after a Block.',
+    });
+    return null;
+  }
   return viewer;
 }
 
@@ -143,6 +154,7 @@ async function presentMatch(matchId: string, viewerId: string, opts: LoopDeps) {
   const match = await opts.loop.findMatch(matchId);
   if (!match || !isParty(match, viewerId)) return null;
   const otherId = otherParty(match, viewerId);
+  if (await opts.loop.isBlocked(viewerId, otherId)) return null;
   const [account, profile] = await Promise.all([
     opts.accounts.findById(otherId),
     opts.profiles.findByAccountId(otherId),
