@@ -1,13 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { apiError } from '../account/contracts';
+import type { LoopDeps } from '../match/actions';
 import { poolResponse } from './contracts';
-import type { AccountStore } from '../account/store';
+import { listVisibleProfiles } from './visible';
 
-export async function poolRoutes(
-  app: FastifyInstance,
-  opts: { accounts: AccountStore },
-): Promise<void> {
+export async function poolRoutes(app: FastifyInstance, opts: LoopDeps): Promise<void> {
   const typed = app.withTypeProvider<ZodTypeProvider>();
 
   typed.get(
@@ -25,7 +23,7 @@ export async function poolRoutes(
           message: 'Only a Resident can use the Pool.',
         });
       }
-      return { admitted: true as const };
+      return { admitted: true as const, profiles: await listVisibleProfiles(account, opts) };
     },
   );
 }

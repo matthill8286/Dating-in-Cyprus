@@ -24,6 +24,7 @@ export interface ProfileStore {
   upsert(accountId: string, data: ProfileWrite): Promise<Profile>;
   findByAccountId(accountId: string): Promise<Profile | null>;
   findById(profileId: string): Promise<Profile | null>;
+  list(): Promise<Profile[]>;
   close(): Promise<void>;
 }
 
@@ -49,6 +50,10 @@ export class MemoryProfileStore implements ProfileStore {
 
   async findById(profileId: string): Promise<Profile | null> {
     return this.byId.get(profileId) ?? null;
+  }
+
+  async list(): Promise<Profile[]> {
+    return [...this.byId.values()];
   }
 
   async close(): Promise<void> {

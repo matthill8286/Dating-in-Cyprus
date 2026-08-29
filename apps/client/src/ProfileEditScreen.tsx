@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Button, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { api } from './api/client';
 import { useApp } from './context/AppContext';
 import { joinApiErrorCode } from './join';
@@ -10,63 +9,84 @@ import {
   type Profile,
   type ProfileFormValues,
 } from './profile';
+import { languageLabel } from './theme';
+import {
+  Card,
+  ChipRow,
+  ErrorNote,
+  Field,
+  Hero,
+  PrimaryButton,
+  Screen,
+  SectionLabel,
+  Sheet,
+} from './ui/kit';
 
-const initialForm: ProfileFormValues = {
-  firstName: '',
-  city: 'Limassol',
-  languagesSpoken: ['en'],
-  bio: '',
-};
+function toForm(profile: Profile | null): ProfileFormValues {
+  return {
+    firstName: profile?.firstName ?? '',
+    city: profile?.city ?? 'Limassol',
+    languagesSpoken: profile?.languagesSpoken ?? ['en'],
+    bio: profile?.bio ?? '',
+  };
+}
 
-export function ProfileEditScreen() {
-  const { sessionToken, setProfile } = useApp();
-  const [form, setForm] = useState(initialForm);
+export function ProfileEditScreen({ onSaved }: { onSaved?: () => void }) {
+  const { sessionToken, profile, setProfile } = useApp();
+  const [form, setForm] = useState(() => toForm(profile));
   const [error, setError] = useState<string | null>(null);
 
   const onSave = async () => {
-    const result = await saveProfile(form, (values) => patchProfile(sessionToken, values), setProfile);
+    const result = await saveProfile(
+      form,
+      (values) => patchProfile(sessionToken, values),
+      setProfile,
+    );
+    if (result.ok) onSaved?.();
     setError(result.ok ? null : 'Check first name, city, languages, and bio.');
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text>Profile</Text>
-      <TextInput
-        placeholder="first name"
-        value={form.firstName}
-        onChangeText={(firstName) => setForm((current) => ({ ...current, firstName }))}
-        style={styles.input}
+    <Screen>
+      <Hero
+        kicker={profile?.city ?? 'Here'}
+        title={profile ? 'Edit profile' : 'Your profile'}
+        subtitle="A name, a city, languages you speak, a few lines."
       />
-      <Text>City</Text>
-      <View style={styles.row}>
-        {OPERATING_AREA_CITIES.map((city) => (
-          <Pressable key={city} onPress={() => setForm((current) => ({ ...current, city }))}>
-            <Text style={city === form.city ? styles.chosen : styles.choice}>{city}</Text>
-          </Pressable>
-        ))}
-      </View>
-      <Text>Languages spoken</Text>
-      <View style={styles.row}>
-        {PROFILE_LANGUAGES.map((language) => (
-          <Pressable
-            key={language}
-            onPress={() => setForm((current) => toggleLanguage(current, language))}
-          >
-            <Text style={form.languagesSpoken.includes(language) ? styles.chosen : styles.choice}>
-              {language}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      <TextInput
-        placeholder="short bio"
-        value={form.bio}
-        onChangeText={(bio) => setForm((current) => ({ ...current, bio }))}
-        style={styles.input}
-      />
-      {error ? <Text>{error}</Text> : null}
-      <Button title="Save Profile" onPress={() => void onSave()} />
-    </ScrollView>
+      <Sheet>
+        <Card>
+          <Field
+            label="First name"
+            value={form.firstName}
+            onChangeText={(firstName) => setForm((current) => ({ ...current, firstName }))}
+            placeholder="What people should call you"
+          />
+          <SectionLabel>City</SectionLabel>
+          <ChipRow
+            options={OPERATING_AREA_CITIES}
+            value={form.city}
+            onChange={(city) => setForm((current) => ({ ...current, city }))}
+          />
+          <SectionLabel>Languages you speak</SectionLabel>
+          <ChipRow
+            options={PROFILE_LANGUAGES}
+            value={form.languagesSpoken}
+            labels={languageLabel}
+            multi
+            onChange={(language) => setForm((current) => toggleLanguage(current, language))}
+          />
+          <Field
+            label="Short bio"
+            value={form.bio}
+            onChangeText={(bio) => setForm((current) => ({ ...current, bio }))}
+            placeholder="A few lines about you"
+            multiline
+          />
+          <ErrorNote message={error} />
+          <PrimaryButton title="Publish Profile" onPress={() => void onSave()} />
+        </Card>
+      </Sheet>
+    </Screen>
   );
 }
 
@@ -93,11 +113,3 @@ async function patchProfile(token: string | null, values: ProfileFormValues) {
     error: error ? { code: joinApiErrorCode(error) } : undefined,
   };
 }
-
-const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 24, gap: 8 },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 8 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  choice: { padding: 4 },
-  chosen: { padding: 4, fontWeight: '700' },
-});

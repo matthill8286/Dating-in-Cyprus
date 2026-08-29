@@ -12,6 +12,7 @@ export default defineConfig({
         'src/server.ts',
         'src/account/postgres.ts',
         'src/profile/postgres.ts',
+        'src/match/postgres.ts',
       ],
       thresholds: {
         lines: 80,

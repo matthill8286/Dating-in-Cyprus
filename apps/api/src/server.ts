@@ -1,6 +1,7 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PostgresAccountStore } from './account/postgres';
+import { PostgresLoopStore } from './match/postgres';
 import { PostgresProfileStore } from './profile/postgres';
 import { buildApp } from './app';
 import { loadConfig } from './config';
@@ -12,7 +13,8 @@ loadEnvFiles([resolve(apiRoot, '.env.example'), resolve(apiRoot, '.env.local')])
 const config = loadConfig();
 const accounts = new PostgresAccountStore(config.DATABASE_URL);
 const profiles = new PostgresProfileStore(config.DATABASE_URL);
-const app = await buildApp({ config, accounts, profiles });
+const loop = new PostgresLoopStore(config.DATABASE_URL);
+const app = await buildApp({ config, accounts, profiles, loop });
 
 const shutdown = async (signal: string) => {
   app.log.info({ signal }, 'shutting down');
