@@ -8,6 +8,7 @@ import {
   islandView,
   mapPins,
   panView,
+  peopleInView,
   peopleWestToEast,
   viewForCity,
   zoomAt,
@@ -30,7 +31,8 @@ export function IslandMap({
   const camera = useMapCamera(size.width, size.height, city);
   const ordered = peopleWestToEast(people);
   const pins = mapPins(ordered, camera.view, size.width, size.height);
-  const selected = ordered.find((person) => person.profileId === picked) ?? ordered[0];
+  const inView = peopleInView(ordered, camera.view, size.width, size.height, camera.drag);
+  const selected = inView.find((person) => person.profileId === picked) ?? inView[0];
 
   return (
     <View style={styles.wrap}>
@@ -72,8 +74,9 @@ export function IslandMap({
       </View>
       <Text style={styles.note}>Approximate area in their city. Never a home address.</Text>
       <PeekStrip
-        people={ordered}
+        people={inView}
         selectedId={selected?.profileId}
+        empty="No one in this part of the island."
         onPick={(profile) => setPicked(profile.profileId)}
         onOpen={onOpen}
       />

@@ -81,11 +81,13 @@ export const PEEK_GAP = 10;
 export function PeekStrip({
   people,
   selectedId,
+  empty = 'No one new right now.',
   onPick,
   onOpen,
 }: {
   people: Profile[];
   selectedId?: string;
+  empty?: string;
   onPick: (profile: Profile) => void;
   onOpen: (profile: Profile) => void;
 }) {
@@ -93,14 +95,15 @@ export function PeekStrip({
   const snap = PEEK_WIDTH + PEEK_GAP;
   const peopleRef = useRef(people);
   peopleRef.current = people;
+  const ids = people.map((person) => person.profileId).join();
 
   useEffect(() => {
     const index = peopleRef.current.findIndex((person) => person.profileId === selectedId);
     if (index < 0) return;
     list.current?.scrollTo({ x: index * snap, animated: true });
-  }, [selectedId, snap]);
+  }, [selectedId, snap, ids]);
 
-  if (people.length === 0) return <Text style={styles.empty}>No one new right now.</Text>;
+  if (people.length === 0) return <Text style={styles.empty}>{empty}</Text>;
   return (
     <ScrollView
       ref={list}

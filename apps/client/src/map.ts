@@ -244,3 +244,26 @@ export function mapPins(people: Profile[], view: MapView, width: number, height:
     return [{ profile: person, x, y }];
   });
 }
+
+export function pinOnScreen(
+  pin: MapPin,
+  width: number,
+  height: number,
+  drag = { x: 0, y: 0 },
+): boolean {
+  const x = pin.x + drag.x;
+  const y = pin.y + drag.y;
+  return x >= -36 && x <= width + 36 && y >= -36 && y <= height + 36;
+}
+
+export function peopleInView(
+  people: Profile[],
+  view: MapView,
+  width: number,
+  height: number,
+  drag = { x: 0, y: 0 },
+): Profile[] {
+  return mapPins(people, view, width, height)
+    .filter((pin) => pinOnScreen(pin, width, height, drag))
+    .map((pin) => pin.profile);
+}

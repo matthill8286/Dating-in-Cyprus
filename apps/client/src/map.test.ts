@@ -9,6 +9,8 @@ import {
   mapTiles,
   panView,
   peopleWestToEast,
+  peopleInView,
+  pinOnScreen,
   projectOnView,
   viewForCity,
   zoomAt,
@@ -98,5 +100,18 @@ describe('approximate map', () => {
       'Limassol',
       'Ayia Napa',
     ]);
+  });
+});
+
+describe('people in view', () => {
+  it('keeps the peek strip to people whose pin is on the map', () => {
+    const paphos: Profile = { ...elena, profileId: 'p2', firstName: 'Ioana', city: 'Paphos' };
+    const napa: Profile = { ...elena, profileId: 'p3', firstName: 'Daria', city: 'Ayia Napa' };
+    const east = viewForCity('Ayia Napa', 360, 400);
+    const seen = peopleInView([elena, paphos, napa], east, 360, 400);
+    expect(seen.map((person) => person.city)).toContain('Ayia Napa');
+    expect(seen.map((person) => person.city)).not.toContain('Paphos');
+    expect(pinOnScreen({ profile: elena, x: 500, y: 80 }, 360, 400)).toBe(false);
+    expect(pinOnScreen({ profile: elena, x: 500, y: 80 }, 360, 400, { x: -200, y: 0 })).toBe(true);
   });
 });
