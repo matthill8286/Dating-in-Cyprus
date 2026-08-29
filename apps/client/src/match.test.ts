@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { afterDecision, deckTap, filterDeck, interestMatched, nextPhotoIndex, photoTap, searchInbox, splitInbox, swipeDecision, type MatchedCard } from './match';
+import { afterDecision, bioHasMore, deckTap, filterDeck, interestMatched, nextPhotoIndex, photoTap, searchInbox, splitInbox, swipeDecision, type MatchedCard } from './match';
 import type { Profile } from './profile';
 
 const elena: Profile = {
@@ -60,5 +60,7 @@ describe('discovery deck', () => {
     expect(splitInbox([fresh, thread])).toEqual({ fresh: [fresh], threads: [thread] });
     expect(searchInbox([fresh, thread], 'mar')).toEqual([thread]);
     expect(searchInbox([fresh, thread], '')).toHaveLength(2);
+    expect(bioHasMore('Marina.')).toBe(false);
+    expect(bioHasMore('x'.repeat(111))).toBe(true);
   });
 });

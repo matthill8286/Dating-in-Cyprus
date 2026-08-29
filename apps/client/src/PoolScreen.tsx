@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { useApp } from './context/AppContext';
+import { IslandMap } from './IslandMap';
 import type { AgeBandId, MatchedCard } from './match';
 import type { Profile } from './profile';
 import { PersonScreen } from './PersonScreen';
@@ -19,23 +20,25 @@ export function PoolScreen({
   onChat: (match: { matchId: string; profile: Profile }) => void;
 }) {
   const { sessionToken, profile } = useApp();
-  const { card, city, setCity, ageBand, setAgeBand, matched, setMatched, decide } = useDeck(sessionToken);
+  const { card, visible, city, setCity, ageBand, setAgeBand, matched, setMatched, decide } =
+    useDeck(sessionToken);
   const [filters, setFilters] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [map, setMap] = useState(false);
+  const [open, setOpen] = useState<Profile | null>(null);
   const tabs = <TabBar active="people" go={go} />;
 
-  if (open && card) {
+  if (open) {
     return (
       <PersonScreen
-        profile={card}
-        onBack={() => setOpen(false)}
+        profile={open}
+        onBack={() => setOpen(null)}
         onPass={() => {
-          setOpen(false);
-          void decide('pass');
+          setOpen(null);
+          void decide('pass', open);
         }}
         onLike={() => {
-          setOpen(false);
-          void decide('like');
+          setOpen(null);
+          void decide('like', open);
         }}
         footer={tabs}
       />
@@ -45,18 +48,21 @@ export function PoolScreen({
   return (
     <DiscoverDeck
       card={card}
+      visible={visible}
       city={city}
       ageBand={ageBand}
       filters={filters}
+      map={map}
       matched={matched}
       viewerUri={profile?.photos[0]?.url}
       footer={tabs}
       onToggleFilters={() => setFilters((value) => !value)}
+      onToggleMap={() => setMap((value) => !value)}
       onCity={setCity}
       onAge={setAgeBand}
       onLike={() => void decide('like')}
       onPass={() => void decide('pass')}
-      onOpen={() => setOpen(true)}
+      onOpen={(person) => setOpen(person ?? card ?? null)}
       onChat={() => {
         if (!matched) return;
         onChat(matched);
@@ -69,31 +75,37 @@ export function PoolScreen({
 
 type DeckProps = {
   card: Profile | undefined;
+  visible: Profile[];
   city: string;
   ageBand: AgeBandId;
   filters: boolean;
+  map: boolean;
   matched: MatchedCard | null;
   viewerUri?: string;
   footer: ReactNode;
   onToggleFilters: () => void;
+  onToggleMap: () => void;
   onCity: (city: string) => void;
   onAge: (id: AgeBandId) => void;
   onLike: () => void;
   onPass: () => void;
-  onOpen: () => void;
+  onOpen: (profile?: Profile) => void;
   onChat: () => void;
   onKeep: () => void;
 };
 
 function DiscoverDeck({
   card,
+  visible,
   city,
   ageBand,
   filters,
+  map,
   matched,
   viewerUri,
   footer,
   onToggleFilters,
+  onToggleMap,
   onCity,
   onAge,
   onLike,
@@ -110,25 +122,33 @@ function DiscoverDeck({
             <Text style={styles.title}>Discover</Text>
             <Text style={styles.place}>{city === 'all' ? 'Republic of Cyprus' : city}</Text>
           </View>
-          <Pressable
-            onPress={onToggleFilters}
-            accessibilityRole="button"
-            accessibilityLabel="Filters"
-            style={[styles.filter, filters && styles.filterOn]}
-          >
-            <Text style={[styles.filterMark, filters && styles.filterMarkOn]}>☰</Text>
-          </Pressable>
-        </View>
-        {card ? (
-          <View style={styles.cardSlot}>
-            <SwipeCard card={card} onLike={onLike} onPass={onPass} onOpen={onOpen} />
-            <View style={styles.actionsDock}>
-              <ActionRow onPass={onPass} onLike={onLike} onInfo={onOpen} />
-            </View>
+          <View style={styles.tools}>
+            <Pressable
+              onPress={onToggleMap}
+              accessibilityRole="button"
+              accessibilityLabel="Map"
+              style={[styles.tool, map && styles.toolOn]}
+            >
+              <Text style={[styles.toolMark, map && styles.toolMarkOn]}>◎</Text>
+            </Pressable>
+            <Pressable
+              onPress={onToggleFilters}
+              accessibilityRole="button"
+              accessibilityLabel="Filters"
+              style={[styles.tool, filters && styles.toolOn]}
+            >
+              <Text style={[styles.toolMark, filters && styles.toolMarkOn]}>☰</Text>
+            </Pressable>
           </View>
-        ) : (
-          <Text style={styles.empty}>No one new right now.</Text>
-        )}
+        </View>
+        <DiscoverBody
+          map={map}
+          card={card}
+          visible={visible}
+          onOpen={onOpen}
+          onLike={onLike}
+          onPass={onPass}
+        />
       </View>
       {filters ? (
         <FilterSheet city={city} ageBand={ageBand} onCity={onCity} onAge={onAge} onDone={onToggleFilters} />
@@ -143,6 +163,33 @@ function DiscoverDeck({
         />
       ) : null}
     </Fixed>
+  );
+}
+
+function DiscoverBody({
+  map,
+  card,
+  visible,
+  onOpen,
+  onLike,
+  onPass,
+}: {
+  map: boolean;
+  card: Profile | undefined;
+  visible: Profile[];
+  onOpen: (profile?: Profile) => void;
+  onLike: () => void;
+  onPass: () => void;
+}) {
+  if (map) return <IslandMap people={visible} onOpen={onOpen} />;
+  if (!card) return <Text style={styles.empty}>No one new right now.</Text>;
+  return (
+    <View style={styles.cardSlot}>
+      <SwipeCard card={card} onLike={onLike} onPass={onPass} onOpen={() => onOpen()} />
+      <View style={styles.actionsDock}>
+        <ActionRow onPass={onPass} onLike={onLike} onInfo={() => onOpen()} />
+      </View>
+    </View>
   );
 }
 
@@ -164,7 +211,8 @@ const styles = StyleSheet.create({
   },
   title: { color: color.ink, fontFamily: font.display, fontSize: 28, fontWeight: '700' },
   place: { color: color.mute, fontFamily: font.body, fontSize: 13, marginTop: 2 },
-  filter: {
+  tools: { flexDirection: 'row', gap: 8 },
+  tool: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -172,9 +220,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  filterOn: { backgroundColor: color.rose },
-  filterMark: { color: color.ink, fontSize: 20, fontWeight: '800', letterSpacing: -2 },
-  filterMarkOn: { color: color.onRose },
+  toolOn: { backgroundColor: color.rose },
+  toolMark: { color: color.ink, fontSize: 20, fontWeight: '800' },
+  toolMarkOn: { color: color.onRose },
   cardSlot: { flex: 1, minHeight: 0 },
   actionsDock: { position: 'absolute', left: 0, right: 0, bottom: 18, zIndex: 3 },
   empty: {

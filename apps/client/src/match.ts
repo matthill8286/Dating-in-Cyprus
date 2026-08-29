@@ -64,6 +64,10 @@ export function searchInbox(rows: InboxRow[], query: string): InboxRow[] {
   return rows.filter((row) => row.profile.firstName.toLowerCase().includes(needle));
 }
 
+export function bioHasMore(bio: string): boolean {
+  return bio.length > 110;
+}
+
 export function afterDecision(people: Profile[], profileId: string): Profile[] {
   return people.filter((person) => person.profileId !== profileId);
 }
