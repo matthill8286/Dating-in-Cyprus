@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Image, Pressable, SafeAreaView, Text, View, StyleSheet } from 'react-native';
-import { color, font } from '../theme';
-import { PrimaryButton } from './kit';
+import { color } from '../theme';
+import { GhostButton, PrimaryButton } from './kit';
 import { styles } from './kit.styles';
 
 export function Fixed({
@@ -79,15 +79,15 @@ export function MatchOverlay({
 }) {
   return (
     <View style={styles.matchMask} accessibilityViewIsModal>
-      <View style={faceStyles.pair}>
-        <Face uri={viewerUri} name="You" tilt="left" />
-        <Face uri={uri} name={name} tilt="right" />
+      <View style={faceStyles.panel}>
+        <View style={faceStyles.pair}>
+          <Face uri={viewerUri} name="You" tilt="left" />
+          <Face uri={uri} name={name} tilt="right" />
+        </View>
+        <Text style={styles.matchTitle}>It's a match, {name}!</Text>
+        <PrimaryButton title="Say hello" onPress={onMessage} />
+        <GhostButton title="Keep swiping" onPress={onKeep} />
       </View>
-      <Text style={styles.matchTitle}>It's a match, {name}!</Text>
-      <PrimaryButton title="Say hello" onPress={onMessage} />
-      <Pressable onPress={onKeep} accessibilityRole="button" style={faceStyles.keep}>
-        <Text style={faceStyles.keepText}>Keep swiping</Text>
-      </Pressable>
     </View>
   );
 }
@@ -101,7 +101,8 @@ function Face({ uri, name, tilt }: { uri?: string; name: string; tilt: 'left' | 
 }
 
 const faceStyles = StyleSheet.create({
-  pair: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  panel: { width: '100%', maxWidth: 360, alignItems: 'stretch', gap: 16 },
+  pair: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   face: {
     width: 120,
     height: 160,
@@ -113,13 +114,4 @@ const faceStyles = StyleSheet.create({
   empty: { backgroundColor: color.roseSoft },
   left: { transform: [{ rotate: '-8deg' }, { translateX: 12 }], zIndex: 1 },
   right: { transform: [{ rotate: '8deg' }, { translateX: -12 }], zIndex: 2 },
-  keep: {
-    backgroundColor: color.roseSoft,
-    borderRadius: 999,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    alignItems: 'center',
-    alignSelf: 'stretch',
-  },
-  keepText: { color: color.rose, fontFamily: font.body, fontSize: 16, fontWeight: '700' },
 });
