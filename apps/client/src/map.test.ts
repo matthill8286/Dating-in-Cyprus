@@ -8,6 +8,7 @@ import {
   mapPins,
   mapTiles,
   panView,
+  peopleWestToEast,
   projectOnView,
   viewForCity,
   zoomAt,
@@ -56,6 +57,9 @@ describe('approximate map', () => {
     expect(runaway.centerLng).toBeGreaterThan(32);
     expect(runaway.centerLng).toBeLessThan(35);
     expect(runaway.centerLat).toBeLessThan(36);
+    const island = islandView(400, 500);
+    const stayed = clampView(panView(island, 120, 30), 400, 500);
+    expect(stayed.centerLng).not.toBeCloseTo(island.centerLng, 4);
   });
 
   it('zooms around a point without jumping that place on screen', () => {
@@ -84,5 +88,15 @@ describe('approximate map', () => {
     const pins = mapPins([elena, { ...elena, profileId: 'p2', city: 'Paphos' }], island, 400, 500);
     expect(pins).toHaveLength(2);
     expect(cityMarks(island, 400, 500).map((mark) => mark.name)).toContain('Limassol');
+  });
+
+  it('orders people west to east so the peek strip can be scrolled', () => {
+    const paphos: Profile = { ...elena, profileId: 'p2', firstName: 'Ioana', city: 'Paphos' };
+    const napa: Profile = { ...elena, profileId: 'p3', firstName: 'Daria', city: 'Ayia Napa' };
+    expect(peopleWestToEast([napa, elena, paphos]).map((person) => person.city)).toEqual([
+      'Paphos',
+      'Limassol',
+      'Ayia Napa',
+    ]);
   });
 });

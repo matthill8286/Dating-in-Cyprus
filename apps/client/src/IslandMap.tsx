@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, Text, View, StyleSheet } from 'react-native';
-import { MapBackdrop, MapPin, PeekCard, ZoomPad } from './islandMapChrome';
+import { MapBackdrop, MapPin, PeekStrip, ZoomPad } from './islandMapChrome';
 import {
   approximatePoint,
   cityMarks,
@@ -8,6 +8,7 @@ import {
   islandView,
   mapPins,
   panView,
+  peopleWestToEast,
   viewForCity,
   zoomAt,
   type MapView,
@@ -27,8 +28,9 @@ export function IslandMap({
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [picked, setPicked] = useState<string | null>(null);
   const camera = useMapCamera(size.width, size.height, city);
-  const pins = mapPins(people, camera.view, size.width, size.height);
-  const selected = people.find((person) => person.profileId === picked) ?? people[0];
+  const ordered = peopleWestToEast(people);
+  const pins = mapPins(ordered, camera.view, size.width, size.height);
+  const selected = ordered.find((person) => person.profileId === picked) ?? ordered[0];
 
   return (
     <View style={styles.wrap}>
@@ -69,40 +71,57 @@ export function IslandMap({
         </Text>
       </View>
       <Text style={styles.note}>Approximate area in their city. Never a home address.</Text>
-      {selected ? <PeekCard profile={selected} onOpen={() => onOpen(selected)} /> : <Text style={styles.empty}>No one new right now.</Text>}
+      <PeekStrip
+        people={ordered}
+        selectedId={selected?.profileId}
+        onPick={(profile) => setPicked(profile.profileId)}
+        onOpen={onOpen}
+      />
     </View>
   );
 }
 
 function useMapCamera(width: number, height: number, city: string) {
   const boardRef = useRef<View>(null);
+  const framed = useRef(false);
+  const cityRef = useRef(city);
   const [view, setView] = useState<MapView>(() => islandView(width, height));
   const [drag, setDrag] = useState({ x: 0, y: 0 });
   const zoomByRef = useRef<(delta: number, x?: number, y?: number) => void>(() => undefined);
+  const panByRef = useRef<(dx: number, dy: number) => void>(() => undefined);
 
   zoomByRef.current = (delta, x = width / 2, y = height / 2) => {
     setView((current) => clampView(zoomAt(current, current.zoom + delta, x ?? width / 2, y ?? height / 2, width, height), width, height));
   };
+  panByRef.current = (dx, dy) => {
+    setView((current) => clampView(panView(current, dx, dy), width, height));
+    setDrag({ x: 0, y: 0 });
+  };
 
   useEffect(() => {
     if (width <= 0) return;
-    setView(city === 'all' ? islandView(width, height) : viewForCity(city, width, height));
-    setDrag({ x: 0, y: 0 });
+    const switched = cityRef.current !== city;
+    cityRef.current = city;
+    if (!framed.current || switched) {
+      setView(city === 'all' ? islandView(width, height) : viewForCity(city, width, height));
+      framed.current = true;
+      setDrag({ x: 0, y: 0 });
+      return;
+    }
+    setView((current) => clampView(current, width, height));
   }, [width, height, city]);
 
-  useEffect(() => bindWheel(boardRef.current, (delta, x, y) => zoomByRef.current(delta, x, y)), [width, height]);
+  useEffect(() => bindWheel(boardRef.current, panByRef, zoomByRef), [width, height]);
 
   const pan = useMemo(
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponder: (_event, gesture) => Math.abs(gesture.dx) > 8 || Math.abs(gesture.dy) > 8,
         onPanResponderMove: (_event, gesture) => setDrag({ x: gesture.dx, y: gesture.dy }),
-        onPanResponderRelease: (_event, gesture) => {
-          setView((current) => clampView(panView(current, gesture.dx, gesture.dy), width, height));
-          setDrag({ x: 0, y: 0 });
-        },
+        onPanResponderRelease: (_event, gesture) => panByRef.current(gesture.dx, gesture.dy),
+        onPanResponderTerminate: (_event, gesture) => panByRef.current(gesture.dx, gesture.dy),
       }),
-    [height, width],
+    [],
   );
 
   return {
@@ -128,7 +147,8 @@ function useMapCamera(width: number, height: number, city: string) {
 
 function bindWheel(
   host: View | null,
-  zoomBy: (delta: number, x: number, y: number) => void,
+  panBy: { current: (dx: number, dy: number) => void },
+  zoomBy: { current: (delta: number, x?: number, y?: number) => void },
 ): (() => void) | undefined {
   if (Platform.OS !== 'web' || !host) return undefined;
   const node = webNode(host);
@@ -136,7 +156,11 @@ function bindWheel(
   const onWheel = (event: WheelEvent) => {
     event.preventDefault();
     const rect = node.getBoundingClientRect();
-    zoomBy(event.deltaY < 0 ? 1 : -1, event.clientX - rect.left, event.clientY - rect.top);
+    if (event.ctrlKey || event.metaKey) {
+      zoomBy.current(event.deltaY < 0 ? 1 : -1, event.clientX - rect.left, event.clientY - rect.top);
+      return;
+    }
+    panBy.current(-event.deltaX, -event.deltaY);
   };
   node.addEventListener('wheel', onWheel, { passive: false });
   return () => node.removeEventListener('wheel', onWheel);
@@ -169,7 +193,6 @@ const styles = StyleSheet.create({
     color: '#4a5560',
   },
   note: { fontFamily: font.body, fontSize: 12, color: color.mute, textAlign: 'center' },
-  empty: { fontFamily: font.body, fontSize: 15, color: color.mute, textAlign: 'center', paddingVertical: 12 },
   credit: {
     position: 'absolute',
     left: 10,

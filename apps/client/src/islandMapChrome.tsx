@@ -1,4 +1,5 @@
-import { Image, Pressable, Text, View, StyleSheet } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Image, Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
 import type { MapView } from './map';
 import { mapTiles, MAX_ZOOM, MIN_ZOOM } from './map';
 import type { Profile } from './profile';
@@ -74,13 +75,80 @@ export function ZoomPad({
   );
 }
 
-export function PeekCard({ profile, onOpen }: { profile: Profile; onOpen: () => void }) {
+export const PEEK_WIDTH = 268;
+export const PEEK_GAP = 10;
+
+export function PeekStrip({
+  people,
+  selectedId,
+  onPick,
+  onOpen,
+}: {
+  people: Profile[];
+  selectedId?: string;
+  onPick: (profile: Profile) => void;
+  onOpen: (profile: Profile) => void;
+}) {
+  const list = useRef<ScrollView>(null);
+  const snap = PEEK_WIDTH + PEEK_GAP;
+  const peopleRef = useRef(people);
+  peopleRef.current = people;
+
+  useEffect(() => {
+    const index = peopleRef.current.findIndex((person) => person.profileId === selectedId);
+    if (index < 0) return;
+    list.current?.scrollTo({ x: index * snap, animated: true });
+  }, [selectedId, snap]);
+
+  if (people.length === 0) return <Text style={styles.empty}>No one new right now.</Text>;
+  return (
+    <ScrollView
+      ref={list}
+      horizontal
+      nestedScrollEnabled
+      showsHorizontalScrollIndicator={false}
+      decelerationRate="fast"
+      snapToInterval={snap}
+      snapToAlignment="start"
+      disableIntervalMomentum
+      contentContainerStyle={styles.strip}
+      accessibilityLabel="People on the map"
+      onMomentumScrollEnd={(event) => {
+        const index = Math.round(event.nativeEvent.contentOffset.x / snap);
+        const person = people[index];
+        if (person) onPick(person);
+      }}
+    >
+      {people.map((profile) => (
+        <PeekCard
+          key={profile.profileId}
+          profile={profile}
+          active={profile.profileId === selectedId}
+          onPick={() => onPick(profile)}
+          onOpen={() => onOpen(profile)}
+        />
+      ))}
+    </ScrollView>
+  );
+}
+
+export function PeekCard({
+  profile,
+  active,
+  onPick,
+  onOpen,
+}: {
+  profile: Profile;
+  active?: boolean;
+  onPick?: () => void;
+  onOpen: () => void;
+}) {
   return (
     <Pressable
-      onPress={onOpen}
+      onPress={onPick ?? onOpen}
       accessibilityRole="button"
       accessibilityLabel={`${profile.firstName} profile`}
-      style={styles.peek}
+      style={[styles.peek, active && styles.peekOn]}
     >
       {profile.photos[0]?.url ? (
         <Image source={{ uri: profile.photos[0].url }} style={styles.peekPhoto} />
@@ -93,7 +161,9 @@ export function PeekCard({ profile, onOpen }: { profile: Profile; onOpen: () => 
         </Text>
         <Text style={styles.peekPlace}>{profile.city} · Republic of Cyprus</Text>
       </View>
-      <Text style={styles.peekGo}>View</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={`View ${profile.firstName}`} onPress={onOpen}>
+        <Text style={styles.peekGo}>View</Text>
+      </Pressable>
     </Pressable>
   );
 }
@@ -128,6 +198,7 @@ const styles = StyleSheet.create({
   },
   zoomMark: { fontFamily: font.display, fontSize: 20, fontWeight: '700', color: color.ink },
   peek: {
+    width: PEEK_WIDTH,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -139,6 +210,9 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
   },
+  peekOn: { borderWidth: 2, borderColor: color.rose },
+  strip: { gap: PEEK_GAP, paddingRight: 16, paddingVertical: 2 },
+  empty: { fontFamily: font.body, fontSize: 15, color: color.mute, textAlign: 'center', paddingVertical: 12 },
   peekPhoto: { width: 56, height: 56, borderRadius: 14, backgroundColor: color.surface },
   peekCopy: { flex: 1 },
   peekName: { fontFamily: font.display, fontSize: 18, fontWeight: '700', color: color.ink },

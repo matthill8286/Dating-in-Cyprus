@@ -186,9 +186,17 @@ export function clampView(view: MapView, width: number, height: number): MapView
 }
 
 function clampAxis(center: number, min: number, max: number, size: number): number {
-  const span = max - min;
-  if (size >= span) return (min + max) / 2;
-  return Math.min(max - size / 2, Math.max(min + size / 2, center));
+  const overlap = Math.min(80, max - min);
+  return Math.min(max + size / 2 - overlap, Math.max(min - size / 2 + overlap, center));
+}
+
+export function peopleWestToEast(people: Profile[]): Profile[] {
+  return [...people].sort((a, b) => {
+    const lngA = approximatePoint(a.city, a.profileId)?.lng ?? 0;
+    const lngB = approximatePoint(b.city, b.profileId)?.lng ?? 0;
+    if (lngA !== lngB) return lngA - lngB;
+    return a.firstName.localeCompare(b.firstName);
+  });
 }
 
 export function mapTiles(view: MapView, width: number, height: number): MapTile[] {
