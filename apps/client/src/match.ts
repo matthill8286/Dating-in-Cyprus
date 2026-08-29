@@ -16,9 +16,52 @@ export const CITY_FILTER_LABELS: Record<string, string> = {
 
 export type MatchedCard = { matchId: string; profile: Profile };
 
-export function filterDeck(people: Profile[], city: string): Profile[] {
-  if (city === 'all') return people;
-  return people.filter((person) => person.city === city);
+export function filterDeck(
+  people: Profile[],
+  city: string,
+  ageMin = 21,
+  ageMax = 55,
+): Profile[] {
+  return people.filter((person) => {
+    if (city !== 'all' && person.city !== city) return false;
+    return person.age >= ageMin && person.age <= ageMax;
+  });
+}
+
+export const AGE_BANDS = [
+  { id: 'all', label: 'Any age', min: 21, max: 55 },
+  { id: '20s', label: '21–29', min: 21, max: 29 },
+  { id: '30s', label: '30–39', min: 30, max: 39 },
+  { id: '40s', label: '40+', min: 40, max: 55 },
+] as const;
+
+export type AgeBandId = (typeof AGE_BANDS)[number]['id'];
+
+export const AGE_BAND_LABELS: Record<string, string> = Object.fromEntries(
+  AGE_BANDS.map((band) => [band.id, band.label]),
+);
+
+export function ageBandById(id: AgeBandId) {
+  return AGE_BANDS.find((band) => band.id === id) ?? AGE_BANDS[0];
+}
+
+export type InboxRow = {
+  matchId: string;
+  profile: Profile;
+  lastMessage: { body: string; fromMe: boolean; sentAt: string } | null;
+};
+
+export function splitInbox(matches: InboxRow[]): { fresh: InboxRow[]; threads: InboxRow[] } {
+  return {
+    fresh: matches.filter((item) => !item.lastMessage),
+    threads: matches.filter((item) => item.lastMessage),
+  };
+}
+
+export function searchInbox(rows: InboxRow[], query: string): InboxRow[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return rows;
+  return rows.filter((row) => row.profile.firstName.toLowerCase().includes(needle));
 }
 
 export function afterDecision(people: Profile[], profileId: string): Profile[] {

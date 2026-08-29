@@ -25,6 +25,13 @@ export function lastMessagePreview(last: { body: string } | null | undefined): s
   return last?.body ?? 'Say hello';
 }
 
+export function messageClock(iso: string | undefined): string {
+  if (!iso) return '';
+  const when = new Date(iso);
+  if (Number.isNaN(when.getTime())) return '';
+  return when.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
 export function threadState(lines: ChatLine[]): 'empty' | 'populated' {
   return lines.length === 0 ? 'empty' : 'populated';
 }

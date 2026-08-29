@@ -9,33 +9,20 @@ import {
   Screen,
   Sheet,
 } from './ui/kit';
-import { TabBar } from './ui/tabs';
+import { TabBar, type TabGo } from './ui/tabs';
 
 export function ProfileViewScreen({
   onEdit,
-  onPeople,
-  onMatches,
+  go,
 }: {
   onEdit: () => void;
-  onPeople?: () => void;
-  onMatches?: () => void;
+  go?: TabGo;
 }) {
   const { profile } = useApp();
   if (!profile) return null;
 
   return (
-    <Screen
-      footer={
-        onPeople && onMatches ? (
-          <TabBar
-            active="profile"
-            onPeople={onPeople}
-            onMatches={onMatches}
-            onProfile={() => undefined}
-          />
-        ) : null
-      }
-    >
+    <Screen footer={go ? <TabBar active="profile" go={go} /> : null}>
       <Hero
         kicker={profile.city}
         title={`${profile.firstName}, ${profile.age}`}

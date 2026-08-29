@@ -4,8 +4,10 @@ import { Text, View, StyleSheet } from 'react-native';
 import { api } from './src/api/client';
 import { AppProvider, useApp } from './src/context/AppContext';
 import { JoinScreen } from './src/JoinScreen';
+import { NotifyScreen } from './src/NotifyScreen';
 import { OnboardingScreen } from './src/OnboardingScreen';
 import { MatchesScreen } from './src/MatchesScreen';
+import { MessagesScreen } from './src/MessagesScreen';
 import { PoolScreen } from './src/PoolScreen';
 import { ProfileEditScreen } from './src/ProfileEditScreen';
 import { ProfileViewScreen } from './src/ProfileViewScreen';
@@ -14,7 +16,7 @@ import { PersonScreen } from './src/PersonScreen';
 import { SignInScreen } from './src/SignInScreen';
 import type { Profile } from './src/profile';
 import { color, ensureWebFonts, font } from './src/theme';
-import type { MainTab } from './src/ui/tabs';
+import type { MainTab, TabGo } from './src/ui/tabs';
 
 ensureWebFonts();
 
@@ -22,6 +24,7 @@ function ProfileGate() {
   const { sessionToken, profile, setProfile } = useApp();
   const [ready, setReady] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [notify, setNotify] = useState(false);
   const [tab, setTab] = useState<MainTab>('people');
   const [chat, setChat] = useState<{ matchId: string; profile: Profile } | null>(null);
   const [person, setPerson] = useState<{ matchId?: string; profile: Profile } | null>(null);
@@ -37,9 +40,15 @@ function ProfileGate() {
   }, [sessionToken, setProfile]);
 
   if (!ready) return <Loading />;
-  if (!profile || editing) {
-    return <ProfileEditScreen onSaved={() => setEditing(false)} />;
-  }
+  if (!profile) return <ProfileEditScreen onSaved={() => setNotify(true)} />;
+  if (notify) return <NotifyScreen onDone={() => setNotify(false)} />;
+  if (editing) return <ProfileEditScreen onSaved={() => setEditing(false)} />;
+  const go: TabGo = {
+    people: () => setTab('people'),
+    matches: () => setTab('matches'),
+    messages: () => setTab('messages'),
+    profile: () => setTab('profile'),
+  };
   if (person) {
     return (
       <PersonScreen
@@ -59,30 +68,24 @@ function ProfileGate() {
     );
   }
   if (tab === 'profile') {
-    return (
-      <ProfileViewScreen
-        onEdit={() => setEditing(true)}
-        onPeople={() => setTab('people')}
-        onMatches={() => setTab('matches')}
-      />
-    );
+    return <ProfileViewScreen onEdit={() => setEditing(true)} go={go} />;
   }
   if (tab === 'matches') {
     return (
       <MatchesScreen
-        onOpen={setChat}
-        onProfileOf={(item) => setPerson({ matchId: item.matchId, profile: item.profile })}
-        onPeople={() => setTab('people')}
-        onProfile={() => setTab('profile')}
+        onOpen={(item) => setPerson({ matchId: item.matchId, profile: item.profile })}
+        go={go}
       />
     );
   }
+  if (tab === 'messages') {
+    return <MessagesScreen onOpen={setChat} go={go} />;
+  }
   return (
     <PoolScreen
-      onProfile={() => setTab('profile')}
-      onMatches={() => setTab('matches')}
+      go={go}
       onChat={(item) => {
-        setTab('matches');
+        setTab('messages');
         setChat(item);
       }}
     />

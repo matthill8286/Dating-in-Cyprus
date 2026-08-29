@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, PanResponder, Text, StyleSheet } from 'react-native';
+import { Animated, PanResponder, Text, View, StyleSheet } from 'react-native';
 import { deckTap, nextPhotoIndex, swipeDecision } from '../match';
 import type { Profile } from '../profile';
+import { color } from '../theme';
 import { PhotoCard } from './kit';
 
 const THRESHOLD = 110;
@@ -60,11 +61,15 @@ export function SwipeCard({
         place={card.city}
         bio={card.bio}
       />
-      <Animated.View style={[styles.stamp, styles.like, { opacity: likeOp }]} pointerEvents="none">
-        <Text style={styles.likeText}>LIKE</Text>
+      <Animated.View style={[styles.stampWrap, { opacity: likeOp }]} pointerEvents="none">
+        <View style={styles.stamp}>
+          <Text style={styles.stampMark}>♥</Text>
+        </View>
       </Animated.View>
-      <Animated.View style={[styles.stamp, styles.nope, { opacity: passOp }]} pointerEvents="none">
-        <Text style={styles.nopeText}>NOPE</Text>
+      <Animated.View style={[styles.stampWrap, { opacity: passOp }]} pointerEvents="none">
+        <View style={styles.stamp}>
+          <Text style={styles.stampMark}>✕</Text>
+        </View>
       </Animated.View>
     </Animated.View>
   );
@@ -107,16 +112,14 @@ function fling(pan: Animated.ValueXY, x: number, then: () => void): void {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, minHeight: 0 },
+  stampWrap: { position: 'absolute', top: '36%', left: 0, right: 0, alignItems: 'center' },
   stamp: {
-    position: 'absolute',
-    top: 28,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 3,
-    borderRadius: 8,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: color.rose,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  like: { left: 18, borderColor: '#2DD36F' },
-  nope: { right: 18, borderColor: '#E94057' },
-  likeText: { color: '#2DD36F', fontWeight: '800', fontSize: 22, letterSpacing: 1 },
-  nopeText: { color: '#E94057', fontWeight: '800', fontSize: 22, letterSpacing: 1 },
+  stampMark: { color: color.onRose, fontSize: 40, fontWeight: '700' },
 });

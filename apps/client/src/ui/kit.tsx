@@ -97,11 +97,13 @@ export function PhotoCard({
           ))}
         </View>
       ) : null}
+      <View style={styles.photoBadge}>
+        <Text style={styles.photoBadgeText}>{place}</Text>
+      </View>
       <View style={styles.photoCaption}>
         <Text style={styles.photoName}>
           {name}, {age}
         </Text>
-        <Text style={styles.photoPlace}>📍 {place}</Text>
         {bio ? (
           <Text style={styles.photoBio} numberOfLines={1}>
             {bio}

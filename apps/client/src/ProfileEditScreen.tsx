@@ -50,8 +50,8 @@ export function ProfileEditScreen({ onSaved }: { onSaved?: () => void }) {
     <Screen>
       <Hero
         kicker={profile?.city ?? 'Here'}
-        title={profile ? 'Edit profile' : 'Your profile'}
-        subtitle="A name, a city, languages you speak, a few lines."
+        title={profile ? 'Edit profile' : 'Profile details'}
+        subtitle="A first name, a city, languages you speak, a few lines. No last name."
       />
       <Sheet>
         <Card>
@@ -83,7 +83,7 @@ export function ProfileEditScreen({ onSaved }: { onSaved?: () => void }) {
             multiline
           />
           <ErrorNote message={error} />
-          <PrimaryButton title="Publish Profile" onPress={() => void onSave()} />
+          <PrimaryButton title={profile ? 'Save' : 'Confirm'} onPress={() => void onSave()} />
         </Card>
       </Sheet>
     </Screen>

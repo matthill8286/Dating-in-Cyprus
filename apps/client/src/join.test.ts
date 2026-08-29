@@ -5,6 +5,15 @@ import {
   joinApiErrorCode,
   joinInvalidMessage,
   joinRefusalMessage,
+  joinStepComplete,
+  localFromMobile,
+  mobileFromLocal,
+  monthDays,
+  nextJoinStep,
+  prevJoinStep,
+  isoDate,
+  shiftCalendarMonth,
+  birthdayLabel,
   storeJoinSession,
   validateJoinForm,
   type JoinFormValues,
@@ -187,5 +196,34 @@ describe('joinRefusalMessage', () => {
 
   it('uses a generic message for other API failures', () => {
     expect(joinRefusalMessage('conflict')).toBe('Join failed.');
+  });
+});
+
+describe('join wizard steps', () => {
+  it('walks email → mobile → identity → seeking → birthday → island', () => {
+    expect(nextJoinStep('email')).toBe('mobile');
+    expect(nextJoinStep('island')).toBe('done');
+    expect(prevJoinStep('email')).toBe('exit');
+    expect(prevJoinStep('mobile')).toBe('email');
+  });
+
+  it('completes each step only with valid fields', () => {
+    expect(joinStepComplete('email', adult)).toBe(true);
+    expect(joinStepComplete('email', { ...adult, password: 'short' })).toBe(false);
+    expect(joinStepComplete('mobile', { ...adult, mobile: '+357' })).toBe(false);
+    expect(joinStepComplete('birthday', { ...adult, dateOfBirth: '' }, now)).toBe(false);
+    expect(joinStepComplete('birthday', adult, now)).toBe(true);
+    expect(joinStepComplete('island', { ...adult, presence: null })).toBe(false);
+    expect(joinStepComplete('island', adult)).toBe(true);
+  });
+
+  it('builds a Cyprus mobile from local digits and a birthday calendar', () => {
+    expect(mobileFromLocal('99123456')).toBe('+35799123456');
+    expect(localFromMobile('+35799123456')).toBe('99123456');
+    expect(isoDate(1995, 7, 11)).toBe('1995-07-11');
+    expect(shiftCalendarMonth('1995-07-11', 1)).toBe('1995-08-11');
+    expect(monthDays('1995-07-11')[6]).toBe(1);
+    expect(birthdayLabel('1995-07-11')).toContain('1995');
+    expect(birthdayLabel('')).toBe('Choose birthday date');
   });
 });

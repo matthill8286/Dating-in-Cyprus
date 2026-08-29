@@ -1,30 +1,18 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { color, font } from '../theme';
 
-export type MainTab = 'people' | 'matches' | 'profile';
+export type MainTab = 'people' | 'matches' | 'messages' | 'profile';
+
+export type TabGo = Record<MainTab, () => void>;
 
 const TABS: Array<{ id: MainTab; label: string; icon: string; iconOn: string }> = [
   { id: 'people', label: 'Discover', icon: '▣', iconOn: '▣' },
   { id: 'matches', label: 'Matches', icon: '♡', iconOn: '♥' },
+  { id: 'messages', label: 'Messages', icon: '✉', iconOn: '✉' },
   { id: 'profile', label: 'Profile', icon: '☺', iconOn: '☺' },
 ];
 
-export function TabBar({
-  active,
-  onPeople,
-  onMatches,
-  onProfile,
-}: {
-  active: MainTab;
-  onPeople: () => void;
-  onMatches: () => void;
-  onProfile: () => void;
-}) {
-  const go: Record<MainTab, () => void> = {
-    people: onPeople,
-    matches: onMatches,
-    profile: onProfile,
-  };
+export function TabBar({ active, go }: { active: MainTab; go: TabGo }) {
   return (
     <View style={styles.tabBar}>
       {TABS.map((tab) => (

@@ -1,39 +1,26 @@
 import { useState } from 'react';
+import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { api } from './api/client';
 import { useApp } from './context/AppContext';
 import {
   completeJoin,
-  GENDERS,
   joinApiErrorCode,
   joinInvalidMessage,
   joinRefusalMessage,
-  LAUNCH_LANGUAGES,
-  SEEKING,
-  type Gender,
+  joinStepComplete,
+  nextJoinStep,
+  prevJoinStep,
   type JoinFormValues,
-  type LaunchLanguage,
-  type Seeking,
+  type JoinStep,
 } from './join';
-import { genderLabel, languageLabel, seekingLabel } from './theme';
-import {
-  Card,
-  CheckRow,
-  ChipRow,
-  ErrorNote,
-  Field,
-  Hero,
-  MuteNote,
-  PrimaryButton,
-  Screen,
-  SectionLabel,
-  Sheet,
-  GhostButton,
-} from './ui/kit';
+import { STEP_COPY, StepBody } from './joinSteps';
+import { color, font } from './theme';
+import { ErrorNote, GhostButton, MuteNote, PrimaryButton, Screen, Sheet } from './ui/kit';
 
 const initialForm: JoinFormValues = {
   email: '',
   password: '',
-  dateOfBirth: '2000-01-01',
+  dateOfBirth: '',
   launchLanguage: 'en',
   gender: 'man',
   seeking: 'women',
@@ -52,7 +39,10 @@ export function JoinScreen({
 }) {
   const { setSessionToken } = useApp();
   const [form, setForm] = useState(initialForm);
+  const [step, setStep] = useState<JoinStep>('email');
+  const [picker, setPicker] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const copy = STEP_COPY[step];
 
   const onJoin = async () => {
     const result = await completeJoin(form, postJoin, setSessionToken);
@@ -65,135 +55,52 @@ export function JoinScreen({
     );
   };
 
+  function goBack() {
+    const prev = prevJoinStep(step);
+    if (prev === 'exit') onBack?.();
+    else setStep(prev);
+    setPicker(false);
+  }
+
+  function goNext() {
+    if (!joinStepComplete(step, form)) {
+      setError(
+        step === 'birthday'
+          ? 'You must be 21 or over. Choose a birthday date.'
+          : 'Check this step and try again.',
+      );
+      return;
+    }
+    setError(null);
+    const next = nextJoinStep(step);
+    if (next === 'done') void onJoin();
+    else setStep(next);
+    setPicker(false);
+  }
+
   return (
     <Screen>
-      <Hero
-        kicker="Republic of Cyprus"
-        title="Create account"
-        subtitle="Dating for people whose primary home is on the island. Not a holiday. Not a stopover."
-      />
       <Sheet>
-        {onBack ? <GhostButton title="Back" onPress={onBack} /> : null}
-        <Card>
-          <AccountFields form={form} setForm={setForm} />
-          <GateFields form={form} setForm={setForm} />
-          <ErrorNote message={error} />
-          <PrimaryButton title="Request a place" onPress={() => void onJoin()} />
+        <View style={styles.top}>
+          <Pressable onPress={goBack} accessibilityRole="button" accessibilityLabel="Back">
+            <Text style={styles.back}>‹</Text>
+          </Pressable>
           <GhostButton title="Sign in" onPress={onSignIn} />
-          <MuteNote>Twenty-one and over. Residents only.</MuteNote>
-        </Card>
+        </View>
+        <Text style={styles.title}>{copy.title}</Text>
+        <Text style={styles.subtitle}>{copy.subtitle}</Text>
+        <StepBody
+          step={step}
+          form={form}
+          setForm={setForm}
+          picker={picker}
+          onOpenPicker={() => setPicker((open) => !open)}
+        />
+        <ErrorNote message={error} />
+        <PrimaryButton title={copy.action} onPress={goNext} />
+        <MuteNote>Twenty-one and over. Residents only.</MuteNote>
       </Sheet>
     </Screen>
-  );
-}
-
-function AccountFields({
-  form,
-  setForm,
-}: {
-  form: JoinFormValues;
-  setForm: (update: (current: JoinFormValues) => JoinFormValues) => void;
-}) {
-  return (
-    <>
-      <SectionLabel>Account</SectionLabel>
-      <Field
-        label="Email"
-        value={form.email}
-        onChangeText={(email) => setForm((current) => ({ ...current, email }))}
-        placeholder="you@example.com"
-        autoCapitalize="none"
-      />
-      <Field
-        label="Password"
-        value={form.password}
-        onChangeText={(password) => setForm((current) => ({ ...current, password }))}
-        placeholder="At least 8 characters"
-        secure
-      />
-      <Field
-        label="Date of birth"
-        value={form.dateOfBirth}
-        onChangeText={(dateOfBirth) => setForm((current) => ({ ...current, dateOfBirth }))}
-        placeholder="YYYY-MM-DD"
-      />
-      <SectionLabel>Language</SectionLabel>
-      <ChipRow
-        options={LAUNCH_LANGUAGES}
-        value={form.launchLanguage}
-        labels={languageLabel}
-        onChange={(launchLanguage) =>
-          setForm((current) => ({ ...current, launchLanguage: launchLanguage as LaunchLanguage }))
-        }
-      />
-      <ChipRow
-        caption="I am"
-        options={GENDERS}
-        value={form.gender}
-        labels={genderLabel}
-        onChange={(gender) => setForm((current) => ({ ...current, gender: gender as Gender }))}
-      />
-      <ChipRow
-        caption="I want to meet"
-        options={SEEKING}
-        value={form.seeking}
-        labels={seekingLabel}
-        onChange={(seeking) => setForm((current) => ({ ...current, seeking: seeking as Seeking }))}
-      />
-    </>
-  );
-}
-
-function GateFields({
-  form,
-  setForm,
-}: {
-  form: JoinFormValues;
-  setForm: (update: (current: JoinFormValues) => JoinFormValues) => void;
-}) {
-  return (
-    <>
-      <SectionLabel>On the island</SectionLabel>
-      <Field
-        label="Cyprus mobile"
-        value={form.mobile}
-        onChangeText={(mobile) => setForm((current) => ({ ...current, mobile }))}
-        placeholder="+3579…"
-        autoCapitalize="none"
-      />
-      <CheckRow
-        label="I am in the Republic of Cyprus now"
-        hint="Checked when you join. We do not operate in Northern Cyprus."
-        on={form.presence !== null}
-        onPress={() =>
-          setForm((current) => ({
-            ...current,
-            presence: current.presence ? null : { latitude: 34.685, longitude: 33.038 },
-          }))
-        }
-      />
-      <CheckRow
-        label="My primary home is in the Republic of Cyprus"
-        hint="A holiday or short stay is not enough. Your primary home must be here."
-        on={form.primaryHomeAttestation}
-        onPress={() =>
-          setForm((current) => ({
-            ...current,
-            primaryHomeAttestation: !current.primaryHomeAttestation,
-          }))
-        }
-      />
-      <CheckRow
-        label="Gender and who I want to meet may be used for matching"
-        on={form.specialCategoryConsent}
-        onPress={() =>
-          setForm((current) => ({
-            ...current,
-            specialCategoryConsent: !current.specialCategoryConsent,
-          }))
-        }
-      />
-    </>
   );
 }
 
@@ -218,3 +125,16 @@ async function postJoin(values: JoinFormValues) {
     error: error ? { code: joinApiErrorCode(error) } : undefined,
   };
 }
+
+const styles = StyleSheet.create({
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  back: { fontSize: 32, color: color.ink, lineHeight: 36 },
+  title: {
+    fontFamily: font.display,
+    fontSize: 32,
+    fontWeight: '700',
+    color: color.ink,
+    marginTop: 8,
+  },
+  subtitle: { fontFamily: font.body, fontSize: 15, lineHeight: 22, color: color.mute },
+});

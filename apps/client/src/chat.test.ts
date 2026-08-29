@@ -4,6 +4,7 @@ import {
   canSend,
   CHAT_POLL_MS,
   lastMessagePreview,
+  messageClock,
   threadPreview,
   threadState,
   type ChatLine,
@@ -27,6 +28,8 @@ describe('chat thread', () => {
     expect(CHAT_POLL_MS).toBe(4000);
     expect(lastMessagePreview(null)).toBe('Say hello');
     expect(lastMessagePreview({ body: 'Hi from Nicosia' })).toBe('Hi from Nicosia');
+    expect(messageClock('2026-08-28T12:04:00.000Z')).toMatch(/^\d{2}:\d{2}$/);
+    expect(messageClock(undefined)).toBe('');
   });
 
   it('appends a sent line onto a populated thread', () => {
