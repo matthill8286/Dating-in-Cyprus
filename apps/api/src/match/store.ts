@@ -28,6 +28,7 @@ export interface LoopStore {
   ensureMatch(aId: string, bId: string): Promise<{ matchId: string; created: boolean }>;
   listMatches(accountId: string): Promise<MatchRecord[]>;
   findMatch(matchId: string): Promise<MatchRecord | null>;
+  dropMatch(matchId: string): Promise<MatchRecord | null>;
   addMessage(matchId: string, fromId: string, body: string): Promise<ChatMessage>;
   listMessages(matchId: string): Promise<ChatMessage[]>;
   recordBlock(fromId: string, toId: string): Promise<void>;
@@ -109,6 +110,17 @@ export class MemoryLoopStore implements LoopStore {
 
   async findMatch(matchId: string): Promise<MatchRecord | null> {
     return this.matches.get(matchId) ?? null;
+  }
+
+  async dropMatch(matchId: string): Promise<MatchRecord | null> {
+    const match = this.matches.get(matchId);
+    if (!match) return null;
+    this.matches.delete(matchId);
+    this.byPair.delete(pairKey(match.aId, match.bId));
+    this.messages.delete(matchId);
+    this.interests.delete(`${match.aId}>${match.bId}`);
+    this.interests.delete(`${match.bId}>${match.aId}`);
+    return match;
   }
 
   async addMessage(matchId: string, fromId: string, body: string): Promise<ChatMessage> {

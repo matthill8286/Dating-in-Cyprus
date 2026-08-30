@@ -108,6 +108,8 @@ function OpenMatch({
         onBack={() => onPerson(null)}
         onMessage={messageAction(person, onChat, () => onPerson(null))}
         onBlocked={leave}
+        onUnmatched={leave}
+        matchId={person.matchId}
       />
     );
   }
@@ -118,6 +120,7 @@ function OpenMatch({
       onBack={() => onChat(null)}
       onProfile={() => onPerson({ matchId: chat.matchId, profile: chat.profile })}
       onBlocked={leave}
+      onUnmatched={leave}
     />
   );
 }

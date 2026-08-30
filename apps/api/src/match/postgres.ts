@@ -138,6 +138,19 @@ export class PostgresLoopStore implements LoopStore {
     return result.rows[0] ?? null;
   }
 
+  async dropMatch(matchId: string): Promise<MatchRecord | null> {
+    await this.ensure();
+    const match = await this.findMatch(matchId);
+    if (!match) return null;
+    await this.pool.query(`DELETE FROM messages WHERE match_id = $1`, [matchId]);
+    await this.pool.query(`DELETE FROM matches WHERE match_id = $1`, [matchId]);
+    await this.pool.query(
+      `DELETE FROM interests WHERE (from_id = $1 AND to_id = $2) OR (from_id = $2 AND to_id = $1)`,
+      [match.aId, match.bId],
+    );
+    return match;
+  }
+
   async addMessage(matchId: string, fromId: string, body: string): Promise<ChatMessage> {
     await this.ensure();
     const message: ChatMessage = {

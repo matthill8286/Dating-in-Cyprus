@@ -11,10 +11,10 @@ export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
   other: 'Other abuse',
 };
 
-export type SafetyKind = 'block' | 'report';
+export type SafetyKind = 'block' | 'report' | 'unmatch';
 
 export function afterSafety(kind: SafetyKind): 'leave' | 'stay' {
-  return kind === 'block' ? 'leave' : 'stay';
+  return kind === 'report' ? 'stay' : 'leave';
 }
 
 export function safetyOnOwnProfile(own: boolean): boolean {
@@ -39,4 +39,12 @@ export async function submitReport(
     body: { profileId, reason },
   });
   return Boolean(data?.reportId);
+}
+
+export async function submitUnmatch(token: string, matchId: string): Promise<boolean> {
+  const { data } = await api.DELETE('/v1/matches/{matchId}', {
+    headers: { authorization: `Bearer ${token}` },
+    params: { path: { matchId } },
+  });
+  return Boolean(data?.ok);
 }

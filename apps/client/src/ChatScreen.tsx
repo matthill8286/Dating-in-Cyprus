@@ -15,11 +15,13 @@ export function ChatScreen({
   onBack,
   onProfile,
   onBlocked,
+  onUnmatched,
 }: {
   match: { matchId: string; profile: Profile };
   onBack: () => void;
   onProfile: () => void;
   onBlocked: () => void;
+  onUnmatched: () => void;
 }) {
   const { sessionToken } = useApp();
   const { lines, setLines } = useChatThread(sessionToken, match.matchId);
@@ -56,11 +58,16 @@ export function ChatScreen({
         open={safety}
         name={match.profile.firstName}
         profileId={match.profile.profileId}
+        matchId={match.matchId}
         token={sessionToken}
         onClose={() => setSafety(false)}
         onBlocked={() => {
           setSafety(false);
           onBlocked();
+        }}
+        onUnmatched={() => {
+          setSafety(false);
+          onUnmatched();
         }}
       />
     </Fixed>
@@ -87,7 +94,7 @@ function ChatBar({
       <Pressable
         onPress={onSafety}
         accessibilityRole="button"
-        accessibilityLabel="Block or Report"
+        accessibilityLabel="More"
         style={styles.more}
       >
         <Text style={styles.moreMark}>⋯</Text>

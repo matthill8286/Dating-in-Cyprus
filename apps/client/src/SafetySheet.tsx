@@ -1,31 +1,35 @@
 import { useState } from 'react';
 import { Modal, Pressable, Text, View, StyleSheet } from 'react-native';
+import { safetyOnOwnProfile, type ReportReason } from './safety';
 import {
-  afterSafety,
-  REPORT_REASON_LABELS,
-  REPORT_REASONS,
-  safetyOnOwnProfile,
-  submitBlock,
-  submitReport,
-  type ReportReason,
-} from './safety';
+  runBlock,
+  runReport,
+  runUnmatch,
+  SafetyBlock,
+  SafetyMenu,
+  SafetyReport,
+  SafetyUnmatch,
+} from './SafetySteps';
 import { color, font } from './theme';
-import { ChipRow, GhostButton, MuteNote, PrimaryButton } from './ui/kit';
 
-type Step = 'menu' | 'block' | 'report';
+type Step = 'menu' | 'block' | 'report' | 'unmatch';
 
 export function SafetySheet({
   name,
   profileId,
+  matchId,
   token,
   onClose,
   onBlocked,
+  onUnmatched,
 }: {
   name: string;
   profileId: string;
+  matchId?: string;
   token: string;
   onClose: () => void;
   onBlocked: () => void;
+  onUnmatched?: () => void;
 }) {
   const [step, setStep] = useState<Step>('menu');
   const [reason, setReason] = useState<ReportReason | null>(null);
@@ -37,16 +41,29 @@ export function SafetySheet({
         <Pressable style={styles.dim} onPress={onClose} accessibilityLabel="Close" />
         <View style={styles.sheet}>
           {step === 'menu' ? (
-            <SafetyMenu name={name} onBlock={() => setStep('block')} onReport={() => setStep('report')} onClose={onClose} />
+            <SafetyMenu
+              name={name}
+              canUnmatch={Boolean(matchId)}
+              onBlock={() => setStep('block')}
+              onReport={() => setStep('report')}
+              onUnmatch={() => setStep('unmatch')}
+              onClose={onClose}
+            />
           ) : null}
           {step === 'block' ? (
             <SafetyBlock
               name={name}
               busy={busy}
               onBack={() => setStep('menu')}
-              onConfirm={() =>
-                void runBlock(token, profileId, busy, setBusy, onBlocked)
-              }
+              onConfirm={() => void runBlock(token, profileId, busy, setBusy, onBlocked)}
+            />
+          ) : null}
+          {step === 'unmatch' && matchId ? (
+            <SafetyUnmatch
+              name={name}
+              busy={busy}
+              onBack={() => setStep('menu')}
+              onConfirm={() => void runUnmatch(token, matchId, busy, setBusy, onUnmatched ?? onBlocked)}
             />
           ) : null}
           {step === 'report' ? (
@@ -55,9 +72,7 @@ export function SafetySheet({
               busy={busy}
               onReason={(next) => setReason(next as ReportReason)}
               onBack={() => setStep('menu')}
-              onConfirm={() =>
-                void runReport(token, profileId, reason, busy, setBusy, onClose)
-              }
+              onConfirm={() => void runReport(token, profileId, reason, busy, setBusy, onClose)}
             />
           ) : null}
         </View>
@@ -70,25 +85,31 @@ export function OpenSafetySheet({
   open,
   name,
   profileId,
+  matchId,
   token,
   onClose,
   onBlocked,
+  onUnmatched,
 }: {
   open: boolean;
   name: string;
   profileId: string;
+  matchId?: string;
   token: string | null;
   onClose: () => void;
   onBlocked: () => void;
+  onUnmatched?: () => void;
 }) {
   if (!open || !token) return null;
   return (
     <SafetySheet
       name={name}
       profileId={profileId}
+      matchId={matchId}
       token={token}
       onClose={onClose}
       onBlocked={onBlocked}
+      onUnmatched={onUnmatched}
     />
   );
 }
@@ -97,14 +118,18 @@ export function PersonSafety({
   own,
   name,
   profileId,
+  matchId,
   token,
   onBlocked,
+  onUnmatched,
 }: {
   own: boolean;
   name: string;
   profileId: string;
+  matchId?: string;
   token: string | null;
   onBlocked?: () => void;
+  onUnmatched?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   if (!safetyOnOwnProfile(own)) return null;
@@ -115,11 +140,16 @@ export function PersonSafety({
         open={open}
         name={name}
         profileId={profileId}
+        matchId={matchId}
         token={token}
         onClose={() => setOpen(false)}
         onBlocked={() => {
           setOpen(false);
           onBlocked?.();
+        }}
+        onUnmatched={() => {
+          setOpen(false);
+          onUnmatched?.();
         }}
       />
     </>
@@ -132,111 +162,6 @@ export function SafetyLink({ onPress }: { onPress: () => void }) {
       <Text style={styles.link}>Block or Report</Text>
     </Pressable>
   );
-}
-
-function SafetyMenu({
-  name,
-  onBlock,
-  onReport,
-  onClose,
-}: {
-  name: string;
-  onBlock: () => void;
-  onReport: () => void;
-  onClose: () => void;
-}) {
-  return (
-    <>
-      <Text style={styles.title}>Safety</Text>
-      <MuteNote>{`Block or Report ${name} from here or from chat.`}</MuteNote>
-      <PrimaryButton title={`Block ${name}`} onPress={onBlock} />
-      <GhostButton title={`Report ${name}`} onPress={onReport} />
-      <GhostButton title="Not now" onPress={onClose} />
-    </>
-  );
-}
-
-function SafetyBlock({
-  name,
-  busy,
-  onBack,
-  onConfirm,
-}: {
-  name: string;
-  busy: boolean;
-  onBack: () => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <>
-      <Text style={styles.title}>{`Block ${name}?`}</Text>
-      <MuteNote>You will not see each other in discovery, and this Match cannot be used for messages.</MuteNote>
-      <PrimaryButton title={busy ? 'Blocking…' : 'Block'} onPress={onConfirm} />
-      <GhostButton title="Back" onPress={onBack} />
-    </>
-  );
-}
-
-function SafetyReport({
-  reason,
-  busy,
-  onReason,
-  onBack,
-  onConfirm,
-}: {
-  reason: ReportReason | null;
-  busy: boolean;
-  onReason: (next: string) => void;
-  onBack: () => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <>
-      <Text style={styles.title}>Report</Text>
-      <MuteNote>This does not remove them from the Pool. Choose a reason.</MuteNote>
-      <ChipRow
-        caption="Reason"
-        options={REPORT_REASONS}
-        value={reason ?? ''}
-        onChange={onReason}
-        labels={REPORT_REASON_LABELS}
-      />
-      <PrimaryButton
-        title={busy ? 'Sending…' : 'Report'}
-        onPress={onConfirm}
-      />
-      <GhostButton title="Back" onPress={onBack} />
-    </>
-  );
-}
-
-async function runBlock(
-  token: string,
-  profileId: string,
-  busy: boolean,
-  setBusy: (value: boolean) => void,
-  onBlocked: () => void,
-) {
-  if (busy) return;
-  setBusy(true);
-  const ok = await submitBlock(token, profileId);
-  setBusy(false);
-  if (ok && afterSafety('block') === 'leave') onBlocked();
-}
-
-async function runReport(
-  token: string,
-  profileId: string,
-  reason: ReportReason | null,
-  busy: boolean,
-  setBusy: (value: boolean) => void,
-  onClose: () => void,
-) {
-  if (!reason || busy) return;
-  setBusy(true);
-  const ok = await submitReport(token, profileId, reason);
-  setBusy(false);
-  if (ok && afterSafety('report') === 'stay') onClose();
 }
 
 const styles = StyleSheet.create({
@@ -258,6 +183,5 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
     gap: 16,
   },
-  title: { fontFamily: font.display, fontSize: 24, fontWeight: '700', color: color.ink },
   link: { color: color.rose, fontFamily: font.body, fontSize: 14, fontWeight: '700', marginTop: 16 },
 });
