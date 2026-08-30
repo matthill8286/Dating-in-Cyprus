@@ -51,7 +51,7 @@ export function PhotoStory({
         ) : null}
         {onMessage ? (
           <Pressable onPress={onMessage} accessibilityRole="button" style={styles.composer}>
-            <Text style={styles.hint}>Write a message…</Text>
+            <Text style={styles.hint}>Send message…</Text>
             <View style={styles.send}>
               <Text style={styles.sendMark}>➤</Text>
             </View>

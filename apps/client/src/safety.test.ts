@@ -17,6 +17,7 @@ describe('Block and Report', () => {
 
   it('leaves after a Block and stays after a Report', () => {
     expect(afterSafety('block')).toBe('leave');
+    expect(afterSafety('unmatch')).toBe('leave');
     expect(afterSafety('report')).toBe('stay');
     expect(safetyOnOwnProfile(true)).toBe(false);
     expect(safetyOnOwnProfile(false)).toBe(true);
