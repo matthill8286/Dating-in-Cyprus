@@ -45,4 +45,18 @@ describe('MemoryLoopStore', () => {
     expect(listed[0]?.fromId).toBe('a');
     await loop.close();
   });
+
+  it('drops a Match and both Interests so the pair can appear in the Pool again', async () => {
+    const loop = new MemoryLoopStore();
+    await loop.recordInterest('a', 'b');
+    await loop.recordInterest('b', 'a');
+    const { matchId } = await loop.ensureMatch('a', 'b');
+    expect((await loop.hiddenIds('a')).has('b')).toBe(true);
+    expect(await loop.dropMatch(matchId)).toMatchObject({ matchId });
+    expect(await loop.findMatch(matchId)).toBeNull();
+    expect(await loop.hasInterest('a', 'b')).toBe(false);
+    expect(await loop.hasInterest('b', 'a')).toBe(false);
+    expect((await loop.hiddenIds('a')).has('b')).toBe(false);
+    await loop.close();
+  });
 });

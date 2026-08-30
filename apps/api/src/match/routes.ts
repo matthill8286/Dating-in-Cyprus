@@ -22,6 +22,7 @@ import {
   readMatch,
   recordPass,
   sendChat,
+  unmatchPair,
   type LoopDeps,
 } from './actions';
 import { fileBlock, fileReport } from './safety';
@@ -68,6 +69,17 @@ export async function matchRoutes(app: FastifyInstance, opts: LoopDeps): Promise
       },
     },
     async (req, reply) => readMatch(req.accountId, req.params.matchId, reply, opts),
+  );
+
+  typed.delete(
+    '/v1/matches/:matchId',
+    {
+      schema: {
+        params: matchIdParam,
+        response: { 200: passResponse, 403: apiError, 404: apiError },
+      },
+    },
+    async (req, reply) => unmatchPair(req.accountId, req.params.matchId, reply, opts),
   );
 
   typed.get(

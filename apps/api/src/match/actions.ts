@@ -107,6 +107,28 @@ export async function listChat(
   };
 }
 
+export async function unmatchPair(
+  accountId: string | undefined,
+  matchId: string,
+  reply: FastifyReply,
+  opts: LoopDeps,
+) {
+  const viewer = await requireResident(opts.accounts, accountId, reply);
+  if (!viewer) return;
+  const match = await opts.loop.findMatch(matchId);
+  if (!match || !isParty(match, viewer.id)) {
+    return reply.code(404).send({ code: 'not_found', message: 'Match not found.' });
+  }
+  if (await opts.loop.isBlocked(viewer.id, otherParty(match, viewer.id))) {
+    return reply.code(403).send({
+      code: 'chat_not_allowed',
+      message: 'Chat is not allowed after a Block.',
+    });
+  }
+  await opts.loop.dropMatch(matchId);
+  return { ok: true as const };
+}
+
 export async function sendChat(
   accountId: string | undefined,
   matchId: string,
