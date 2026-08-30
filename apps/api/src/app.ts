@@ -22,6 +22,9 @@ import { poolRoutes } from './pool/routes';
 import { MemoryProfileStore, type ProfileStore } from './profile/store';
 import { MemoryPhotoStore, type PhotoStore } from './profile/photos';
 import { profileRoutes } from './profile/routes';
+import { MemoryPhotoVerificationStore, type PhotoVerificationStore } from './profile/verifyStore';
+import { photoVerificationRoutes } from './profile/verifyRoutes';
+import { stubVendor, type PhotoVerificationVendor } from './profile/vendor';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -35,6 +38,8 @@ export interface AppOptions {
   profiles?: ProfileStore;
   photos?: PhotoStore;
   loop?: LoopStore;
+  verifications?: PhotoVerificationStore;
+  photoVendor?: PhotoVerificationVendor;
   now?: () => Date;
   mobileChecker?: MobileChecker;
   presenceChecker?: PresenceChecker;
@@ -102,13 +107,16 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   const profiles = opts.profiles ?? new MemoryProfileStore();
   const photos = opts.photos ?? new MemoryPhotoStore(opts.config.PHOTO_STORE_REGION);
   const loop = opts.loop ?? new MemoryLoopStore();
+  const verifications = opts.verifications ?? new MemoryPhotoVerificationStore();
+  const photoVendor = opts.photoVendor ?? stubVendor('passed');
   const now = opts.now ?? (() => new Date());
   app.addHook('onClose', async () => {
     await accounts.close();
     await profiles.close();
     await loop.close();
+    await verifications.close();
   });
-  await registerRoutes(app, opts, { accounts, profiles, photos, loop, now });
+  await registerRoutes(app, opts, { accounts, profiles, photos, loop, verifications, photoVendor, now });
   return app;
 }
 
@@ -120,6 +128,8 @@ async function registerRoutes(
     profiles: ProfileStore;
     photos: PhotoStore;
     loop: LoopStore;
+    verifications: PhotoVerificationStore;
+    photoVendor: PhotoVerificationVendor;
     now: () => Date;
   },
 ): Promise<void> {
@@ -133,4 +143,5 @@ async function registerRoutes(
   await app.register(poolRoutes, deps);
   await app.register(profileRoutes, deps);
   await app.register(matchRoutes, deps);
+  await app.register(photoVerificationRoutes, deps);
 }

@@ -12,5 +12,6 @@ export function presentProfile(profile: Profile, account: Account, now: Date) {
     languagesSpoken: profile.languagesSpoken,
     bio: profile.bio,
     photos: profile.photos,
+    photoVerification: profile.photoVerification,
   };
 }

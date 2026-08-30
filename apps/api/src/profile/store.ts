@@ -6,6 +6,8 @@ export type ProfilePhoto = {
   url: string;
 };
 
+export type PhotoVerificationMark = 'unverified' | 'verified';
+
 export type Profile = {
   profileId: string;
   accountId: string;
@@ -14,9 +16,14 @@ export type Profile = {
   languagesSpoken: LaunchLanguage[];
   bio: string;
   photos: ProfilePhoto[];
+  photoVerification: PhotoVerificationMark;
+  photoVerifiedAt: string | null;
 };
 
-export type ProfileWrite = Omit<Profile, 'profileId' | 'accountId' | 'photos'> & {
+export type ProfileWrite = Omit<
+  Profile,
+  'profileId' | 'accountId' | 'photos' | 'photoVerification' | 'photoVerifiedAt'
+> & {
   photos: ProfilePhoto[];
 };
 
@@ -25,6 +32,11 @@ export interface ProfileStore {
   findByAccountId(accountId: string): Promise<Profile | null>;
   findById(profileId: string): Promise<Profile | null>;
   list(): Promise<Profile[]>;
+  setPhotoVerification(
+    accountId: string,
+    mark: PhotoVerificationMark,
+    at: Date | null,
+  ): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -38,6 +50,8 @@ export class MemoryProfileStore implements ProfileStore {
       ...data,
       accountId,
       profileId: existing?.profileId ?? crypto.randomUUID(),
+      photoVerification: existing?.photoVerification ?? 'unverified',
+      photoVerifiedAt: existing?.photoVerifiedAt ?? null,
     };
     this.byAccount.set(accountId, profile);
     this.byId.set(profile.profileId, profile);
@@ -54,6 +68,22 @@ export class MemoryProfileStore implements ProfileStore {
 
   async list(): Promise<Profile[]> {
     return [...this.byId.values()];
+  }
+
+  async setPhotoVerification(
+    accountId: string,
+    mark: PhotoVerificationMark,
+    at: Date | null,
+  ): Promise<void> {
+    const existing = this.byAccount.get(accountId);
+    if (!existing) return;
+    const next = {
+      ...existing,
+      photoVerification: mark,
+      photoVerifiedAt: at ? at.toISOString() : null,
+    };
+    this.byAccount.set(accountId, next);
+    this.byId.set(next.profileId, next);
   }
 
   async close(): Promise<void> {

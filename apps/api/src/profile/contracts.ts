@@ -15,6 +15,8 @@ export const profilePhoto = z.object({
   url: z.string(),
 });
 
+export const PHOTO_VERIFICATION_MARKS = ['unverified', 'verified'] as const;
+
 export const profileResponse = z.object({
   profileId: z.string(),
   accountId: z.string(),
@@ -24,6 +26,18 @@ export const profileResponse = z.object({
   languagesSpoken: z.array(z.enum(LAUNCH_LANGUAGES)),
   bio: z.string(),
   photos: z.array(profilePhoto),
+  photoVerification: z.enum(PHOTO_VERIFICATION_MARKS),
+});
+
+export const photoVerificationBody = z.object({
+  skip: z.boolean().optional(),
+});
+
+export const photoVerificationResponse = z.object({
+  photoVerificationId: z.string(),
+  status: z.enum(['passed', 'failed', 'skipped']),
+  photoVerification: z.enum(PHOTO_VERIFICATION_MARKS),
+  completedAt: z.string(),
 });
 
 export const photoUpload = z.object({

@@ -62,6 +62,7 @@ export function PhotoCard({
   age,
   place,
   bio,
+  mark,
 }: {
   uri?: string;
   photos?: string[];
@@ -70,6 +71,7 @@ export function PhotoCard({
   age: number;
   place: string;
   bio?: string;
+  mark?: string;
 }) {
   const urls = photos?.length ? photos : uri ? [uri] : [];
   const shown = urls[photoIndex] ?? urls[0];
@@ -101,9 +103,8 @@ export function PhotoCard({
         <Text style={styles.photoBadgeText}>{place}</Text>
       </View>
       <View style={styles.photoCaption}>
-        <Text style={styles.photoName}>
-          {name}, {age}
-        </Text>
+        <Text style={styles.photoName}>{`${name}, ${age}`}</Text>
+        {mark ? <Text style={styles.photoBio}>{mark}</Text> : null}
         {bio ? (
           <Text style={styles.photoBio} numberOfLines={1}>
             {bio}

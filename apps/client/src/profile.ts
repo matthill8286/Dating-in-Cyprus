@@ -24,6 +24,8 @@ export const DATING_INTENT_PATTERN =
 
 export type ProfilePhoto = { photoId: string; url: string };
 
+export type PhotoVerificationMark = 'unverified' | 'verified';
+
 export type Profile = {
   profileId: string;
   accountId: string;
@@ -33,6 +35,7 @@ export type Profile = {
   languagesSpoken: Array<(typeof PROFILE_LANGUAGES)[number]>;
   bio: string;
   photos: ProfilePhoto[];
+  photoVerification?: PhotoVerificationMark;
 };
 
 export type ProfileFormValues = {
@@ -72,6 +75,7 @@ export function profileViewText(profile: Profile): string {
     languages,
     profile.bio,
     photos,
+    profile.photoVerification === 'verified' ? 'Photo verified' : 'Unverified',
   ].join('\n');
 }
 

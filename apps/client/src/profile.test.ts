@@ -68,6 +68,7 @@ describe('Profile view and edit have no dating-intent label', () => {
     expect(text).toContain('en, uk');
     expect(text).toContain('Lives in Limassol.');
     expect(text).toContain('1 photos');
+    expect(text).toContain('Unverified');
     expect(hasDatingIntentLabel(text)).toBe(false);
   });
 

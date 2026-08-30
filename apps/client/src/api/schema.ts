@@ -285,6 +285,8 @@ export interface paths {
                                     photoId: string;
                                     url: string;
                                 }[];
+                                /** @enum {string} */
+                                photoVerification: "unverified" | "verified";
                             }[];
                         };
                     };
@@ -349,6 +351,8 @@ export interface paths {
                                 photoId: string;
                                 url: string;
                             }[];
+                            /** @enum {string} */
+                            photoVerification: "unverified" | "verified";
                         };
                     };
                 };
@@ -428,6 +432,8 @@ export interface paths {
                                 photoId: string;
                                 url: string;
                             }[];
+                            /** @enum {string} */
+                            photoVerification: "unverified" | "verified";
                         };
                     };
                 };
@@ -450,6 +456,8 @@ export interface paths {
                                 photoId: string;
                                 url: string;
                             }[];
+                            /** @enum {string} */
+                            photoVerification: "unverified" | "verified";
                         };
                     };
                 };
@@ -524,6 +532,8 @@ export interface paths {
                                 photoId: string;
                                 url: string;
                             }[];
+                            /** @enum {string} */
+                            photoVerification: "unverified" | "verified";
                         };
                     };
                 };
@@ -798,6 +808,8 @@ export interface paths {
                                         photoId: string;
                                         url: string;
                                     }[];
+                                    /** @enum {string} */
+                                    photoVerification: "unverified" | "verified";
                                 };
                                 lastMessage: {
                                     body: string;
@@ -872,6 +884,8 @@ export interface paths {
                                     photoId: string;
                                     url: string;
                                 }[];
+                                /** @enum {string} */
+                                photoVerification: "unverified" | "verified";
                             };
                             lastMessage: {
                                 body: string;
@@ -1174,6 +1188,173 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/photo-verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        skip?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            photoVerificationId: string;
+                            /** @enum {string} */
+                            status: "passed" | "failed" | "skipped";
+                            /** @enum {string} */
+                            photoVerification: "unverified" | "verified";
+                            completedAt: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/photo-verifications/{photoVerificationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    photoVerificationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            photoVerificationId: string;
+                            /** @enum {string} */
+                            status: "passed" | "failed" | "skipped";
+                            /** @enum {string} */
+                            photoVerification: "unverified" | "verified";
+                            completedAt: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

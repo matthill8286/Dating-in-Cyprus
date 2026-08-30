@@ -1,9 +1,9 @@
 import { Pool } from 'pg';
 import type { LaunchLanguage } from '../account/store';
 import type { OperatingAreaCity } from './model';
-import type { Profile, ProfileStore, ProfileWrite } from './store';
+import type { PhotoVerificationMark, Profile, ProfileStore, ProfileWrite } from './store';
 
-const CREATE_TABLE = `
+const DDL = `
   CREATE TABLE IF NOT EXISTS profiles (
     profile_id UUID PRIMARY KEY,
     account_id UUID NOT NULL UNIQUE,
@@ -12,7 +12,9 @@ const CREATE_TABLE = `
     languages_spoken JSONB NOT NULL,
     bio TEXT NOT NULL,
     photos JSONB NOT NULL
-  )
+  );
+  ALTER TABLE profiles ADD COLUMN IF NOT EXISTS photo_verification TEXT NOT NULL DEFAULT 'unverified';
+  ALTER TABLE profiles ADD COLUMN IF NOT EXISTS photo_verified_at TIMESTAMPTZ;
 `;
 
 type ProfileRow = {
@@ -23,6 +25,8 @@ type ProfileRow = {
   languages_spoken: LaunchLanguage[];
   bio: string;
   photos: Profile['photos'];
+  photo_verification: PhotoVerificationMark;
+  photo_verified_at: Date | string | null;
 };
 
 function toProfile(row: ProfileRow): Profile {
@@ -34,8 +38,13 @@ function toProfile(row: ProfileRow): Profile {
     languagesSpoken: row.languages_spoken,
     bio: row.bio,
     photos: row.photos,
+    photoVerification: row.photo_verification,
+    photoVerifiedAt: row.photo_verified_at ? new Date(row.photo_verified_at).toISOString() : null,
   };
 }
+
+const SELECT_COLS =
+  'profile_id, account_id, first_name, city, languages_spoken, bio, photos, photo_verification, photo_verified_at';
 
 export class PostgresProfileStore implements ProfileStore {
   private readonly pool: Pool;
@@ -46,7 +55,7 @@ export class PostgresProfileStore implements ProfileStore {
   }
 
   private ensure(): Promise<void> {
-    this.ready ??= this.pool.query(CREATE_TABLE).then(() => undefined);
+    this.ready ??= this.pool.query(DDL).then(() => undefined);
     return this.ready;
   }
 
@@ -74,14 +83,13 @@ export class PostgresProfileStore implements ProfileStore {
         JSON.stringify(data.photos),
       ],
     );
-    return { ...data, accountId, profileId };
+    return (await this.findByAccountId(accountId)) as Profile;
   }
 
   async findByAccountId(accountId: string): Promise<Profile | null> {
     await this.ensure();
     const result = await this.pool.query<ProfileRow>(
-      `SELECT profile_id, account_id, first_name, city, languages_spoken, bio, photos
-         FROM profiles WHERE account_id = $1`,
+      `SELECT ${SELECT_COLS} FROM profiles WHERE account_id = $1`,
       [accountId],
     );
     const row = result.rows[0];
@@ -91,8 +99,7 @@ export class PostgresProfileStore implements ProfileStore {
   async findById(profileId: string): Promise<Profile | null> {
     await this.ensure();
     const result = await this.pool.query<ProfileRow>(
-      `SELECT profile_id, account_id, first_name, city, languages_spoken, bio, photos
-         FROM profiles WHERE profile_id = $1`,
+      `SELECT ${SELECT_COLS} FROM profiles WHERE profile_id = $1`,
       [profileId],
     );
     const row = result.rows[0];
@@ -101,11 +108,20 @@ export class PostgresProfileStore implements ProfileStore {
 
   async list(): Promise<Profile[]> {
     await this.ensure();
-    const result = await this.pool.query<ProfileRow>(
-      `SELECT profile_id, account_id, first_name, city, languages_spoken, bio, photos
-         FROM profiles`,
-    );
+    const result = await this.pool.query<ProfileRow>(`SELECT ${SELECT_COLS} FROM profiles`);
     return result.rows.map(toProfile);
+  }
+
+  async setPhotoVerification(
+    accountId: string,
+    mark: PhotoVerificationMark,
+    at: Date | null,
+  ): Promise<void> {
+    await this.ensure();
+    await this.pool.query(
+      `UPDATE profiles SET photo_verification = $2, photo_verified_at = $3 WHERE account_id = $1`,
+      [accountId, mark, at],
+    );
   }
 
   async close(): Promise<void> {
