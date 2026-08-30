@@ -423,6 +423,13 @@
                               ],
                               "additionalProperties": false
                             }
+                          },
+                          "photoVerification": {
+                            "type": "string",
+                            "enum": [
+                              "unverified",
+                              "verified"
+                            ]
                           }
                         },
                         "required": [
@@ -433,7 +440,8 @@
                           "city",
                           "languagesSpoken",
                           "bio",
-                          "photos"
+                          "photos",
+                          "photoVerification"
                         ],
                         "additionalProperties": false
                       }
@@ -606,6 +614,13 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "photoVerification": {
+                      "type": "string",
+                      "enum": [
+                        "unverified",
+                        "verified"
+                      ]
                     }
                   },
                   "required": [
@@ -616,7 +631,8 @@
                     "city",
                     "languagesSpoken",
                     "bio",
-                    "photos"
+                    "photos",
+                    "photoVerification"
                   ],
                   "additionalProperties": false
                 }
@@ -687,6 +703,13 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "photoVerification": {
+                      "type": "string",
+                      "enum": [
+                        "unverified",
+                        "verified"
+                      ]
                     }
                   },
                   "required": [
@@ -697,7 +720,8 @@
                     "city",
                     "languagesSpoken",
                     "bio",
-                    "photos"
+                    "photos",
+                    "photoVerification"
                   ],
                   "additionalProperties": false
                 }
@@ -826,6 +850,13 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "photoVerification": {
+                      "type": "string",
+                      "enum": [
+                        "unverified",
+                        "verified"
+                      ]
                     }
                   },
                   "required": [
@@ -836,7 +867,8 @@
                     "city",
                     "languagesSpoken",
                     "bio",
-                    "photos"
+                    "photos",
+                    "photoVerification"
                   ],
                   "additionalProperties": false
                 }
@@ -977,6 +1009,13 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "photoVerification": {
+                      "type": "string",
+                      "enum": [
+                        "unverified",
+                        "verified"
+                      ]
                     }
                   },
                   "required": [
@@ -987,7 +1026,8 @@
                     "city",
                     "languagesSpoken",
                     "bio",
-                    "photos"
+                    "photos",
+                    "photoVerification"
                   ],
                   "additionalProperties": false
                 }
@@ -1387,6 +1427,13 @@
                                   ],
                                   "additionalProperties": false
                                 }
+                              },
+                              "photoVerification": {
+                                "type": "string",
+                                "enum": [
+                                  "unverified",
+                                  "verified"
+                                ]
                               }
                             },
                             "required": [
@@ -1397,7 +1444,8 @@
                               "city",
                               "languagesSpoken",
                               "bio",
-                              "photos"
+                              "photos",
+                              "photoVerification"
                             ],
                             "additionalProperties": false
                           },
@@ -1553,6 +1601,13 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "photoVerification": {
+                          "type": "string",
+                          "enum": [
+                            "unverified",
+                            "verified"
+                          ]
                         }
                       },
                       "required": [
@@ -1563,7 +1618,8 @@
                         "city",
                         "languagesSpoken",
                         "bio",
-                        "photos"
+                        "photos",
+                        "photoVerification"
                       ],
                       "additionalProperties": false
                     },
@@ -2035,6 +2091,259 @@
             }
           },
           "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/photo-verifications": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "skip": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "photoVerificationId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "passed",
+                        "failed",
+                        "skipped"
+                      ]
+                    },
+                    "photoVerification": {
+                      "type": "string",
+                      "enum": [
+                        "unverified",
+                        "verified"
+                      ]
+                    },
+                    "completedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "photoVerificationId",
+                    "status",
+                    "photoVerification",
+                    "completedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/photo-verifications/{photoVerificationId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "photoVerificationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "photoVerificationId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "passed",
+                        "failed",
+                        "skipped"
+                      ]
+                    },
+                    "photoVerification": {
+                      "type": "string",
+                      "enum": [
+                        "unverified",
+                        "verified"
+                      ]
+                    },
+                    "completedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "photoVerificationId",
+                    "status",
+                    "photoVerification",
+                    "completedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
             "description": "Default Response",
             "content": {
               "application/json": {
