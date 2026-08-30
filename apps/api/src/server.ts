@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { PostgresAccountStore } from './account/postgres';
 import { PostgresLoopStore } from './match/postgres';
 import { PostgresProfileStore } from './profile/postgres';
+import { PostgresPhotoVerificationStore } from './profile/verifyPostgres';
 import { buildApp } from './app';
 import { loadConfig } from './config';
 import { loadEnvFiles } from './loadEnv';
@@ -14,7 +15,8 @@ const config = loadConfig();
 const accounts = new PostgresAccountStore(config.DATABASE_URL);
 const profiles = new PostgresProfileStore(config.DATABASE_URL);
 const loop = new PostgresLoopStore(config.DATABASE_URL);
-const app = await buildApp({ config, accounts, profiles, loop });
+const verifications = new PostgresPhotoVerificationStore(config.DATABASE_URL);
+const app = await buildApp({ config, accounts, profiles, loop, verifications });
 
 const shutdown = async (signal: string) => {
   app.log.info({ signal }, 'shutting down');

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, PanResponder, Text, View, StyleSheet } from 'react-native';
 import { deckTap, nextPhotoIndex, swipeDecision } from '../match';
 import type { Profile } from '../profile';
+import { photoVerificationLabel, photoVerificationOf } from '../verify';
 import { color } from '../theme';
 import { PhotoCard } from './kit';
 
@@ -60,6 +61,7 @@ export function SwipeCard({
         age={card.age}
         place={card.city}
         bio={card.bio}
+        mark={photoVerificationLabel(photoVerificationOf(card))}
       />
       <Animated.View style={[styles.stampWrap, { opacity: likeOp }]} pointerEvents="none">
         <View style={styles.stamp}>

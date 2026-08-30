@@ -10,6 +10,7 @@ import {
   type ProfileFormValues,
 } from './profile';
 import { languageLabel } from './theme';
+import { VerifyCard } from './VerifyCard';
 import {
   Card,
   ChipRow,
@@ -84,6 +85,9 @@ export function ProfileEditScreen({ onSaved }: { onSaved?: () => void }) {
           />
           <ErrorNote message={error} />
           <PrimaryButton title={profile ? 'Save' : 'Confirm'} onPress={() => void onSave()} />
+          {profile && sessionToken ? (
+            <VerifyCard token={sessionToken} profile={profile} onMark={setProfile} />
+          ) : null}
         </Card>
       </Sheet>
     </Screen>

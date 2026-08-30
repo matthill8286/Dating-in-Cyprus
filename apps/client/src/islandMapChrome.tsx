@@ -4,6 +4,7 @@ import type { MapView } from './map';
 import { mapTiles, MAX_ZOOM, MIN_ZOOM } from './map';
 import type { Profile } from './profile';
 import { color, font } from './theme';
+import { photoVerificationLabel, photoVerificationOf } from './verify';
 
 export function MapBackdrop({ view, width, height }: { view: MapView; width: number; height: number }) {
   return (
@@ -167,7 +168,7 @@ export function PeekCard({
         <Text style={styles.peekName}>
           {profile.firstName}, {profile.age}
         </Text>
-        <Text style={styles.peekPlace}>{profile.city} · Republic of Cyprus</Text>
+        <Text style={styles.peekPlace}>{profile.city} · {photoVerificationLabel(photoVerificationOf(profile))}</Text>
       </View>
       <Pressable accessibilityRole="button" accessibilityLabel={`View ${profile.firstName}`} onPress={onOpen}>
         <Text style={styles.peekGo}>View</Text>
