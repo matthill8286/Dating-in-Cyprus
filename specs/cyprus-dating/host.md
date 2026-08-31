@@ -4,6 +4,7 @@ Here is a host, not a catalog. The atomic unit is a proposed evening — who, ci
 
 ## Now
 
+- After join, a Resident without a Profile talks to Here (first name, city, languages, a few lines). That is the same thread as Introductions. Edit profile from the Profile tab stays a form.
 - After a Profile exists, the main loop is `GET /v1/introductions` plus yes / pass. The Discover deck is not the main loop.
 - An Introduction shows first name, city, languages spoken, an honest why, and a suggested meet framing. No GPS. No live km.
 - Verbs: Yes, Not this, Tell me more.
