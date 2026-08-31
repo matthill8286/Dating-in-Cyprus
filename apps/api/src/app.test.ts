@@ -39,7 +39,8 @@ describe('app', () => {
     expect(spec.paths?.['/v1/blocks']).toBeDefined();
     expect(spec.paths?.['/v1/reports']).toBeDefined();
     expect(spec.paths?.['/v1/photo-verifications']).toBeDefined();
-    expect(spec.paths?.['/v1/introductions']).toBeDefined();
+    expect(spec.paths?.['/v1/introductions']?.get).toBeDefined();
+    expect(spec.paths?.['/v1/introductions']?.post).toBeDefined();
     expect(spec.paths?.['/v1/introductions/{introductionId}/yes']?.post).toBeDefined();
     expect(spec.paths?.['/v1/introductions/{introductionId}/pass']?.post).toBeDefined();
     expect(spec.paths?.['/v1/matches/{matchId}']?.delete).toBeDefined();

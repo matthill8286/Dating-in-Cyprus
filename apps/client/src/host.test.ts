@@ -30,6 +30,23 @@ describe('host thread', () => {
     expect(lines[0]).toEqual({ id: 'open', kind: 'host', body: HOST_OPENING });
     expect(lines[1]).toMatchObject({ kind: 'intro', revealed: false });
     expect(JSON.stringify(lines)).not.toMatch(/like|nope|swipe/i);
+    const asked = hostLines({
+      introduction: elena,
+      revealed: false,
+      verb: null,
+      matched: null,
+      want: 'harbour walks',
+    });
+    expect(asked[1]).toEqual({ id: 'want', kind: 'you', body: 'harbour walks' });
+    const looking = hostLines({
+      introduction: null,
+      revealed: false,
+      verb: null,
+      matched: null,
+      want: 'harbour walks',
+      looking: true,
+    });
+    expect(looking.map((line) => line.kind)).toEqual(['host', 'you', 'host']);
   });
 
   it('earns the portrait after Tell me more, and steps back after a mutual Yes', () => {

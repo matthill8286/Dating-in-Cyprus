@@ -2585,6 +2585,149 @@
             }
           }
         }
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "want": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 280
+                  }
+                },
+                "required": [
+                  "want"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "introduction": {
+                      "type": "object",
+                      "properties": {
+                        "introductionId": {
+                          "type": "string"
+                        },
+                        "profileId": {
+                          "type": "string"
+                        },
+                        "firstName": {
+                          "type": "string"
+                        },
+                        "city": {
+                          "type": "string",
+                          "enum": [
+                            "Limassol",
+                            "Nicosia",
+                            "Larnaca",
+                            "Paphos",
+                            "Paralimni",
+                            "Ayia Napa"
+                          ]
+                        },
+                        "languagesSpoken": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "en",
+                              "uk",
+                              "ru",
+                              "ro",
+                              "bg"
+                            ]
+                          }
+                        },
+                        "photoVerification": {
+                          "type": "string",
+                          "enum": [
+                            "unverified",
+                            "verified"
+                          ]
+                        },
+                        "reason": {
+                          "type": "string"
+                        },
+                        "meetFraming": {
+                          "type": "string"
+                        },
+                        "portraitUrl": {
+                          "type": "string"
+                        },
+                        "bio": {
+                          "type": "string"
+                        },
+                        "expiresAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "introductionId",
+                        "profileId",
+                        "firstName",
+                        "city",
+                        "languagesSpoken",
+                        "photoVerification",
+                        "reason",
+                        "meetFraming",
+                        "portraitUrl",
+                        "bio",
+                        "expiresAt"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "introduction"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v1/introductions/{introductionId}/yes": {

@@ -13,50 +13,22 @@ export function useHost(sessionToken: string | null) {
   const [matchProfile, setMatchProfile] = useState<Profile | null>(null);
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
+  const [want, setWant] = useState<string | null>(null);
+  const [looking, setLooking] = useState(false);
 
   const load = useCallback(async () => {
     if (!sessionToken) return;
-    const headers = { authorization: `Bearer ${sessionToken}` };
-    const [intro, pool] = await Promise.all([
-      api.GET('/v1/introductions', { headers }),
-      api.GET('/v1/pool', { headers }),
-    ]);
-    setIntroduction(asIntroduction(intro.data));
+    const next = await fetchHost(sessionToken);
+    setIntroduction(next.intro);
+    setPeople(next.people);
     setRevealed(false);
     setVerb(null);
-    if (pool.data?.profiles) setPeople(pool.data.profiles as Profile[]);
     setReady(true);
   }, [sessionToken]);
 
   useEffect(() => {
     void load();
   }, [load]);
-
-  async function decide(kind: 'yes' | 'pass') {
-    if (!introduction || !sessionToken || busy || matched) return;
-    setBusy(true);
-    const headers = { authorization: `Bearer ${sessionToken}` };
-    const params = { path: { introductionId: introduction.introductionId } };
-    if (kind === 'yes') {
-      const { data } = await api.POST('/v1/introductions/{introductionId}/yes', { headers, params });
-      const opened = interestMatched(data, hostAsProfile(introduction));
-      if (opened) {
-        setMatched({
-          matchId: opened.matchId,
-          firstName: introduction.firstName,
-          profileId: introduction.profileId,
-        });
-        setMatchProfile(opened.profile);
-        setVerb('yes');
-        setBusy(false);
-        return;
-      }
-    } else {
-      await api.POST('/v1/introductions/{introductionId}/pass', { headers, params });
-    }
-    await load();
-    setBusy(false);
-  }
 
   return {
     introduction,
@@ -67,14 +39,105 @@ export function useHost(sessionToken: string | null) {
     matchProfile,
     busy,
     ready,
+    want,
+    looking,
     more: () => {
       setRevealed(true);
       setVerb('more');
     },
-    yes: () => void decide('yes'),
-    pass: () => void decide('pass'),
+    yes: () =>
+      void decideYes(sessionToken, introduction, busy, matched, setBusy, setMatched, setMatchProfile, setVerb, load),
+    pass: () => void decidePass(sessionToken, introduction, busy, matched, setBusy, load),
+    ask: (text: string) =>
+      void askHere(text, sessionToken, busy, matched, setBusy, setLooking, setWant, setIntroduction, setRevealed, setVerb),
     reload: () => void load(),
   };
+}
+
+async function fetchHost(sessionToken: string) {
+  const headers = { authorization: `Bearer ${sessionToken}` };
+  const [intro, pool] = await Promise.all([
+    api.GET('/v1/introductions', { headers }),
+    api.GET('/v1/pool', { headers }),
+  ]);
+  return {
+    intro: asIntroduction(intro.data),
+    people: (pool.data?.profiles ?? []) as Profile[],
+  };
+}
+
+async function decideYes(
+  sessionToken: string | null,
+  introduction: HostIntroduction | null,
+  busy: boolean,
+  matched: HostMatch | null,
+  setBusy: (value: boolean) => void,
+  setMatched: (value: HostMatch) => void,
+  setMatchProfile: (value: Profile) => void,
+  setVerb: (value: HostVerb) => void,
+  load: () => Promise<void>,
+) {
+  if (!introduction || !sessionToken || busy || matched) return;
+  setBusy(true);
+  const headers = { authorization: `Bearer ${sessionToken}` };
+  const params = { path: { introductionId: introduction.introductionId } };
+  const { data } = await api.POST('/v1/introductions/{introductionId}/yes', { headers, params });
+  const opened = interestMatched(data, hostAsProfile(introduction));
+  if (opened) {
+    setMatched({ matchId: opened.matchId, firstName: introduction.firstName, profileId: introduction.profileId });
+    setMatchProfile(opened.profile);
+    setVerb('yes');
+    setBusy(false);
+    return;
+  }
+  await load();
+  setBusy(false);
+}
+
+async function decidePass(
+  sessionToken: string | null,
+  introduction: HostIntroduction | null,
+  busy: boolean,
+  matched: HostMatch | null,
+  setBusy: (value: boolean) => void,
+  load: () => Promise<void>,
+) {
+  if (!introduction || !sessionToken || busy || matched) return;
+  setBusy(true);
+  await api.POST('/v1/introductions/{introductionId}/pass', {
+    headers: { authorization: `Bearer ${sessionToken}` },
+    params: { path: { introductionId: introduction.introductionId } },
+  });
+  await load();
+  setBusy(false);
+}
+
+async function askHere(
+  text: string,
+  sessionToken: string | null,
+  busy: boolean,
+  matched: HostMatch | null,
+  setBusy: (value: boolean) => void,
+  setLooking: (value: boolean) => void,
+  setWant: (value: string) => void,
+  setIntroduction: (value: HostIntroduction | null) => void,
+  setRevealed: (value: boolean) => void,
+  setVerb: (value: HostVerb) => void,
+) {
+  const note = text.trim();
+  if (!note || !sessionToken || busy || matched) return;
+  setBusy(true);
+  setLooking(true);
+  setWant(note);
+  const { data } = await api.POST('/v1/introductions', {
+    headers: { authorization: `Bearer ${sessionToken}` },
+    body: { want: note },
+  });
+  setIntroduction(asIntroduction(data));
+  setRevealed(false);
+  setVerb(null);
+  setLooking(false);
+  setBusy(false);
 }
 
 function hostAsProfile(intro: HostIntroduction): Profile {

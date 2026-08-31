@@ -6,7 +6,8 @@ import { listVisibleProfiles } from '../pool/visible';
 import type { Profile } from '../profile/store';
 import { requireResident } from '../profile/resident';
 import type { IntroductionBody } from './contracts';
-import { introductionReason, isFresh, meetFraming, pickFromPool } from './reason';
+import { introductionReason, isFresh, meetFraming } from './reason';
+import { chooseFromPool } from './score';
 import type { IntroductionRecord, IntroStore } from './store';
 
 export type HostDeps = LoopDeps & { intros: IntroStore };
@@ -40,11 +41,36 @@ export async function currentIntroduction(
   if (open && kept && isFresh(open.expiresAt, opts.now())) {
     return { introduction: presentIntro(open, kept, own) };
   }
-  const next = pickFromPool(visible, own.city);
+  const next = pickNext(visible, own);
   if (!next) return { introduction: null };
   const record = await openIntroduction(viewer, next, opts.now);
   await opts.intros.save(record);
   return { introduction: presentIntro(record, next, own) };
+}
+
+export async function requestIntroduction(
+  accountId: string | undefined,
+  want: string,
+  reply: FastifyReply,
+  opts: HostDeps,
+) {
+  const viewer = await requireResident(opts.accounts, accountId, reply);
+  if (!viewer) return;
+  const own = await opts.profiles.findByAccountId(viewer.id);
+  if (!own) {
+    return reply.code(403).send({
+      code: 'profile_required',
+      message: 'Publish a Profile before asking Here for an Introduction.',
+    });
+  }
+  const visible = await listVisibleProfiles(viewer, opts);
+  const open = await opts.intros.findOpen(viewer.id);
+  if (open) await opts.intros.mark(open.introductionId, 'replaced');
+  const next = pickNext(visible, own, want);
+  if (!next) return { introduction: null };
+  const record = await openIntroduction(viewer, next, opts.now);
+  await opts.intros.save(record);
+  return { introduction: presentIntro(record, next, own, want) };
 }
 
 export async function acceptIntroduction(
@@ -119,6 +145,7 @@ function presentIntro(
   record: IntroductionRecord,
   person: Presented,
   own: Profile,
+  want?: string,
 ): IntroductionBody {
   return {
     introductionId: record.introductionId,
@@ -127,10 +154,14 @@ function presentIntro(
     city: person.city,
     languagesSpoken: person.languagesSpoken,
     photoVerification: person.photoVerification,
-    reason: introductionReason(own, person),
+    reason: introductionReason(own, person, want),
     meetFraming: meetFraming(person.city),
     portraitUrl: person.photos[0]?.url ?? '',
     bio: person.bio,
     expiresAt: record.expiresAt,
   };
+}
+
+function pickNext(visible: Presented[], own: Profile, want?: string): Presented | undefined {
+  return chooseFromPool(visible, own, want);
 }

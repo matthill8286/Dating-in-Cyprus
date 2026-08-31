@@ -1474,7 +1474,63 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        want: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            introduction: {
+                                introductionId: string;
+                                profileId: string;
+                                firstName: string;
+                                /** @enum {string} */
+                                city: "Limassol" | "Nicosia" | "Larnaca" | "Paphos" | "Paralimni" | "Ayia Napa";
+                                languagesSpoken: ("en" | "uk" | "ru" | "ro" | "bg")[];
+                                /** @enum {string} */
+                                photoVerification: "unverified" | "verified";
+                                reason: string;
+                                meetFraming: string;
+                                portraitUrl: string;
+                                bio: string;
+                                expiresAt: string;
+                            } | null;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

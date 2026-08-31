@@ -24,6 +24,9 @@ describe('introduction reason', () => {
     expect(introductionReason({ ...alex, languagesSpoken: ['bg'] }, elena)).toBe(
       'You both live in Limassol.',
     );
+    expect(introductionReason(alex, { ...elena, bio: 'Shipping by week, the marina at the weekend.' })).toMatch(
+      /Elena writes, “Shipping by week, the marina at the weekend.”/,
+    );
   });
 
   it('frames an evening in the other person’s city, not a GPS distance', () => {
