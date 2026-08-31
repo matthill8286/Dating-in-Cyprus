@@ -11,11 +11,11 @@ export const ONBOARDING_SLIDES = [
   },
   {
     title: 'Matches',
-    body: 'Express Interest in someone you can see. When it is mutual, a Match opens and you can chat.',
+    body: 'Here introduces you to one person at a time. When interest is mutual, a Match opens and you can chat.',
   },
   {
     title: 'Free',
-    body: 'Join, discovery, Match, and chat are free. Twenty-one and over. Residents only.',
+    body: 'Join, introductions, Match, and chat are free. Twenty-one and over. Residents only.',
   },
 ] as const;
 

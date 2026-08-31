@@ -7,11 +7,13 @@ import {
   clampView,
   islandView,
   mapPins,
+  mapShouldHandleWheel,
   panView,
   peopleInView,
   peopleWestToEast,
   viewForCity,
   zoomAt,
+  zoomDeltaFromWheel,
   type MapView,
 } from './map';
 import type { Profile } from './profile';
@@ -67,18 +69,18 @@ export function IslandMap({
             />
           ))}
         </View>
-        <ZoomPad zoom={camera.view.zoom} onIn={() => camera.zoomBy(1)} onOut={() => camera.zoomBy(-1)} onFit={camera.fit} />
-        <Text style={styles.credit} pointerEvents="none">
-          © Esri · approximate city area
-        </Text>
-        <PeekStrip
-          people={inView}
-          selectedId={selected?.profileId}
-          empty="No one in this part of the island."
-          onPick={(profile) => setPicked(profile.profileId)}
-          onOpen={onOpen}
-        />
       </View>
+      <ZoomPad zoom={camera.view.zoom} onIn={() => camera.zoomBy(0.5)} onOut={() => camera.zoomBy(-0.5)} onFit={camera.fit} />
+      <Text style={styles.credit} pointerEvents="none">
+        © Esri · approximate city area
+      </Text>
+      <PeekStrip
+        people={inView}
+        selectedId={selected?.profileId}
+        empty="No one in this part of the island."
+        onPick={(profile) => setPicked(profile.profileId)}
+        onOpen={onOpen}
+      />
     </View>
   );
 }
@@ -113,7 +115,7 @@ function useMapCamera(width: number, height: number, city: string) {
     setView((current) => clampView(current, width, height));
   }, [width, height, city]);
 
-  useEffect(() => bindWheel(boardRef.current, panByRef, zoomByRef), [width, height]);
+  useEffect(() => bindWheel(boardRef.current, zoomByRef), [width, height]);
 
   const pan = useMemo(
     () =>
@@ -149,23 +151,35 @@ function useMapCamera(width: number, height: number, city: string) {
 
 function bindWheel(
   host: View | null,
-  panBy: { current: (dx: number, dy: number) => void },
   zoomBy: { current: (delta: number, x?: number, y?: number) => void },
 ): (() => void) | undefined {
   if (Platform.OS !== 'web' || !host) return undefined;
   const node = webNode(host);
   if (!node) return undefined;
+  let pending = 0;
+  let atX = 0;
+  let atY = 0;
+  let frame = 0;
+  const flush = () => {
+    frame = 0;
+    if (pending === 0) return;
+    zoomBy.current(pending, atX, atY);
+    pending = 0;
+  };
   const onWheel = (event: WheelEvent) => {
+    if (!mapShouldHandleWheel(event.target, node)) return;
     event.preventDefault();
     const rect = node.getBoundingClientRect();
-    if (event.ctrlKey || event.metaKey) {
-      zoomBy.current(event.deltaY < 0 ? 1 : -1, event.clientX - rect.left, event.clientY - rect.top);
-      return;
-    }
-    panBy.current(-event.deltaX, -event.deltaY);
+    pending += zoomDeltaFromWheel(event.deltaY);
+    atX = event.clientX - rect.left;
+    atY = event.clientY - rect.top;
+    if (!frame) frame = requestAnimationFrame(flush);
   };
   node.addEventListener('wheel', onWheel, { passive: false });
-  return () => node.removeEventListener('wheel', onWheel);
+  return () => {
+    node.removeEventListener('wheel', onWheel);
+    if (frame) cancelAnimationFrame(frame);
+  };
 }
 
 function webNode(host: View): HTMLElement | null {
@@ -176,7 +190,7 @@ function webNode(host: View): HTMLElement | null {
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, minHeight: 0 },
+  wrap: { flex: 1, minHeight: 0, position: 'relative' },
   board: { flex: 1, minHeight: 0, overflow: 'hidden', backgroundColor: '#d7e6ee' },
   layer: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
   city: {

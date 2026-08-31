@@ -6,7 +6,7 @@ export type MainTab = 'people' | 'matches' | 'messages' | 'profile';
 export type TabGo = Record<MainTab, () => void>;
 
 const TABS: Array<{ id: MainTab; label: string; icon: string; iconOn: string }> = [
-  { id: 'people', label: 'Discover', icon: '▣', iconOn: '▣' },
+  { id: 'people', label: 'Here', icon: '◇', iconOn: '◆' },
   { id: 'matches', label: 'Matches', icon: '♡', iconOn: '♥' },
   { id: 'messages', label: 'Messages', icon: '✉', iconOn: '✉' },
   { id: 'profile', label: 'Profile', icon: '☺', iconOn: '☺' },

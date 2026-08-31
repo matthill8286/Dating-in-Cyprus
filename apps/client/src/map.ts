@@ -86,7 +86,14 @@ export function worldYToLat(y: number, zoom: number): number {
 }
 
 export function clampZoom(zoom: number): number {
-  return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.round(zoom)));
+  return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
+}
+
+const WHEEL_ZOOM_PX = 320;
+const WHEEL_ZOOM_CAP = 0.28;
+
+export function zoomDeltaFromWheel(deltaY: number): number {
+  return Math.max(-WHEEL_ZOOM_CAP, Math.min(WHEEL_ZOOM_CAP, -deltaY / WHEEL_ZOOM_PX));
 }
 
 export function projectOnView(
@@ -153,7 +160,7 @@ export function zoomAt(
   height: number,
 ): MapView {
   const zoom = clampZoom(nextZoom);
-  if (zoom === view.zoom) return view;
+  if (Math.abs(zoom - view.zoom) < 1e-6) return view;
   const { lat, lng } = screenToLatLng(view, x, y, width, height);
   const next = { ...view, zoom };
   const placed = projectOnView(lat, lng, next, width, height);
@@ -202,21 +209,23 @@ export function peopleWestToEast(people: Profile[]): Profile[] {
 export function mapTiles(view: MapView, width: number, height: number): MapTile[] {
   if (width <= 0 || height <= 0) return [];
   const z = view.zoom;
+  const tileZ = Math.floor(z);
+  const tileSize = TILE * 2 ** (z - tileZ);
   const left = lngToWorldX(view.centerLng, z) - width / 2;
   const top = latToWorldY(view.centerLat, z) - height / 2;
   const tiles: MapTile[] = [];
-  const maxIndex = 2 ** z;
-  for (let tx = Math.floor((left - TILE) / TILE); tx <= Math.floor((left + width + TILE) / TILE); tx += 1) {
-    for (let ty = Math.floor((top - TILE) / TILE); ty <= Math.floor((top + height + TILE) / TILE); ty += 1) {
+  const maxIndex = 2 ** tileZ;
+  for (let tx = Math.floor((left - tileSize) / tileSize); tx <= Math.floor((left + width + tileSize) / tileSize); tx += 1) {
+    for (let ty = Math.floor((top - tileSize) / tileSize); ty <= Math.floor((top + height + tileSize) / tileSize); ty += 1) {
       if (ty < 0 || ty >= maxIndex) continue;
       const wrapped = ((tx % maxIndex) + maxIndex) % maxIndex;
       tiles.push({
-        key: `${z}-${wrapped}-${ty}`,
-        url: `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/${z}/${ty}/${wrapped}`,
-        x: tx * TILE - left,
-        y: ty * TILE - top,
-        width: TILE,
-        height: TILE,
+        key: `${tileZ}-${wrapped}-${ty}`,
+        url: `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/${tileZ}/${ty}/${wrapped}`,
+        x: tx * tileSize - left,
+        y: ty * tileSize - top,
+        width: tileSize,
+        height: tileSize,
       });
     }
   }
@@ -254,6 +263,13 @@ export function pinOnScreen(
   const x = pin.x + drag.x;
   const y = pin.y + drag.y;
   return x >= -36 && x <= width + 36 && y >= -36 && y <= height + 36;
+}
+
+export function mapShouldHandleWheel(
+  target: unknown,
+  host: { contains: (node: never) => boolean } | null,
+): boolean {
+  return Boolean(target && host?.contains(target as never));
 }
 
 export function peopleInView(

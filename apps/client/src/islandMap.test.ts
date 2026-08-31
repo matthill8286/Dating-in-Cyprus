@@ -16,6 +16,11 @@ describe('island map chrome', () => {
     expect(netOpenViews(src.slice(board, peek))).toBeLessThanOrEqual(0);
   });
 
+  it('zooms from the wheel in small steps instead of jumping a level per tick', () => {
+    expect(src).toContain('zoomDeltaFromWheel');
+    expect(src).not.toContain('event.deltaY < 0 ? 1 : -1');
+  });
+
   it('lets the peek strip keep wheel and trackpad scroll', () => {
     const host = { contains: (node: unknown) => node === 'pin' };
     expect(mapShouldHandleWheel('pin', host)).toBe(true);
