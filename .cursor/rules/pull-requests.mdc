@@ -7,13 +7,11 @@ alwaysApply: true
 
 Never push commits to `master` (or `main`). Use a feature branch and open a PR against `master`.
 
-Every PR must include:
+Every PR uses `.github/PULL_REQUEST_TEMPLATE.md`. Fill it in. Do not open a blank PR.
 
 1. **Title** — one line, why the change exists
 2. **Summary** — 1–3 bullets of what changed
-3. **Test plan** — a short checklist of how to verify (CI, a signed-in flow, an edge case)
-
-Keep it short. Use this shape:
+3. **Test plan** — a short checklist (CI, a signed-in flow, an edge case)
 
 ```markdown
 ## Summary
@@ -24,4 +22,4 @@ Keep it short. Use this shape:
 - [ ] …
 ```
 
-If `gh pr create` cannot open the PR, still write that body and give the compare URL. Do not leave a branch with no description of how to test it.
+Pass that body to `gh pr create`. If `gh` cannot open the PR, put the same body on the compare URL. Do not leave a branch with no description of how to test it.
