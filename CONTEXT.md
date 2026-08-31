@@ -32,8 +32,16 @@ _Avoid_: Locale (when you mean a human language), Greek (not a Launch language)
 The photos, first name, age, city, languages spoken, and short bio a Resident shows to others.
 _Avoid_: Account (the login), bio (the whole Profile)
 
+**Here** (the host):
+The one conversation a Resident has with the product. Here proposes Introductions and then leaves a Match.
+_Avoid_: Discover (as the main loop), assistant, wingman
+
+**Introduction**:
+A proposed evening: who, city, why, and a suggested meet framing. One is open at a time. It expires. Photos are earned, not stacked.
+_Avoid_: Card, swipe, recommendation (as the unit), match (the Introduction is before Interest)
+
 **Interest**:
-A one-way expression that a Resident wants to Match with another Resident they can see.
+A one-way expression that a Resident wants to Match with another Resident they can see. In the host loop this is **Yes**.
 _Avoid_: Like, swipe, crush (as the domain noun)
 
 **Match**:

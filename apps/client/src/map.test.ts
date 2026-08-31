@@ -14,6 +14,7 @@ import {
   projectOnView,
   viewForCity,
   zoomAt,
+  zoomDeltaFromWheel,
 } from './map';
 import type { Profile } from './profile';
 
@@ -100,6 +101,21 @@ describe('approximate map', () => {
       'Limassol',
       'Ayia Napa',
     ]);
+  });
+});
+
+describe('calm zoom', () => {
+  it('zooms in small fractional steps so a pinch does not skip a level', () => {
+    const view = islandView(400, 400);
+    expect(Math.abs(zoomDeltaFromWheel(12))).toBeLessThan(0.1);
+    expect(Math.abs(zoomDeltaFromWheel(800))).toBeLessThanOrEqual(0.28);
+    expect(zoomDeltaFromWheel(-40)).toBeGreaterThan(0);
+    const next = zoomAt(view, view.zoom + zoomDeltaFromWheel(-40), 200, 200, 400, 400);
+    expect(next.zoom).toBeGreaterThan(view.zoom);
+    expect(next.zoom).toBeLessThan(view.zoom + 1);
+    const mid = mapTiles({ ...view, zoom: view.zoom + 0.5 }, 400, 400);
+    expect(mid[0]?.width).toBeGreaterThan(256);
+    expect(mid[0]?.url).toContain(`/tile/${Math.floor(view.zoom + 0.5)}/`);
   });
 });
 

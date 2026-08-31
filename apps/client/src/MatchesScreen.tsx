@@ -28,7 +28,7 @@ export function MatchesScreen({
             <MatchTile key={item.matchId} item={item} onPress={() => onOpen(item)} />
           ))}
         </View>
-        {matches.length === 0 ? <MuteNote>No Matches yet. Keep swiping.</MuteNote> : null}
+        {matches.length === 0 ? <MuteNote>No Matches yet. Here will introduce you.</MuteNote> : null}
       </Sheet>
     </Screen>
   );

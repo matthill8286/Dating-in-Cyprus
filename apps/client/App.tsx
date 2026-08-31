@@ -8,7 +8,7 @@ import { NotifyScreen } from './src/NotifyScreen';
 import { OnboardingScreen } from './src/OnboardingScreen';
 import { MatchesScreen } from './src/MatchesScreen';
 import { MessagesScreen } from './src/MessagesScreen';
-import { PoolScreen } from './src/PoolScreen';
+import { HostScreen } from './src/HostScreen';
 import { ProfileEditScreen } from './src/ProfileEditScreen';
 import { ProfileViewScreen } from './src/ProfileViewScreen';
 import { ChatScreen } from './src/ChatScreen';
@@ -76,7 +76,7 @@ function ProfileGate() {
     return <MessagesScreen onOpen={setChat} go={go} />;
   }
   return (
-    <PoolScreen
+    <HostScreen
       go={go}
       onChat={(item) => {
         setTab('messages');

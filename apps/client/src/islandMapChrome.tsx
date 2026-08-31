@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Image, Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, Text, View, StyleSheet, type ViewStyle } from 'react-native';
 import type { MapView } from './map';
 import { mapTiles, MAX_ZOOM, MIN_ZOOM } from './map';
 import type { Profile } from './profile';
@@ -113,11 +113,13 @@ export function PeekStrip({
           ref={list}
           horizontal
           nestedScrollEnabled
+          pointerEvents="auto"
           showsHorizontalScrollIndicator={false}
           decelerationRate="fast"
           snapToInterval={snap}
           snapToAlignment="start"
           disableIntervalMomentum
+          style={[styles.stripScroll, Platform.OS === 'web' ? webStripScroll : null]}
           contentContainerStyle={styles.strip}
           accessibilityLabel="People on the map"
           onMomentumScrollEnd={(event) => {
@@ -153,27 +155,29 @@ export function PeekCard({
   onOpen: () => void;
 }) {
   return (
-    <Pressable
-      onPress={onPick ?? onOpen}
-      accessibilityRole="button"
-      accessibilityLabel={`${profile.firstName} profile`}
-      style={[styles.peek, active && styles.peekOn]}
-    >
-      {profile.photos[0]?.url ? (
-        <Image source={{ uri: profile.photos[0].url }} style={styles.peekPhoto} />
-      ) : (
-        <View style={styles.peekPhoto} />
-      )}
-      <View style={styles.peekCopy}>
-        <Text style={styles.peekName}>
-          {profile.firstName}, {profile.age}
-        </Text>
-        <Text style={styles.peekPlace}>{profile.city} · {photoVerificationLabel(photoVerificationOf(profile))}</Text>
-      </View>
+    <View style={[styles.peek, active && styles.peekOn]}>
+      <Pressable
+        onPress={onPick ?? onOpen}
+        accessibilityRole="button"
+        accessibilityLabel={`${profile.firstName} profile`}
+        style={styles.peekMain}
+      >
+        {profile.photos[0]?.url ? (
+          <Image source={{ uri: profile.photos[0].url }} style={styles.peekPhoto} />
+        ) : (
+          <View style={styles.peekPhoto} />
+        )}
+        <View style={styles.peekCopy}>
+          <Text style={styles.peekName}>
+            {profile.firstName}, {profile.age}
+          </Text>
+          <Text style={styles.peekPlace}>{profile.city} · {photoVerificationLabel(photoVerificationOf(profile))}</Text>
+        </View>
+      </Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={`View ${profile.firstName}`} onPress={onOpen}>
         <Text style={styles.peekGo}>View</Text>
       </Pressable>
-    </Pressable>
+    </View>
   );
 }
 
@@ -207,6 +211,7 @@ const styles = StyleSheet.create({
   },
   zoomMark: { fontFamily: font.display, fontSize: 20, fontWeight: '700', color: color.ink },
   dock: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 6, paddingBottom: 12 },
+  stripScroll: { width: '100%', flexGrow: 0 },
   peek: {
     width: PEEK_WIDTH,
     flexDirection: 'row',
@@ -240,9 +245,12 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
   },
+  peekMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   peekPhoto: { width: 48, height: 48, borderRadius: 12, backgroundColor: color.surface },
   peekCopy: { flex: 1 },
   peekName: { fontFamily: font.display, fontSize: 16, fontWeight: '700', color: color.ink },
   peekPlace: { fontFamily: font.body, fontSize: 12, color: color.mute, marginTop: 1 },
   peekGo: { fontFamily: font.body, fontSize: 14, fontWeight: '700', color: color.rose },
 });
+
+const webStripScroll = { touchAction: 'pan-x', overflowX: 'auto' } as ViewStyle;

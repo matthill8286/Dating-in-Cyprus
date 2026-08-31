@@ -25,6 +25,8 @@ import { profileRoutes } from './profile/routes';
 import { MemoryPhotoVerificationStore, type PhotoVerificationStore } from './profile/verifyStore';
 import { photoVerificationRoutes } from './profile/verifyRoutes';
 import { stubVendor, type PhotoVerificationVendor } from './profile/vendor';
+import { hostRoutes } from './host/routes';
+import { MemoryIntroStore, type IntroStore } from './host/store';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -40,6 +42,7 @@ export interface AppOptions {
   loop?: LoopStore;
   verifications?: PhotoVerificationStore;
   photoVendor?: PhotoVerificationVendor;
+  intros?: IntroStore;
   now?: () => Date;
   mobileChecker?: MobileChecker;
   presenceChecker?: PresenceChecker;
@@ -109,6 +112,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   const loop = opts.loop ?? new MemoryLoopStore();
   const verifications = opts.verifications ?? new MemoryPhotoVerificationStore();
   const photoVendor = opts.photoVendor ?? stubVendor('passed');
+  const intros = opts.intros ?? new MemoryIntroStore();
   const now = opts.now ?? (() => new Date());
   app.addHook('onClose', async () => {
     await accounts.close();
@@ -116,7 +120,16 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     await loop.close();
     await verifications.close();
   });
-  await registerRoutes(app, opts, { accounts, profiles, photos, loop, verifications, photoVendor, now });
+  await registerRoutes(app, opts, {
+    accounts,
+    profiles,
+    photos,
+    loop,
+    verifications,
+    photoVendor,
+    intros,
+    now,
+  });
   return app;
 }
 
@@ -130,6 +143,7 @@ async function registerRoutes(
     loop: LoopStore;
     verifications: PhotoVerificationStore;
     photoVendor: PhotoVerificationVendor;
+    intros: IntroStore;
     now: () => Date;
   },
 ): Promise<void> {
@@ -144,4 +158,5 @@ async function registerRoutes(
   await app.register(profileRoutes, deps);
   await app.register(matchRoutes, deps);
   await app.register(photoVerificationRoutes, deps);
+  await app.register(hostRoutes, deps);
 }
