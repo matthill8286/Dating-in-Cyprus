@@ -190,3 +190,24 @@ describe('Introduction expiry', () => {
     await app.close();
   });
 });
+
+describe('Introduction from what the Resident asked Here', () => {
+  it('re-picks from the Pool using the written want, without a Pass', async () => {
+    const app = await seededApp();
+    const token = await signInAlex(app);
+    const first = await readIntro(app, token);
+    const asked = await app.inject({
+      method: 'POST',
+      url: '/v1/introductions',
+      headers: auth(token),
+      payload: { want: 'Paphos harbour' },
+    });
+    expect(asked.statusCode).toBe(200);
+    const intro = (asked.json() as IntroJson).introduction;
+    expect(intro?.city).toBe('Paphos');
+    expect(intro?.reason).toMatch(/harbour|Paphos/i);
+    expect(intro?.introductionId).not.toBe(first.body.introduction?.introductionId);
+    expect(intro?.reason).not.toMatch(/engineer|lawyer|doctor/i);
+    await app.close();
+  });
+});

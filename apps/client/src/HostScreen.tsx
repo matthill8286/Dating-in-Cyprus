@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
 import { useApp } from './context/AppContext';
 import { canDecide, HOST_OPENING, hostLines, type HostLine } from './host';
-import { HostHeader, HostMessage, IslandBack, VerbRow } from './hostChrome';
+import { HostComposer, HostHeader, HostMessage, IslandBack, VerbRow } from './hostChrome';
 import { IslandMap } from './IslandMap';
 import type { Profile } from './profile';
 import { OpenSafetySheet } from './SafetySheet';
@@ -22,6 +22,7 @@ export function HostScreen({
   const host = useHost(sessionToken);
   const [island, setIsland] = useState(false);
   const [safety, setSafety] = useState(false);
+  const [draft, setDraft] = useState('');
   const tabs = <TabBar active="people" go={go} />;
 
   if (island) {
@@ -29,7 +30,28 @@ export function HostScreen({
   }
 
   return (
-    <Fixed footer={tabs}>
+    <Fixed
+      footer={
+        <View>
+          {canDecide(host.introduction, host.busy, host.matched) ? (
+            <VerbRow onYes={host.yes} onPass={host.pass} onMore={host.more} showMore={!host.revealed} />
+          ) : null}
+          {!host.matched ? (
+            <HostComposer
+              value={draft}
+              onChange={setDraft}
+              busy={host.busy}
+              onSend={() => {
+                const text = draft;
+                setDraft('');
+                host.ask(text);
+              }}
+            />
+          ) : null}
+          {tabs}
+        </View>
+      }
+    >
       <ScrollView contentContainerStyle={styles.thread} style={styles.scroll}>
         <HostHeader
           onIsland={() => setIsland(true)}
@@ -40,14 +62,6 @@ export function HostScreen({
             <HostMessage key={line.id} line={line} />
           ))}
         </View>
-        {canDecide(host.introduction, host.busy, host.matched) ? (
-          <VerbRow
-            onYes={host.yes}
-            onPass={host.pass}
-            onMore={host.more}
-            showMore={!host.revealed}
-          />
-        ) : null}
         <WriteToMatch match={host.matched} profile={host.matchProfile} onChat={onChat} />
       </ScrollView>
       <OpenSafetySheet
@@ -88,6 +102,8 @@ function threadFor(host: {
   revealed: boolean;
   verb: Parameters<typeof hostLines>[0]['verb'];
   matched: Parameters<typeof hostLines>[0]['matched'];
+  want: string | null;
+  looking: boolean;
 }): HostLine[] {
   if (!host.ready) return [{ id: 'open', kind: 'host', body: HOST_OPENING }];
   return hostLines(host);
@@ -123,10 +139,10 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: 32,
-    gap: 28,
+    paddingBottom: 24,
+    gap: 20,
   },
-  lines: { gap: 22 },
+  lines: { gap: 16 },
   write: {
     backgroundColor: color.ink,
     borderRadius: 999,

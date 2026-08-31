@@ -22,11 +22,14 @@ export type ReasonFacts = {
   firstName: string;
   city: OperatingAreaCity;
   languagesSpoken: LaunchLanguage[];
+  bio?: string;
+  photoVerification?: 'verified' | 'unverified';
 };
 
 export type ViewerFacts = {
   city: OperatingAreaCity;
   languagesSpoken: LaunchLanguage[];
+  bio?: string;
 };
 
 export function sharedLanguage(
@@ -36,7 +39,7 @@ export function sharedLanguage(
   return other.find((code) => viewer.includes(code));
 }
 
-export function introductionReason(viewer: ViewerFacts, person: ReasonFacts): string {
+export function factReason(viewer: ViewerFacts, person: ReasonFacts): string {
   const sameCity = viewer.city === person.city;
   const language = sharedLanguage(viewer.languagesSpoken, person.languagesSpoken);
   const spoken = language ? LANGUAGE_NAME[language] : null;
@@ -48,6 +51,26 @@ export function introductionReason(viewer: ViewerFacts, person: ReasonFacts): st
     return `${person.firstName} lives in ${person.city}. You both speak ${spoken}.`;
   }
   return `${person.firstName} lives in ${person.city}.`;
+}
+
+export function quoteFromBio(bio: string, hint?: string): string | undefined {
+  const parts = bio
+    .split(/[.!?]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const hintWords = (hint ?? '').toLowerCase().match(/[a-z]{3,}/g) ?? [];
+  const hit = hintWords.length
+    ? parts.find((part) => hintWords.some((word) => part.toLowerCase().includes(word)))
+    : parts[0];
+  if (!hit || !bio.includes(hit)) return undefined;
+  return hit.length > 88 ? `${hit.slice(0, 85).trimEnd()}…` : hit;
+}
+
+export function introductionReason(viewer: ViewerFacts, person: ReasonFacts, want?: string): string {
+  const facts = factReason(viewer, person);
+  const quote = quoteFromBio(person.bio ?? '', want || viewer.bio);
+  if (!quote) return facts;
+  return `${facts} ${person.firstName} writes, “${quote}.”`;
 }
 
 export function meetFraming(city: OperatingAreaCity): string {

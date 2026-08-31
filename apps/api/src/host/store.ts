@@ -1,4 +1,4 @@
-export type IntroStatus = 'open' | 'yes' | 'passed';
+export type IntroStatus = 'open' | 'yes' | 'passed' | 'replaced';
 
 export type IntroductionRecord = {
   introductionId: string;

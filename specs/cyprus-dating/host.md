@@ -30,7 +30,7 @@ Here is a host, not a catalog. The atomic unit is a proposed evening — who, ci
 - Northern Cyprus, or matching across the Green Line.
 - SMS OTP.
 
-This slice stubs the model: a server introducer templates why and meet framing from city and shared languages only. It must not invent a biography.
+This slice ranks Introductions from Profile facts and an optional want. There is no live LLM in CI. A later EU-hosted model may replace the ranker; copy must still be grounded in the Profile.
 
 ## Yes / Not this
 
@@ -43,6 +43,7 @@ This slice stubs the model: a server introducer templates why and meet framing f
 
 - Each Introduction has `expiresAt` 24 hours after it is issued.
 - GET re-issues if the held Introduction has expired or the subject is no longer visible.
+- POST `/v1/introductions` with `{ want }` tells Here who you are hoping to meet. Here replaces the open Introduction (not a Pass) and ranks the Pool on city, shared language, photo verification, and overlap with the written bios and the want. Reasons quote a clause that already exists in the Profile bio. They must not invent a job or a character.
 - Yes or Not this on an expired Introduction returns `410 introduction_expired`.
 - Expiry does not write a Pass.
 
@@ -55,6 +56,6 @@ This slice stubs the model: a server introducer templates why and meet framing f
 
 ## Not this slice
 
-- A live LLM. The introducer is templated and honest.
+- A live LLM call in CI. Ranking is local and grounded.
 - T9 Block and Report, and T10 Photo verification, as new work — those already exist and are not marked done here.
 - Super Like, who-liked-you, SMS OTP, exact home GPS, live km, Northern Cyprus, profession, interest-tag pills, an AI pickup-line writer.

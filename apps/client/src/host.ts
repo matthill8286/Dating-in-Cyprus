@@ -30,9 +30,11 @@ export type HostLine =
   | { id: string; kind: 'intro'; introduction: HostIntroduction; revealed: boolean };
 
 export const HOST_OPENING =
-  "I'm Here. I'll introduce you to people who live on the island — one evening at a time.";
+  "I'm Here. Tell me who you're hoping to meet — I'll look across the island and introduce one person.";
 
-export const HOST_EMPTY = "No one new this evening. I'll look again tomorrow.";
+export const HOST_EMPTY = "No one new this evening. Tell me a little more, and I'll look again.";
+
+export const HOST_LOOKING = "I'm looking across the island.";
 
 export function spokenList(codes: readonly string[]): string {
   return codes.map((code) => LANGUAGE_NAME[code] ?? code).join(' · ');
@@ -47,8 +49,17 @@ export function hostLines(input: {
   revealed: boolean;
   verb: HostVerb;
   matched: HostMatch | null;
+  want?: string | null;
+  looking?: boolean;
 }): HostLine[] {
   const lines: HostLine[] = [{ id: 'open', kind: 'host', body: HOST_OPENING }];
+  if (input.want) {
+    lines.push({ id: 'want', kind: 'you', body: input.want });
+  }
+  if (input.looking) {
+    lines.push({ id: 'look', kind: 'host', body: HOST_LOOKING });
+    return lines;
+  }
   if (input.matched) {
     lines.push({ id: 'yes', kind: 'you', body: 'Yes.' });
     lines.push({

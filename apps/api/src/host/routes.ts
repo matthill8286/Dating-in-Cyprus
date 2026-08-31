@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { apiError } from '../account/contracts';
 import { interestResponse, passResponse } from '../match/contracts';
 import { introductionResponse } from './contracts';
-import { acceptIntroduction, currentIntroduction, declineIntroduction, type HostDeps } from './propose';
+import { acceptIntroduction, currentIntroduction, declineIntroduction, requestIntroduction, type HostDeps } from './propose';
 
 const introductionIdParam = z.object({ introductionId: z.string() });
 
@@ -19,6 +19,17 @@ export async function hostRoutes(app: FastifyInstance, opts: HostDeps): Promise<
       },
     },
     async (req, reply) => currentIntroduction(req.accountId, reply, opts),
+  );
+
+  typed.post(
+    '/v1/introductions',
+    {
+      schema: {
+        body: z.object({ want: z.string().trim().min(1).max(280) }),
+        response: { 200: introductionResponse, 403: apiError },
+      },
+    },
+    async (req, reply) => requestIntroduction(req.accountId, req.body.want, reply, opts),
   );
 
   typed.post(
