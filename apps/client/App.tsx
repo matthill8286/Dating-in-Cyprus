@@ -4,6 +4,7 @@ import { Text, View, StyleSheet } from 'react-native';
 import { api } from './src/api/client';
 import { AppProvider, useApp } from './src/context/AppContext';
 import { JoinScreen } from './src/JoinScreen';
+import { IntakeScreen } from './src/IntakeScreen';
 import { NotifyScreen } from './src/NotifyScreen';
 import { OnboardingScreen } from './src/OnboardingScreen';
 import { MatchesScreen } from './src/MatchesScreen';
@@ -42,7 +43,7 @@ function ProfileGate() {
   }, [sessionToken, setProfile, setSessionToken]);
 
   if (!ready) return <Loading />;
-  if (!profile) return <ProfileEditScreen onSaved={() => setNotify(true)} />;
+  if (!profile) return <IntakeScreen onSaved={() => setNotify(true)} />;
   if (notify) return <NotifyScreen onDone={() => setNotify(false)} />;
   if (editing) return <ProfileEditScreen onSaved={() => setEditing(false)} />;
   const go: TabGo = {

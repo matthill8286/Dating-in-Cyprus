@@ -7,7 +7,7 @@ export function HostHeader({
   onIsland,
   onSafety,
 }: {
-  onIsland: () => void;
+  onIsland?: () => void;
   onSafety?: () => void;
 }) {
   return (
@@ -22,9 +22,11 @@ export function HostHeader({
             <Text style={styles.islandLink}>Safety</Text>
           </Pressable>
         ) : null}
-        <Pressable onPress={onIsland} accessibilityRole="button" accessibilityLabel="The island">
-          <Text style={styles.islandLink}>The island</Text>
-        </Pressable>
+        {onIsland ? (
+          <Pressable onPress={onIsland} accessibilityRole="button" accessibilityLabel="The island">
+            <Text style={styles.islandLink}>The island</Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -130,32 +132,36 @@ export function HostComposer({
   onChange,
   onSend,
   busy,
+  placeholder = "Tell Here who you're hoping to meet",
+  sendLabel = 'Ask',
 }: {
   value: string;
   onChange: (text: string) => void;
   onSend: () => void;
   busy: boolean;
+  placeholder?: string;
+  sendLabel?: string;
 }) {
   return (
     <View style={styles.composer}>
       <TextInput
         value={value}
         onChangeText={onChange}
-        placeholder="Tell Here who you're hoping to meet"
+        placeholder={placeholder}
         placeholderTextColor={color.mute}
         editable={!busy}
         onSubmitEditing={onSend}
         style={styles.field}
-        accessibilityLabel="Tell Here who you're hoping to meet"
+        accessibilityLabel={placeholder}
       />
       <Pressable
         onPress={onSend}
         disabled={busy || !value.trim()}
         accessibilityRole="button"
-        accessibilityLabel="Ask Here"
+        accessibilityLabel={sendLabel}
         style={styles.send}
       >
-        <Text style={styles.sendText}>Ask</Text>
+        <Text style={styles.sendText}>{sendLabel}</Text>
       </Pressable>
     </View>
   );
