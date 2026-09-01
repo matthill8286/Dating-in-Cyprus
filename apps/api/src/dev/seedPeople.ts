@@ -3,6 +3,7 @@ import type { AccountStore } from '../account/store';
 import type { LoopStore } from '../match/store';
 import type { OperatingAreaCity } from '../profile/model';
 import type { ProfileStore } from '../profile/store';
+import { SEED_ROWS } from './seedRoster';
 
 export const SEED_PASSWORD = 'password1';
 
@@ -20,82 +21,41 @@ export type SeedPerson = {
   photoUrl: string;
 };
 
-export const SEED_PEOPLE: SeedPerson[] = [
-  person('Elena', '1997-03-14', 'en', 'woman', 'men', '01', 'Limassol', ['en'],
-    'Limassol resident. Shipping by week, the marina at the weekend.',
-    'photo-1494790108377-be9c29b29330'),
-  person('Oksana', '1994-06-02', 'uk', 'woman', 'men', '02', 'Limassol', ['uk', 'en', 'ru'],
-    'Kyiv to Limassol. Morning swims, evening walks in Molos. This is home now.',
-    'photo-1534528741775-53994a69daeb'),
-  person('Maria', '1999-11-21', 'ro', 'woman', 'men', '03', 'Nicosia', ['ro', 'en'],
-    'I teach in Nicosia and drive to the sea on Friday. Settled, not passing through.',
-    'photo-1524504388940-b1c1722653e1'),
-  person('Irina', '1992-01-09', 'ru', 'woman', 'men', '04', 'Limassol', ['ru', 'en'],
-    'Year-round in Limassol. Quiet mornings in the old town.',
-    'photo-1517841905240-472988babdf9'),
-  person('Anna', '2000-04-18', 'en', 'woman', 'men', '05', 'Larnaca', ['en'],
-    'Near the salt lake. Larnaca is home, not a stop on the way to the airport.',
-    'photo-1487412720507-e7ab37603c6f'),
-  person('Kateryna', '1995-08-30', 'uk', 'woman', 'men', '06', 'Limassol', ['uk', 'en'],
-    'Product work from Germasogeia. Weekends on the beach path.',
-    'photo-1529626455594-4ff0802cfb7e'),
-  person('Ioana', '1998-02-12', 'ro', 'woman', 'men', '07', 'Paphos', ['ro', 'en'],
-    'The quieter west of the island. Still here in winter.',
-    'photo-1531746020798-e6953c6c8e76'),
-  person('Sofia', '2002-07-07', 'bg', 'woman', 'men', '08', 'Limassol', ['bg', 'en'],
-    'First years on the island and already staying. Coffee at Columbia.',
-    'photo-1544005313-94ddf0286df2'),
-  person('Natalia', '1990-09-25', 'ru', 'woman', 'men', '09', 'Nicosia', ['ru', 'en', 'uk'],
-    'Finance in Nicosia. Walks in Athalassa after work.',
-    'photo-1508214751196-bcfd4ca60f91'),
-  person('Daria', '2003-05-16', 'en', 'woman', 'men', '10', 'Ayia Napa', ['en', 'ru'],
-    'I live here. Summer crowds are not the same thing as a holiday.',
-    'photo-1488426862026-3ee34a7d66df'),
-  person('Viktoria', '1996-12-03', 'uk', 'woman', 'men', '11', 'Larnaca', ['uk', 'en'],
-    'Mackenzie in the morning, then work. Larnaca through the year.',
-    'photo-1525134479668-1bee5c7c6845'),
-  person('Teodora', '1993-10-19', 'bg', 'woman', 'men', '12', 'Paralimni', ['bg', 'en'],
-    'Family here. Weekends in Protaras, not a tourist let.',
-    'photo-1502823403499-6ccfcf4fb453'),
-  person('Yulia', '1998-05-03', 'uk', 'woman', 'men', '16', 'Limassol', ['uk', 'en'],
-    'Limassol year-round. Saturday market, then the sea path.',
-    'photo-1573496359142-b8d87734a5a2'),
-  person('Alina', '1996-09-11', 'ru', 'woman', 'men', '17', 'Paphos', ['ru', 'en'],
-    'Paphos harbour walks. I stayed after the first winter.',
-    'photo-1580489944761-15a19d654956'),
-  person('Mila', '2001-02-27', 'en', 'woman', 'men', '18', 'Nicosia', ['en', 'uk'],
-    'Nicosia old town. Coffee on Ledra, then home.',
-    'photo-1607746882042-944635dfe10e'),
-  person('Eva', '1994-12-08', 'ro', 'woman', 'men', '19', 'Larnaca', ['ro', 'en'],
-    'Larnaca through August heat and January wind. This is the base.',
-    'photo-1594744803323-4ba202479693'),
-  person('Kristina', '1999-07-19', 'bg', 'woman', 'men', '20', 'Ayia Napa', ['bg', 'en'],
-    'East coast resident. Quiet streets after the season ends.',
-    'photo-1619895862022-09114b41f5a4'),
-  person('Hanna', '1997-11-04', 'uk', 'woman', 'men', '22', 'Paralimni', ['uk', 'en'],
-    'Paralimni most of the year. Protaras on a still evening.',
-    'photo-1520813792240-56fc4a3765a7'),
-  person('Nadia', '1995-03-22', 'ru', 'woman', 'men', '23', 'Limassol', ['ru', 'en'],
-    'Limassol old town. I cook, then walk down to the water.',
-    'photo-1489424731084-a5d8b219a5bb'),
-  person('Alex', '1991-04-04', 'en', 'man', 'women', '13', 'Limassol', ['en'],
-    'Limassol harbour side. Here for the long run.',
-    'photo-1500648767791-00dcc994a43e'),
-  person('Dimitri', '1997-08-22', 'ru', 'man', 'women', '14', 'Nicosia', ['ru', 'en'],
-    'Nicosia most days, the coast when the heat breaks.',
-    'photo-1506794778202-cad84cf45f1d'),
-  person('Niko', '1995-01-28', 'bg', 'man', 'women', '15', 'Larnaca', ['bg', 'en'],
-    'Larnaca resident. Finikoudes at dusk, then home.',
-    'photo-1492562080023-ab3db95bfbce'),
-  person('Stefan', '1993-06-16', 'en', 'man', 'women', '21', 'Paphos', ['en'],
-    'Paphos for work and weekends. The west stays quieter.',
-    'photo-1472099645785-5658abf4ff4e'),
-  person('Lukas', '1994-02-08', 'en', 'man', 'women', '24', 'Limassol', ['en'],
-    'Limassol harbour and the hill behind it. Staying.',
-    'photo-1560250097-0b93528c311a'),
-  person('Pavel', '1992-10-30', 'ru', 'man', 'women', '25', 'Ayia Napa', ['ru', 'en'],
-    'East coast after the season. This is the address, not a let.',
-    'photo-1566492031773-4f4e44671857'),
+export const SEED_PEOPLE: SeedPerson[] = SEED_ROWS.map((row) => person(...row));
+
+export const WOMAN_EXTRAS = [
+  'photo-1438761681033-6461ffad8d80',
+  'photo-1531123897727-8f129e1688ce',
+  'photo-1554151228-14d9def656e4',
+  'photo-1548142813-c348350df52b',
+  'photo-1500917293891-ef795e70e1f6',
+  'photo-1524502397800-2eeaad7c3fe5',
+  'photo-1524250502761-1ac6f2e30d43',
+  'photo-1502323777036-f29e3972d82f',
+  'photo-1542206395-9feb3edaa68d',
+  'photo-1567532939604-b6b5b0db2604',
+  'photo-1544005313-94ddf0286df2',
+  'photo-1529626455594-4ff0802cfb7e',
+  'photo-1515886657613-9f3515b0c78f',
+  'photo-1526510747491-58f928ec870f',
+  'photo-1479936345342-2b8d650d6278',
+  'photo-1573497019236-17f8177b81e8',
+  'photo-1541823709867-1b206113eafd',
+  'photo-1492633423870-59d1b6ba4496',
+];
+
+export const MAN_EXTRAS = [
+  'photo-1463453091185-61582044d556',
+  'photo-1507003211169-0a1dd7228f2d',
+  'photo-1521119989659-a83eee488004',
+  'photo-1539571696357-5a69c17a67c6',
+  'photo-1547425260-76bcadfb4f2c',
+  'photo-1500648767791-00dcc994a43e',
+  'photo-1506794778202-cad84cf45f1d',
+  'photo-1492562080023-ab3db95bfbce',
+  'photo-1472099645785-5658abf4ff4e',
+  'photo-1560250097-0b93528c311a',
+  'photo-1566492031773-4f4e44671857',
 ];
 
 export function womenSeekingMen(): SeedPerson[] {
@@ -154,6 +114,19 @@ export async function seedInboundInterest(
   return inbound;
 }
 
+export function photosFor(item: SeedPerson, index: number) {
+  const extras = item.gender === 'woman' ? WOMAN_EXTRAS : MAN_EXTRAS;
+  const own = unsplashId(item.photoUrl);
+  const pool = extras.filter((id) => id !== own);
+  const first = pool[index % pool.length] ?? pool[0];
+  const second = pool[(index + 5) % pool.length] ?? pool[1];
+  const extraIds = first === second ? [first, pool[(index + 1) % pool.length]] : [first, second];
+  return [item.photoUrl, ...extraIds.map((id) => portraitUrl(id ?? ''))].map((url, photoIndex) => ({
+    photoId: `seed-${item.firstName.toLowerCase()}-${photoIndex}`,
+    url,
+  }));
+}
+
 function person(
   firstName: string,
   dateOfBirth: string,
@@ -177,34 +150,17 @@ function person(
     city,
     languagesSpoken,
     bio,
-    photoUrl: portraitUrl(unsplashId),
+    photoUrl: portraitUrl(unsplashId, firstName),
   };
 }
 
-const EXTRA_UNSPLASH = [
-  'photo-1438761681033-6461ffad8d80',
-  'photo-1463453091185-61582044d556',
-  'photo-1507003211169-0a1dd7228f2d',
-  'photo-1521119989659-a83eee488004',
-  'photo-1531123897727-8f129e1688ce',
-  'photo-1539571696357-5a69c17a67c6',
-  'photo-1554151228-14d9def656e4',
-  'photo-1547425260-76bcadfb4f2c',
-];
-
-function portraitUrl(unsplashId: string): string {
-  return `https://images.unsplash.com/${unsplashId}?auto=format&fit=crop&w=900&h=1200&q=80`;
+function portraitUrl(unsplashId: string, tag?: string): string {
+  const base = `https://images.unsplash.com/${unsplashId}?auto=format&fit=crop&w=900&h=1200&q=80`;
+  return tag ? `${base}&n=${tag.toLowerCase()}` : base;
 }
 
-function photosFor(item: SeedPerson, index: number) {
-  const extras = [
-    EXTRA_UNSPLASH[index % EXTRA_UNSPLASH.length],
-    EXTRA_UNSPLASH[(index + 3) % EXTRA_UNSPLASH.length],
-  ];
-  return [item.photoUrl, ...extras.map((id) => portraitUrl(id ?? ''))].map((url, photoIndex) => ({
-    photoId: `seed-${item.firstName.toLowerCase()}-${photoIndex}`,
-    url,
-  }));
+export function unsplashId(url: string): string {
+  return url.match(/images\.unsplash\.com\/(photo-[^?]+)/)?.[1] ?? url;
 }
 
 function toNewAccount(item: SeedPerson, hash: (password: string) => string) {

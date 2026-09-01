@@ -1,7 +1,7 @@
-import type { LaunchLanguage } from '../account/store';
+import { LAUNCH_LANGUAGES, type LaunchLanguage } from '../account/store';
 import type { OperatingAreaCity } from '../profile/model';
 
-const LANGUAGE_NAME: Record<LaunchLanguage, string> = {
+export const LANGUAGE_NAME: Record<LaunchLanguage, string> = {
   en: 'English',
   uk: 'Ukrainian',
   ru: 'Russian',
@@ -39,8 +39,26 @@ export function sharedLanguage(
   return other.find((code) => viewer.includes(code));
 }
 
-export function factReason(viewer: ViewerFacts, person: ReasonFacts): string {
+export function wantedLanguages(want?: string): LaunchLanguage[] {
+  if (!want) return [];
+  const words = new Set(want.toLowerCase().match(/[a-z]{3,}/g) ?? []);
+  return LAUNCH_LANGUAGES.filter(
+    (code) => words.has(LANGUAGE_NAME[code].toLowerCase()) || words.has(code),
+  );
+}
+
+export function languageSearchText(person: ReasonFacts): string {
+  return person.languagesSpoken.map((code) => `${code} ${LANGUAGE_NAME[code]}`).join(' ').toLowerCase();
+}
+
+export function factReason(viewer: ViewerFacts, person: ReasonFacts, want?: string): string {
   const sameCity = viewer.city === person.city;
+  const asked = wantedLanguages(want).filter((code) => person.languagesSpoken.includes(code));
+  if (asked.length > 0) {
+    const spoken = asked.map((code) => LANGUAGE_NAME[code]).join(' and ');
+    if (sameCity) return `You both live in ${person.city}. ${person.firstName} speaks ${spoken}.`;
+    return `${person.firstName} lives in ${person.city} and speaks ${spoken}.`;
+  }
   const language = sharedLanguage(viewer.languagesSpoken, person.languagesSpoken);
   const spoken = language ? LANGUAGE_NAME[language] : null;
   if (sameCity && spoken) {
@@ -67,7 +85,7 @@ export function quoteFromBio(bio: string, hint?: string): string | undefined {
 }
 
 export function introductionReason(viewer: ViewerFacts, person: ReasonFacts, want?: string): string {
-  const facts = factReason(viewer, person);
+  const facts = factReason(viewer, person, want);
   const quote = quoteFromBio(person.bio ?? '', want || viewer.bio);
   if (!quote) return facts;
   return `${facts} ${person.firstName} writes, “${quote}.”`;

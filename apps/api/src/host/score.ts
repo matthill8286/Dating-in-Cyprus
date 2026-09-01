@@ -1,4 +1,10 @@
-import { sharedLanguage, type ReasonFacts, type ViewerFacts } from './reason';
+import {
+  languageSearchText,
+  sharedLanguage,
+  wantedLanguages,
+  type ReasonFacts,
+  type ViewerFacts,
+} from './reason';
 
 const SKIP = new Set([
   'the',
@@ -39,13 +45,20 @@ export function matchScore(
   return score;
 }
 
+export function speakingPool<T extends ReasonFacts>(visible: T[], want?: string): T[] {
+  const langs = wantedLanguages(want);
+  if (langs.length === 0) return visible;
+  return visible.filter((person) => langs.every((code) => person.languagesSpoken.includes(code)));
+}
+
 export function chooseFromPool<T extends ReasonFacts>(
   visible: T[],
   viewer: ViewerFacts,
   want?: string,
 ): T | undefined {
-  if (visible.length === 0) return undefined;
-  return [...visible].sort((a, b) => {
+  const pool = speakingPool(visible, want);
+  if (pool.length === 0) return undefined;
+  return [...pool].sort((a, b) => {
     const gap = matchScore(viewer, b, want) - matchScore(viewer, a, want);
     if (gap !== 0) return gap;
     return a.firstName.localeCompare(b.firstName);
@@ -54,7 +67,7 @@ export function chooseFromPool<T extends ReasonFacts>(
 
 function hintHits(person: ReasonFacts, want?: string): number {
   if (!want) return 0;
-  const hay = `${person.city} ${person.bio ?? ''} ${person.firstName}`.toLowerCase();
+  const hay = `${person.city} ${person.bio ?? ''} ${person.firstName} ${languageSearchText(person)}`.toLowerCase();
   return tokens(want).filter((word) => hay.includes(word)).length;
 }
 

@@ -77,13 +77,7 @@ function ProfileGate() {
     return <MessagesScreen onOpen={setChat} go={go} />;
   }
   return (
-    <HostScreen
-      go={go}
-      onChat={(item) => {
-        setTab('messages');
-        setChat(item);
-      }}
-    />
+    <HostScreen go={go} />
   );
 }
 

@@ -210,6 +210,44 @@ describe('Introduction from what the Resident asked Here', () => {
     expect(intro?.reason).not.toMatch(/engineer|lawyer|doctor/i);
     await app.close();
   });
+
+  it('proposes a Russian speaker when the Resident asked for Russian', async () => {
+    const app = await seededApp();
+    const token = await signInAlex(app);
+    const asked = await app.inject({
+      method: 'POST',
+      url: '/v1/introductions',
+      headers: auth(token),
+      payload: { want: '25, russian, fun' },
+    });
+    expect(asked.statusCode).toBe(200);
+    const intro = (asked.json() as IntroJson).introduction;
+    expect(intro?.reason).toMatch(/Russian/i);
+    expect(intro?.reason).not.toMatch(/Ukrainian/i);
+    expect(intro?.reason).not.toMatch(/engineer|lawyer|doctor/i);
+    await app.close();
+  });
+
+  it('keeps the last want after Not this', async () => {
+    const app = await seededApp();
+    const token = await signInAlex(app);
+    const asked = await app.inject({
+      method: 'POST',
+      url: '/v1/introductions',
+      headers: auth(token),
+      payload: { want: 'Russian that speaks English' },
+    });
+    const first = (asked.json() as IntroJson).introduction;
+    await app.inject({
+      method: 'POST',
+      url: `/v1/introductions/${first?.introductionId}/pass`,
+      headers: auth(token),
+    });
+    const next = await readIntro(app, token);
+    expect(next.body.introduction?.profileId).not.toBe(first?.profileId);
+    expect(next.body.introduction?.reason).toMatch(/Russian/i);
+    await app.close();
+  });
 });
 
 describe('Introduction from an EU model', () => {

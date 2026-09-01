@@ -5,9 +5,12 @@ import { MemoryAccountStore } from '../account/store';
 import { MemoryProfileStore } from '../profile/store';
 import {
   applySeed,
+  MAN_EXTRAS,
   menSeekingWomen,
+  photosFor,
   SEED_PASSWORD,
   SEED_PEOPLE,
+  unsplashId,
   womenSeekingMen,
 } from './seedPeople';
 
@@ -15,11 +18,17 @@ describe('seed people', () => {
   it('is mostly women seeking men', () => {
     const women = womenSeekingMen();
     const men = SEED_PEOPLE.filter((person) => person.gender === 'man');
-    expect(women.length).toBeGreaterThanOrEqual(10);
+    expect(women.length).toBeGreaterThanOrEqual(90);
     expect(women.length).toBeGreaterThan(men.length);
     expect(men.every((person) => person.seeking === 'women')).toBe(true);
     expect(women.every((person) => person.seeking === 'men')).toBe(true);
     expect(SEED_PASSWORD).toBe('password1');
+    const speak = (code: 'uk' | 'ru' | 'ro' | 'bg') =>
+      women.filter((person) => person.languagesSpoken.includes(code)).length;
+    expect(speak('uk')).toBeGreaterThanOrEqual(20);
+    expect(speak('ru')).toBeGreaterThanOrEqual(16);
+    expect(speak('ro')).toBeGreaterThanOrEqual(16);
+    expect(speak('bg')).toBeGreaterThanOrEqual(14);
   });
 
   it('keeps dating-intent labels out of bios', () => {
@@ -40,6 +49,10 @@ describe('seed people', () => {
     const urls = SEED_PEOPLE.map((item) => item.photoUrl);
     expect(urls.every((url) => url.startsWith('https://images.unsplash.com/'))).toBe(true);
     expect(new Set(urls).size).toBe(urls.length);
+  });
+
+  it('does not put male portraits on women', () => {
+    assertNoMalePortraitsOnWomen();
   });
 
   it('writes a Resident Profile that can be seeded twice', async () => {
@@ -71,6 +84,22 @@ describe('seed people', () => {
     await profiles.close();
   });
 });
+
+function assertNoMalePortraitsOnWomen() {
+  const menIds = new Set([
+    ...menSeekingWomen().map((person) => unsplashId(person.photoUrl)),
+    ...MAN_EXTRAS,
+  ]);
+  for (const [index, person] of SEED_PEOPLE.entries()) {
+    if (person.gender !== 'woman') continue;
+    const gallery = photosFor(person, index);
+    expect(gallery).toHaveLength(3);
+    expect(new Set(gallery.map((photo) => photo.url)).size).toBe(3);
+    for (const photo of gallery) {
+      expect(menIds.has(unsplashId(photo.url))).toBe(false);
+    }
+  }
+}
 
 async function expectSeededElena(
   accounts: MemoryAccountStore,

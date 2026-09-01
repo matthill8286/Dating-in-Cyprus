@@ -21,6 +21,9 @@ describe('introduction reason', () => {
       'Maria lives in Nicosia. You both speak English.',
     );
     expect(introductionReason(alex, ioana)).toBe('Ioana lives in Paphos.');
+    expect(introductionReason(alex, maria, 'romanian')).toBe(
+      'Maria lives in Nicosia and speaks Romanian.',
+    );
     expect(introductionReason({ ...alex, languagesSpoken: ['bg'] }, elena)).toBe(
       'You both live in Limassol.',
     );

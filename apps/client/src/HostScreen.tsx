@@ -1,22 +1,19 @@
 import { useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
 import { useApp } from './context/AppContext';
 import { canDecide, HOST_OPENING, hostLines, type HostLine } from './host';
 import { HostComposer, HostHeader, HostMessage, IslandBack, VerbRow } from './hostChrome';
 import { IslandMap } from './IslandMap';
 import type { Profile } from './profile';
 import { OpenSafetySheet } from './SafetySheet';
-import { color, font } from './theme';
 import { Fixed } from './ui/deck';
 import { TabBar, type TabGo } from './ui/tabs';
 import { useHost } from './useHost';
 
 export function HostScreen({
   go,
-  onChat,
 }: {
   go: TabGo;
-  onChat: (match: { matchId: string; profile: Profile }) => void;
 }) {
   const { sessionToken } = useApp();
   const host = useHost(sessionToken);
@@ -36,18 +33,16 @@ export function HostScreen({
           {canDecide(host.introduction, host.busy, host.matched) ? (
             <VerbRow onYes={host.yes} onPass={host.pass} onMore={host.more} showMore={!host.revealed} />
           ) : null}
-          {!host.matched ? (
-            <HostComposer
-              value={draft}
-              onChange={setDraft}
-              busy={host.busy}
-              onSend={() => {
-                const text = draft;
-                setDraft('');
-                host.ask(text);
-              }}
-            />
-          ) : null}
+          <HostComposer
+            value={draft}
+            onChange={setDraft}
+            busy={host.busy}
+            onSend={() => {
+              const text = draft;
+              setDraft('');
+              host.ask(text);
+            }}
+          />
           {tabs}
         </View>
       }
@@ -62,7 +57,6 @@ export function HostScreen({
             <HostMessage key={line.id} line={line} />
           ))}
         </View>
-        <WriteToMatch match={host.matched} profile={host.matchProfile} onChat={onChat} />
       </ScrollView>
       <OpenSafetySheet
         open={safety}
@@ -109,28 +103,6 @@ function threadFor(host: {
   return hostLines(host);
 }
 
-function WriteToMatch({
-  match,
-  profile,
-  onChat,
-}: {
-  match: { matchId: string; firstName: string } | null;
-  profile: Profile | null;
-  onChat: (item: { matchId: string; profile: Profile }) => void;
-}) {
-  if (!match || !profile) return null;
-  return (
-    <Pressable
-      onPress={() => onChat({ matchId: match.matchId, profile })}
-      accessibilityRole="button"
-      accessibilityLabel={`Write to ${match.firstName}`}
-      style={styles.write}
-    >
-      <Text style={styles.writeText}>Write to {match.firstName}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
   thread: {
@@ -143,12 +115,4 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   lines: { gap: 16 },
-  write: {
-    backgroundColor: color.ink,
-    borderRadius: 999,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  writeText: { color: color.onRose, fontFamily: font.body, fontSize: 16, fontWeight: '700' },
 });

@@ -8,7 +8,7 @@ Here is a host, not a catalog. The atomic unit is a proposed evening — who, ci
 - After a Profile exists, the main loop is `GET /v1/introductions` plus yes / pass. The Discover deck is not the main loop.
 - An Introduction shows first name, city, languages spoken, an honest why, and a suggested meet framing. No GPS. No live km.
 - Verbs: Yes, Not this, Tell me more.
-- Yes records existing Interest. Mutual Interest becomes a Match and opens human chat. Here does not write in that chat.
+- Yes records existing Interest. Mutual Interest becomes a Match. Chat is available from Matches; Here keeps looking and does not write in that chat.
 - Not this records an existing Pass. That person is not proposed again.
 - Tell me more earns one editorial portrait plus the person’s own written bio. Not a photo pile. The portrait is held back in the conversation until that verb.
 - Introductions expire after 24 hours. The island is small; an unanswered evening does not linger. Expiry is not a Pass — they may be proposed again later.
@@ -36,7 +36,7 @@ This slice ranks Introductions from Profile facts and an optional want. An optio
 ## Yes / Not this
 
 - `POST /v1/introductions/:introductionId/yes` is Interest. It is not visible to them until it is mutual.
-- `POST /v1/introductions/:introductionId/pass` is a Pass. Here proposes someone else.
+- `POST /v1/introductions/:introductionId/pass` is a Pass. Here proposes someone else and keeps the last want until the Resident asks again.
 - A Visitor cannot receive or answer an Introduction. A Resident without a Profile is refused (`profile_required`).
 - Block and Report remain available from the Introduction. Un-match remains on an existing Match.
 
@@ -44,7 +44,7 @@ This slice ranks Introductions from Profile facts and an optional want. An optio
 
 - Each Introduction has `expiresAt` 24 hours after it is issued.
 - GET re-issues if the held Introduction has expired or the subject is no longer visible.
-- POST `/v1/introductions` with `{ want }` tells Here who you are hoping to meet. Here replaces the open Introduction (not a Pass) and ranks the Pool on city, shared language, photo verification, and overlap with the written bios and the want. Reasons quote a clause that already exists in the Profile bio. They must not invent a job or a character.
+- POST `/v1/introductions` with `{ want }` tells Here who you are hoping to meet. Here replaces the open Introduction (not a Pass) and ranks the Pool on city, shared language, photo verification, and overlap with the written bios and the want. If the want names a launch language (English, Ukrainian, Russian, Romanian, Bulgarian), Here only proposes someone who speaks it. If nobody left in the Pool does, Here does not substitute someone who speaks a different language. Reasons quote a clause that already exists in the Profile bio. They must not invent a job, a nationality, or a character.
 - Yes or Not this on an expired Introduction returns `410 introduction_expired`.
 - Expiry does not write a Pass.
 
