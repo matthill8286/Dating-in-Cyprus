@@ -8,7 +8,7 @@ Here is a host, not a catalog. The atomic unit is a proposed evening — who, ci
 - After a Profile exists, the main loop is `GET /v1/introductions` plus yes / pass. The Discover deck is not the main loop.
 - An Introduction shows first name, city, languages spoken, an honest why, and a suggested meet framing. No GPS. No live km.
 - Verbs: Yes, Not this, Tell me more.
-- Yes records existing Interest. Mutual Interest becomes a Match and opens human chat. Here does not write in that chat.
+- Yes records existing Interest. Mutual Interest becomes a Match. Chat is available from Matches; Here keeps looking and does not write in that chat.
 - Not this records an existing Pass. That person is not proposed again.
 - Tell me more earns one editorial portrait plus the person’s own written bio. Not a photo pile. The portrait is held back in the conversation until that verb.
 - Introductions expire after 24 hours. The island is small; an unanswered evening does not linger. Expiry is not a Pass — they may be proposed again later.

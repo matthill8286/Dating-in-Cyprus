@@ -36,6 +36,12 @@ export const WOMAN_EXTRAS = [
   'photo-1567532939604-b6b5b0db2604',
   'photo-1544005313-94ddf0286df2',
   'photo-1529626455594-4ff0802cfb7e',
+  'photo-1515886657613-9f3515b0c78f',
+  'photo-1526510747491-58f928ec870f',
+  'photo-1479936345342-2b8d650d6278',
+  'photo-1573497019236-17f8177b81e8',
+  'photo-1541823709867-1b206113eafd',
+  'photo-1492633423870-59d1b6ba4496',
 ];
 
 export const MAN_EXTRAS = [
@@ -144,12 +150,13 @@ function person(
     city,
     languagesSpoken,
     bio,
-    photoUrl: portraitUrl(unsplashId),
+    photoUrl: portraitUrl(unsplashId, firstName),
   };
 }
 
-function portraitUrl(unsplashId: string): string {
-  return `https://images.unsplash.com/${unsplashId}?auto=format&fit=crop&w=900&h=1200&q=80`;
+function portraitUrl(unsplashId: string, tag?: string): string {
+  const base = `https://images.unsplash.com/${unsplashId}?auto=format&fit=crop&w=900&h=1200&q=80`;
+  return tag ? `${base}&n=${tag.toLowerCase()}` : base;
 }
 
 export function unsplashId(url: string): string {

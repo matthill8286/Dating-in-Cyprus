@@ -49,18 +49,31 @@ describe('host thread', () => {
     expect(looking.map((line) => line.kind)).toEqual(['host', 'you', 'host']);
   });
 
-  it('earns the portrait after Tell me more, and steps back after a mutual Yes', () => {
+  it('earns the portrait after Tell me more, and keeps looking after a mutual Yes', () => {
     const more = hostLines({ introduction: elena, revealed: true, verb: 'more', matched: null });
     expect(more.some((line) => line.kind === 'you' && line.body === 'Tell me more.')).toBe(true);
+    const opened = { matchId: 'm1', firstName: 'Elena', profileId: 'p1' };
     const match = hostLines({
       introduction: elena,
       revealed: true,
       verb: 'yes',
-      matched: { matchId: 'm1', firstName: 'Elena', profileId: 'p1' },
+      matched: opened,
     });
-    expect(match.map((line) => line.kind)).toEqual(['host', 'you', 'host']);
-    expect(match[2]).toMatchObject({ kind: 'host' });
-    if (match[2]?.kind === 'host') expect(match[2].body).toMatch(/step back/);
+    expect(match.some((line) => line.kind === 'intro')).toBe(false);
+    const leave = match.find((line) => line.id === 'leave');
+    expect(leave).toMatchObject({ kind: 'host' });
+    if (leave?.kind === 'host') {
+      expect(leave.body).toMatch(/keep looking/);
+      expect(leave.body).toMatch(/Matches/);
+      expect(leave.body).not.toMatch(/step back/);
+    }
+    const oksana = { ...elena, introductionId: 'intro-2', profileId: 'p2', firstName: 'Oksana' };
+    const next = hostLines({ introduction: oksana, revealed: false, verb: null, matched: opened });
+    expect(next.some((line) => line.kind === 'intro' && line.introduction.firstName === 'Oksana')).toBe(
+      true,
+    );
+    expect(canDecide(elena, false, opened)).toBe(false);
+    expect(canDecide(oksana, false, opened)).toBe(true);
   });
 
   it('shows an empty evening when the Pool has no one left', () => {

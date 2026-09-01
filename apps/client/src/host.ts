@@ -56,27 +56,28 @@ export function hostLines(input: {
   if (input.want) {
     lines.push({ id: 'want', kind: 'you', body: input.want });
   }
+  if (input.matched) {
+    lines.push({
+      id: 'leave',
+      kind: 'host',
+      body: matchedCopy(input.matched.firstName),
+    });
+  }
   if (input.looking) {
     lines.push({ id: 'look', kind: 'host', body: HOST_LOOKING });
     return lines;
   }
-  if (input.matched) {
-    lines.push({ id: 'yes', kind: 'you', body: 'Yes.' });
-    lines.push({
-      id: 'leave',
-      kind: 'host',
-      body: `You're both interested. I'll step back — you can write to ${input.matched.firstName}.`,
-    });
-    return lines;
-  }
-  if (!input.introduction) {
-    lines.push({ id: 'empty', kind: 'host', body: HOST_EMPTY });
+  const live = liveIntroduction(input.introduction, input.matched);
+  if (!live) {
+    if (!waitingOnNext(input.introduction, input.matched)) {
+      lines.push({ id: 'empty', kind: 'host', body: HOST_EMPTY });
+    }
     return lines;
   }
   lines.push({
-    id: input.introduction.introductionId,
+    id: live.introductionId,
     kind: 'intro',
-    introduction: input.introduction,
+    introduction: live,
     revealed: input.revealed,
   });
   if (input.verb === 'more') {
@@ -85,12 +86,29 @@ export function hostLines(input: {
   return lines;
 }
 
+export function matchedCopy(firstName: string): string {
+  return `You're both interested. Write to ${firstName} from Matches when you want — I'll keep looking.`;
+}
+
 export function canDecide(
   introduction: HostIntroduction | null,
   busy: boolean,
   matched: HostMatch | null,
 ): boolean {
-  return Boolean(introduction && !busy && !matched);
+  return Boolean(liveIntroduction(introduction, matched) && !busy);
+}
+
+function liveIntroduction(
+  introduction: HostIntroduction | null,
+  matched: HostMatch | null,
+): HostIntroduction | null {
+  if (!introduction) return null;
+  if (matched && introduction.profileId === matched.profileId) return null;
+  return introduction;
+}
+
+function waitingOnNext(introduction: HostIntroduction | null, matched: HostMatch | null): boolean {
+  return Boolean(matched && introduction?.profileId === matched.profileId);
 }
 
 export function asIntroduction(data: unknown): HostIntroduction | null {
