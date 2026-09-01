@@ -53,6 +53,11 @@ describe('EU host model', () => {
       fetch: async () => jsonReply('not-in-pool'),
     });
     expect(fallback?.firstName).toBe('Elena');
+    const ignored = await chooseWithModel([elena, alina], alex, 'Russian that speaks English', {
+      url: 'https://example.test/v1',
+      fetch: async () => jsonReply('p-elena'),
+    });
+    expect(ignored?.firstName).toBe('Alina');
   });
 
   it('falls back to the local ranker when the model is down, times out, or unset', async () => {
@@ -68,7 +73,12 @@ describe('EU host model', () => {
       timeoutMs: 20,
       fetch: (_url, init) =>
         new Promise((_resolve, reject) => {
-          init.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+          const signal = init.signal;
+          if (!signal || signal.aborted) {
+            reject(new Error('aborted'));
+            return;
+          }
+          signal.addEventListener('abort', () => reject(new Error('aborted')), { once: true });
         }),
     });
     expect(timedOut?.firstName).toBe('Elena');

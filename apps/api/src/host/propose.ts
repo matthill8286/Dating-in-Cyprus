@@ -36,16 +36,17 @@ export async function currentIntroduction(
     });
   }
   const visible = await listVisibleProfiles(viewer, opts);
+  const want = await opts.intros.lastWant(viewer.id);
   const open = await opts.intros.findOpen(viewer.id);
   const kept = open ? visible.find((person) => person.profileId === open.profileId) : undefined;
   if (open && kept && isFresh(open.expiresAt, opts.now())) {
-    return { introduction: presentIntro(open, kept, own) };
+    return { introduction: presentIntro(open, kept, own, open.want ?? want) };
   }
-  const next = await pickNext(visible, own, opts);
+  const next = await pickNext(visible, own, opts, want);
   if (!next) return { introduction: null };
-  const record = await openIntroduction(viewer, next, opts.now);
+  const record = await openIntroduction(viewer, next, opts.now, want);
   await opts.intros.save(record);
-  return { introduction: presentIntro(record, next, own) };
+  return { introduction: presentIntro(record, next, own, want) };
 }
 
 export async function requestIntroduction(
@@ -66,9 +67,10 @@ export async function requestIntroduction(
   const visible = await listVisibleProfiles(viewer, opts);
   const open = await opts.intros.findOpen(viewer.id);
   if (open) await opts.intros.mark(open.introductionId, 'replaced');
+  await opts.intros.rememberWant(viewer.id, want);
   const next = await pickNext(visible, own, opts, want);
   if (!next) return { introduction: null };
-  const record = await openIntroduction(viewer, next, opts.now);
+  const record = await openIntroduction(viewer, next, opts.now, want);
   await opts.intros.save(record);
   return { introduction: presentIntro(record, next, own, want) };
 }
@@ -128,6 +130,7 @@ async function openIntroduction(
   viewer: Account,
   person: Presented,
   now: () => Date,
+  want?: string,
 ): Promise<IntroductionRecord> {
   const created = now();
   return {
@@ -138,6 +141,7 @@ async function openIntroduction(
     createdAt: created.toISOString(),
     expiresAt: new Date(created.getTime() + INTRO_MS).toISOString(),
     status: 'open',
+    want,
   };
 }
 

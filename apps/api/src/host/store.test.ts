@@ -23,5 +23,8 @@ describe('intro store', () => {
     expect(await store.findOpen('alex')).toBeNull();
     await store.mark('missing', 'passed');
     expect(await store.findById('missing')).toBeNull();
+    await store.rememberWant('alex', 'Russian that speaks English');
+    expect(await store.lastWant('alex')).toBe('Russian that speaks English');
+    expect(await store.lastWant('other')).toBeUndefined();
   });
 });

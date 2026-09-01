@@ -29,6 +29,8 @@ describe('host matching', () => {
     );
     expect(chooseFromPool([elena, alina], alex, 'Paphos harbour')?.firstName).toBe('Alina');
     expect(chooseFromPool([elena, alina], alex)?.firstName).toBe('Elena');
+    expect(chooseFromPool([elena, alina], alex, '25, russian, fun')?.firstName).toBe('Alina');
+    expect(chooseFromPool([elena], alex, 'Russian that speaks English')).toBeUndefined();
     expect(chooseFromPool([], alex)).toBeUndefined();
   });
 });

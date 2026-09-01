@@ -1,5 +1,5 @@
-import type { ReasonFacts, ViewerFacts } from './reason';
-import { chooseFromPool } from './score';
+import { LANGUAGE_NAME, type ReasonFacts, type ViewerFacts } from './reason';
+import { chooseFromPool, speakingPool } from './score';
 
 export type RankedPerson = ReasonFacts & { profileId: string };
 
@@ -14,7 +14,7 @@ export type HostModelOpts = {
 };
 
 const SYSTEM =
-  'Pick one profileId from the list. Reply JSON {"profileId":"..."}. Use only listed people. Do not invent bios, jobs, or pickup lines.';
+  'Pick one profileId from the list. If the want names a language, pick someone who speaks it. Reply JSON {"profileId":"..."}. Use only listed people. Do not invent bios, jobs, nationalities, or pickup lines.';
 
 export function parseModelChoice(raw: string, allowed: Set<string>): string | undefined {
   const match = raw.match(/\{[\s\S]*\}/);
@@ -33,10 +33,11 @@ export async function chooseWithModel<T extends RankedPerson>(
   want: string | undefined,
   opts: HostModelOpts = {},
 ): Promise<T | undefined> {
-  const local = chooseFromPool(visible, viewer, want);
-  if (!opts.url || visible.length === 0) return local;
-  const id = await askModel(visible, viewer, want, opts).catch(() => undefined);
-  return visible.find((person) => person.profileId === id) ?? local;
+  const candidates = speakingPool(visible, want);
+  const local = chooseFromPool(candidates, viewer, want);
+  if (!opts.url || candidates.length === 0) return local;
+  const id = await askModel(candidates, viewer, want, opts).catch(() => undefined);
+  return candidates.find((person) => person.profileId === id) ?? local;
 }
 
 async function askModel(
@@ -80,6 +81,7 @@ function modelBody(visible: RankedPerson[], viewer: ViewerFacts, want: string | 
     firstName: person.firstName,
     city: person.city,
     languagesSpoken: person.languagesSpoken,
+    languages: person.languagesSpoken.map((code) => LANGUAGE_NAME[code]),
     bio: person.bio ?? '',
   }));
   return {
