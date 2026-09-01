@@ -25,6 +25,7 @@ import { profileRoutes } from './profile/routes';
 import { MemoryPhotoVerificationStore, type PhotoVerificationStore } from './profile/verifyStore';
 import { photoVerificationRoutes } from './profile/verifyRoutes';
 import { stubVendor, type PhotoVerificationVendor } from './profile/vendor';
+import type { HostFetch } from './host/mind';
 import { hostRoutes } from './host/routes';
 import { MemoryIntroStore, type IntroStore } from './host/store';
 
@@ -43,6 +44,7 @@ export interface AppOptions {
   verifications?: PhotoVerificationStore;
   photoVendor?: PhotoVerificationVendor;
   intros?: IntroStore;
+  hostFetch?: HostFetch;
   now?: () => Date;
   mobileChecker?: MobileChecker;
   presenceChecker?: PresenceChecker;
@@ -158,5 +160,13 @@ async function registerRoutes(
   await app.register(profileRoutes, deps);
   await app.register(matchRoutes, deps);
   await app.register(photoVerificationRoutes, deps);
-  await app.register(hostRoutes, deps);
+  await app.register(hostRoutes, {
+    ...deps,
+    hostModel: {
+      url: opts.config.HOST_MODEL_URL,
+      key: opts.config.HOST_MODEL_KEY,
+      name: opts.config.HOST_MODEL_NAME,
+      fetch: opts.hostFetch,
+    },
+  });
 }

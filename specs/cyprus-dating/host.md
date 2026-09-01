@@ -31,7 +31,7 @@ Here is a host, not a catalog. The atomic unit is a proposed evening — who, ci
 - Northern Cyprus, or matching across the Green Line.
 - SMS OTP.
 
-This slice ranks Introductions from Profile facts and an optional want. There is no live LLM in CI. A later EU-hosted model may replace the ranker; copy must still be grounded in the Profile.
+This slice ranks Introductions from Profile facts and an optional want. An optional EU-hosted OpenAI-compatible model may pick `profileId` from the visible Pool. Reasons still come from `introductionReason` / `meetFraming` and must quote a clause that already exists. There is no live LLM in CI: unset `HOST_MODEL_URL` uses the local ranker, and any timeout, error, or unknown id falls back to it. A hostname such as `*.openai.azure.com` is not treated as EU by itself; `HOST_MODEL_REGION` or `DATA_REGION` must be an EU Azure region.
 
 ## Yes / Not this
 
@@ -57,6 +57,7 @@ This slice ranks Introductions from Profile facts and an optional want. There is
 
 ## Not this slice
 
-- A live LLM call in CI. Ranking is local and grounded.
+- A live LLM call in CI. Ranking is local unless `HOST_MODEL_URL` is set outside CI, and even then copy stays grounded.
+- Letting the model write bios, jobs, pickup lines, or Match chat.
 - T9 Block and Report, and T10 Photo verification, as new work — those already exist and are not marked done here.
 - Super Like, who-liked-you, SMS OTP, exact home GPS, live km, Northern Cyprus, profession, interest-tag pills, an AI pickup-line writer.
