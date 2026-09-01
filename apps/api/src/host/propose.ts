@@ -6,11 +6,11 @@ import { listVisibleProfiles } from '../pool/visible';
 import type { Profile } from '../profile/store';
 import { requireResident } from '../profile/resident';
 import type { IntroductionBody } from './contracts';
+import { chooseWithModel, type HostModelOpts } from './mind';
 import { introductionReason, isFresh, meetFraming } from './reason';
-import { chooseFromPool } from './score';
 import type { IntroductionRecord, IntroStore } from './store';
 
-export type HostDeps = LoopDeps & { intros: IntroStore };
+export type HostDeps = LoopDeps & { intros: IntroStore; hostModel?: HostModelOpts };
 
 const INTRO_MS = 24 * 60 * 60 * 1000;
 
@@ -41,7 +41,7 @@ export async function currentIntroduction(
   if (open && kept && isFresh(open.expiresAt, opts.now())) {
     return { introduction: presentIntro(open, kept, own) };
   }
-  const next = pickNext(visible, own);
+  const next = await pickNext(visible, own, opts);
   if (!next) return { introduction: null };
   const record = await openIntroduction(viewer, next, opts.now);
   await opts.intros.save(record);
@@ -66,7 +66,7 @@ export async function requestIntroduction(
   const visible = await listVisibleProfiles(viewer, opts);
   const open = await opts.intros.findOpen(viewer.id);
   if (open) await opts.intros.mark(open.introductionId, 'replaced');
-  const next = pickNext(visible, own, want);
+  const next = await pickNext(visible, own, opts, want);
   if (!next) return { introduction: null };
   const record = await openIntroduction(viewer, next, opts.now);
   await opts.intros.save(record);
@@ -162,6 +162,6 @@ function presentIntro(
   };
 }
 
-function pickNext(visible: Presented[], own: Profile, want?: string): Presented | undefined {
-  return chooseFromPool(visible, own, want);
+function pickNext(visible: Presented[], own: Profile, opts: HostDeps, want?: string) {
+  return chooseWithModel(visible, own, want, opts.hostModel);
 }

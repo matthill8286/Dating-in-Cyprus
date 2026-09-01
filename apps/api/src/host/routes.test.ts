@@ -211,3 +211,52 @@ describe('Introduction from what the Resident asked Here', () => {
     await app.close();
   });
 });
+
+describe('Introduction from an EU model', () => {
+  it('uses a listed profileId from the model and still writes a grounded reason', async () => {
+    const accounts = new MemoryAccountStore();
+    const profiles = new MemoryProfileStore();
+    const loop = new MemoryLoopStore();
+    await applySeed(accounts, profiles, hashPassword, loop);
+    const app = await buildApp({
+      config: loadConfig({
+        CORS_ORIGINS: 'http://localhost:8081',
+        SESSION_SECRET: 's'.repeat(32),
+        NODE_ENV: 'test',
+        DATA_REGION: 'westeurope',
+        PHOTO_STORE_REGION: 'westeurope',
+        DATABASE_URL: 'postgres://dating:dating@localhost:5432/dating',
+        HOST_MODEL_URL: 'https://example.test/openai/chat/completions',
+      }),
+      accounts,
+      profiles,
+      loop,
+      intros: new MemoryIntroStore(),
+      now: () => NOW,
+      hostFetch: async (_url, init) => modelPick(init, 'Paphos'),
+    });
+    const token = await signInAlex(app);
+    const { status, body } = await readIntro(app, token);
+    expect(status).toBe(200);
+    expect(body.introduction?.city).toBe('Paphos');
+    expect(body.introduction?.reason).toMatch(/Paphos|harbour/i);
+    expect(body.introduction?.reason).not.toMatch(/engineer|lawyer|doctor/i);
+    await app.close();
+  });
+});
+
+function modelPick(init: RequestInit | undefined, city: string): Response {
+  const posted = JSON.parse(String(init?.body)) as { messages: Array<{ content: string }> };
+  const people = (
+    JSON.parse(posted.messages[1]?.content ?? '{}') as {
+      people: Array<{ profileId: string; city: string }>;
+    }
+  ).people;
+  const person = people.find((entry) => entry.city === city) ?? people[0];
+  return {
+    ok: true,
+    json: async () => ({
+      choices: [{ message: { content: JSON.stringify({ profileId: person?.profileId }) } }],
+    }),
+  } as Response;
+}

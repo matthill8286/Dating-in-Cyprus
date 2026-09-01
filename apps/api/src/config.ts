@@ -23,6 +23,10 @@ const configSchema = z.object({
   DATA_REGION: euRegion,
   PHOTO_STORE_REGION: euRegion,
   DATABASE_URL: z.string().min(1),
+  HOST_MODEL_URL: z.string().optional(),
+  HOST_MODEL_KEY: z.string().optional(),
+  HOST_MODEL_NAME: z.string().optional(),
+  HOST_MODEL_REGION: z.string().optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;
@@ -42,5 +46,38 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   if (!result.success) {
     throw new Error(`Invalid configuration: ${result.error.message}`);
   }
-  return result.data;
+  return finalizeHostModel(result.data);
+}
+
+function blank(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function finalizeHostModel(cfg: Config): Config {
+  const url = blank(cfg.HOST_MODEL_URL);
+  const key = blank(cfg.HOST_MODEL_KEY);
+  const name = blank(cfg.HOST_MODEL_NAME);
+  const stated = blank(cfg.HOST_MODEL_REGION);
+  if (!url) {
+    return { ...cfg, HOST_MODEL_URL: undefined, HOST_MODEL_KEY: key, HOST_MODEL_NAME: name, HOST_MODEL_REGION: stated };
+  }
+  assertHttpsUrl(url);
+  const region = stated ?? cfg.DATA_REGION;
+  if (!isEuAzureRegion(region)) {
+    throw new Error('Invalid configuration: HOST_MODEL_REGION must be an EU Azure region');
+  }
+  return { ...cfg, HOST_MODEL_URL: url, HOST_MODEL_KEY: key, HOST_MODEL_NAME: name, HOST_MODEL_REGION: region };
+}
+
+function assertHttpsUrl(url: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error('Invalid configuration: HOST_MODEL_URL must be an https URL');
+  }
+  if (parsed.protocol !== 'https:') {
+    throw new Error('Invalid configuration: HOST_MODEL_URL must be an https URL');
+  }
 }
