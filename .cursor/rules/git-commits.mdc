@@ -1,0 +1,27 @@
+---
+description: Never add GitHub Co-authored-by trailers to commits
+alwaysApply: true
+---
+
+# Git commits
+
+Do not add co-author attribution to GitHub.
+
+Never include `Co-authored-by` trailers in commit messages (including Cursor, Copilot, or any other agent). Do not pass `--trailer`, `Co-authored-by`, or equivalent when committing.
+
+```
+# BAD
+git commit -m "$(cat <<'EOF'
+Fix the match list skeleton.
+
+Co-authored-by: Cursor <cursoragent@cursor.com>
+EOF
+)"
+
+# GOOD
+git commit -m "$(cat <<'EOF'
+Fix the match list skeleton.
+
+EOF
+)"
+```

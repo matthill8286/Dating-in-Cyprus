@@ -1,6 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { Text, View, StyleSheet } from 'react-native';
 import { api } from './src/api/client';
 import { AppProvider, useApp } from './src/context/AppContext';
 import { JoinScreen } from './src/JoinScreen';
@@ -16,7 +15,8 @@ import { ChatScreen } from './src/ChatScreen';
 import { PersonScreen } from './src/PersonScreen';
 import { SignInScreen } from './src/SignInScreen';
 import type { Profile } from './src/profile';
-import { color, ensureWebFonts, font } from './src/theme';
+import { HostLoadingScreen } from './src/ui/skeleton';
+import { ensureWebFonts } from './src/theme';
 import { sessionExpired } from './src/session';
 import type { MainTab, TabGo } from './src/ui/tabs';
 
@@ -42,7 +42,7 @@ function ProfileGate() {
       .finally(() => setReady(true));
   }, [sessionToken, setProfile, setSessionToken]);
 
-  if (!ready) return <Loading />;
+  if (!ready) return <HostLoadingScreen />;
   if (!profile) return <IntakeScreen onSaved={() => setNotify(true)} />;
   if (notify) return <NotifyScreen onDone={() => setNotify(false)} />;
   if (editing) return <ProfileEditScreen onSaved={() => setEditing(false)} />;
@@ -133,17 +133,6 @@ function messageAction(
   };
 }
 
-function Loading() {
-  return (
-    <View style={styles.loading}>
-      <View style={styles.rule}>
-        <Text style={styles.heart}>♥</Text>
-      </View>
-      <Text style={styles.word}>Here</Text>
-    </View>
-  );
-}
-
 function Root() {
   const { sessionToken } = useApp();
   const [entry, setEntry] = useState<'welcome' | 'join' | 'signin'>('welcome');
@@ -167,23 +156,3 @@ export default function App() {
     </AppProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    backgroundColor: color.bg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  rule: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: color.roseSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  word: { color: color.ink, fontFamily: font.display, fontSize: 28, fontWeight: '700' },
-  heart: { color: color.rose, fontSize: 20, fontWeight: '700' },
-});

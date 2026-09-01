@@ -52,7 +52,7 @@ export function hostLines(input: {
   want?: string | null;
   looking?: boolean;
 }): HostLine[] {
-  const lines: HostLine[] = [{ id: 'open', kind: 'host', body: HOST_OPENING }];
+  const lines: HostLine[] = [];
   if (input.want) {
     lines.push({ id: 'want', kind: 'you', body: input.want });
   }
@@ -70,6 +70,9 @@ export function hostLines(input: {
   const live = liveIntroduction(input.introduction, input.matched);
   if (!live) {
     if (!waitingOnNext(input.introduction, input.matched)) {
+      if (!input.want && !input.matched) {
+        lines.push({ id: 'open', kind: 'host', body: HOST_OPENING });
+      }
       lines.push({ id: 'empty', kind: 'host', body: HOST_EMPTY });
     }
     return lines;
