@@ -25,10 +25,10 @@ const elena: HostIntroduction = {
 };
 
 describe('host thread', () => {
-  it('opens with Here, then one Introduction — not a swipe deck', () => {
+  it('opens with one Introduction — not a swipe deck or a repeated pitch', () => {
     const lines = hostLines({ introduction: elena, revealed: false, verb: null, matched: null });
-    expect(lines[0]).toEqual({ id: 'open', kind: 'host', body: HOST_OPENING });
-    expect(lines[1]).toMatchObject({ kind: 'intro', revealed: false });
+    expect(lines.map((line) => line.kind)).toEqual(['intro']);
+    expect(lines[0]).toMatchObject({ kind: 'intro', revealed: false });
     expect(JSON.stringify(lines)).not.toMatch(/like|nope|swipe/i);
     const asked = hostLines({
       introduction: elena,
@@ -37,7 +37,8 @@ describe('host thread', () => {
       matched: null,
       want: 'harbour walks',
     });
-    expect(asked[1]).toEqual({ id: 'want', kind: 'you', body: 'harbour walks' });
+    expect(asked.map((line) => line.kind)).toEqual(['you', 'intro']);
+    expect(asked[0]).toEqual({ id: 'want', kind: 'you', body: 'harbour walks' });
     const looking = hostLines({
       introduction: null,
       revealed: false,
@@ -46,7 +47,7 @@ describe('host thread', () => {
       want: 'harbour walks',
       looking: true,
     });
-    expect(looking.map((line) => line.kind)).toEqual(['host', 'you', 'host']);
+    expect(looking.map((line) => line.kind)).toEqual(['you', 'host']);
   });
 
   it('earns the portrait after Tell me more, and keeps looking after a mutual Yes', () => {
@@ -78,6 +79,7 @@ describe('host thread', () => {
 
   it('shows an empty evening when the Pool has no one left', () => {
     const lines = hostLines({ introduction: null, revealed: false, verb: null, matched: null });
+    expect(lines[0]).toEqual({ id: 'open', kind: 'host', body: HOST_OPENING });
     expect(lines[1]).toEqual({ id: 'empty', kind: 'host', body: HOST_EMPTY });
     expect(canDecide(elena, false, null)).toBe(true);
     expect(canDecide(null, false, null)).toBe(false);

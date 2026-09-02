@@ -4,6 +4,7 @@ import { lastMessagePreview, messageClock } from './chat';
 import { useApp } from './context/AppContext';
 import { searchInbox, splitInbox, type InboxRow } from './match';
 import { MuteNote, Screen, Sheet } from './ui/kit';
+import { MessageListSkeleton } from './ui/skeleton';
 import { TabBar, type TabGo } from './ui/tabs';
 import { color, font } from './theme';
 import { useMatches } from './useMatches';
@@ -16,7 +17,7 @@ export function MessagesScreen({
   go: TabGo;
 }) {
   const { sessionToken } = useApp();
-  const matches = useMatches(sessionToken);
+  const { matches, ready } = useMatches(sessionToken);
   const [query, setQuery] = useState('');
   const { fresh, threads } = splitInbox(matches);
   const searching = query.trim().length > 0;
@@ -38,13 +39,19 @@ export function MessagesScreen({
         />
       </View>
       <Sheet>
-        {!searching && fresh.length > 0 ? <FreshTray items={fresh} onOpen={onOpen} /> : null}
-        {rows.map((item) => (
-          <ThreadRow key={item.matchId} item={item} onPress={() => onOpen(item)} />
-        ))}
-        {rows.length === 0 ? (
-          <MuteNote>{searching ? 'No matches with that name.' : 'No messages yet. Say hello.'}</MuteNote>
-        ) : null}
+        {!ready ? (
+          <MessageListSkeleton />
+        ) : (
+          <>
+            {!searching && fresh.length > 0 ? <FreshTray items={fresh} onOpen={onOpen} /> : null}
+            {rows.map((item) => (
+              <ThreadRow key={item.matchId} item={item} onPress={() => onOpen(item)} />
+            ))}
+            {rows.length === 0 ? (
+              <MuteNote>{searching ? 'No matches with that name.' : 'No messages yet. Say hello.'}</MuteNote>
+            ) : null}
+          </>
+        )}
       </Sheet>
     </Screen>
   );

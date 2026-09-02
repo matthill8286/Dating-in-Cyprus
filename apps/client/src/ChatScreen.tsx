@@ -9,6 +9,7 @@ import { OpenSafetySheet } from './SafetySheet';
 import { color, font } from './theme';
 import { Fixed } from './ui/deck';
 import { styles as kit } from './ui/kit.styles';
+import { ChatSkeleton } from './ui/skeleton';
 
 export function ChatScreen({
   match,
@@ -24,7 +25,7 @@ export function ChatScreen({
   onUnmatched: () => void;
 }) {
   const { sessionToken } = useApp();
-  const { lines, setLines } = useChatThread(sessionToken, match.matchId);
+  const { lines, setLines, ready } = useChatThread(sessionToken, match.matchId);
   const [draft, setDraft] = useState('');
   const [safety, setSafety] = useState(false);
 
@@ -46,7 +47,8 @@ export function ChatScreen({
           onSafety={() => setSafety(true)}
         />
         <ScrollView style={styles.thread} contentContainerStyle={styles.threadInner}>
-          {lines.length === 0 ? <EmptyThread profile={match.profile} onPress={onProfile} /> : null}
+          {!ready ? <ChatSkeleton /> : null}
+          {ready && lines.length === 0 ? <EmptyThread profile={match.profile} onPress={onProfile} /> : null}
           {lines.map((line) => (
             <View key={line.messageId} style={line.fromMe ? kit.bubbleMe : kit.bubbleThem}>
               <Text style={line.fromMe ? kit.bubbleMeText : kit.bubbleThemText}>{line.body}</Text>
@@ -169,16 +171,22 @@ function EmptyThread({ profile, onPress }: { profile: Profile; onPress: () => vo
 
 function useChatThread(sessionToken: string | null, matchId: string) {
   const [lines, setLines] = useState<ChatLine[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!sessionToken) return;
     let cancelled = false;
+    setReady(false);
     const load = async () => {
-      const { data } = await api.GET('/v1/matches/{matchId}/messages', {
-        headers: { authorization: `Bearer ${sessionToken}` },
-        params: { path: { matchId } },
-      });
-      if (!cancelled && data?.messages) setLines(data.messages);
+      try {
+        const { data } = await api.GET('/v1/matches/{matchId}/messages', {
+          headers: { authorization: `Bearer ${sessionToken}` },
+          params: { path: { matchId } },
+        });
+        if (!cancelled && data?.messages) setLines(data.messages);
+      } finally {
+        if (!cancelled) setReady(true);
+      }
     };
     void load();
     const timer = setInterval(() => void load(), CHAT_POLL_MS);
@@ -188,7 +196,7 @@ function useChatThread(sessionToken: string | null, matchId: string) {
     };
   }, [sessionToken, matchId]);
 
-  return { lines, setLines };
+  return { lines, setLines, ready };
 }
 
 const styles = StyleSheet.create({

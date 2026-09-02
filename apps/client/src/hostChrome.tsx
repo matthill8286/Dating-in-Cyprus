@@ -75,13 +75,11 @@ export function IntroCard({
 }) {
   return (
     <View style={styles.intro}>
-      <Text style={styles.tonight}>Here chose this evening</Text>
+      <Text style={styles.tonight}>Tonight in {introduction.city}</Text>
       <Text style={styles.name}>{introduction.firstName}</Text>
-      <Text style={styles.meta}>
-        {introduction.city}
-        {' · '}
-        {spokenList(introduction.languagesSpoken)}
-      </Text>
+      <Text style={styles.meta}>{spokenList(introduction.languagesSpoken)}</Text>
+      <Text style={styles.framing}>{introduction.meetFraming}</Text>
+      <Text style={styles.reason}>{introduction.reason}</Text>
       {revealed ? <Text style={styles.markLabel}>{verificationCopy(introduction.photoVerification)}</Text> : null}
       {revealed && introduction.portraitUrl ? (
         <Image
@@ -91,8 +89,6 @@ export function IntroCard({
         />
       ) : null}
       {revealed && introduction.bio ? <Text style={styles.bio}>{introduction.bio}</Text> : null}
-      <Text style={styles.reason}>{introduction.reason}</Text>
-      <Text style={styles.framing}>{introduction.meetFraming}</Text>
     </View>
   );
 }
@@ -111,7 +107,12 @@ export function VerbRow({
   return (
     <View style={styles.verbs}>
       {showMore ? (
-        <Pressable onPress={onMore} accessibilityRole="button" accessibilityLabel="Tell me more">
+        <Pressable
+          onPress={onMore}
+          accessibilityRole="button"
+          accessibilityLabel="Tell me more"
+          style={styles.moreBtn}
+        >
           <Text style={styles.more}>Tell me more</Text>
         </Pressable>
       ) : null}
@@ -207,17 +208,23 @@ const styles = StyleSheet.create({
   hostCopy: { flex: 1, color: color.ink, fontFamily: font.display, fontSize: 22, lineHeight: 30, fontWeight: '600' },
   youRow: { alignSelf: 'flex-end', backgroundColor: color.roseSoft, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10, maxWidth: 280 },
   youCopy: { color: color.ink, fontFamily: font.body, fontSize: 15, fontWeight: '600' },
-  intro: { gap: 8, padding: 18, backgroundColor: color.surface, borderRadius: 24 },
-  tonight: { color: color.rose, fontFamily: font.body, fontSize: 12, fontWeight: '600', letterSpacing: 0.5 },
+  intro: { gap: 10, padding: 20, backgroundColor: color.surface, borderRadius: 24 },
+  tonight: { color: color.rose, fontFamily: font.body, fontSize: 13, fontWeight: '600', letterSpacing: 0.4 },
   name: { color: color.ink, fontFamily: font.display, fontSize: 34, lineHeight: 38, fontWeight: '700' },
-  meta: { color: color.ink, fontFamily: font.body, fontSize: 16, lineHeight: 22 },
+  meta: { color: color.mute, fontFamily: font.body, fontSize: 15, lineHeight: 22, fontWeight: '600' },
   markLabel: { color: color.mute, fontFamily: font.body, fontSize: 13, fontWeight: '600' },
-  portrait: { width: '100%', aspectRatio: 0.82, borderRadius: 20, backgroundColor: color.surface, marginTop: 4 },
+  portrait: { width: '100%', aspectRatio: 0.82, borderRadius: 20, backgroundColor: color.line, marginTop: 4 },
   bio: { color: color.ink, fontFamily: font.body, fontSize: 16, lineHeight: 24 },
-  reason: { color: color.ink, fontFamily: font.body, fontSize: 17, lineHeight: 25, marginTop: 4 },
-  framing: { color: color.mute, fontFamily: font.body, fontSize: 15, lineHeight: 22 },
-  verbs: { gap: 12, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 8, maxWidth: 430, width: '100%', alignSelf: 'center' },
-  more: { color: color.rose, fontFamily: font.body, fontSize: 15, fontWeight: '600', textAlign: 'center' },
+  framing: { color: color.ink, fontFamily: font.display, fontSize: 20, lineHeight: 28, fontWeight: '600', marginTop: 6 },
+  reason: { color: color.mute, fontFamily: font.body, fontSize: 15, lineHeight: 22 },
+  verbs: { gap: 10, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 8, maxWidth: 430, width: '100%', alignSelf: 'center' },
+  moreBtn: {
+    borderRadius: 999,
+    backgroundColor: color.roseSoft,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  more: { color: color.rose, fontFamily: font.body, fontSize: 16, fontWeight: '700', textAlign: 'center' },
   row: { flexDirection: 'row', gap: 10 },
   passBtn: { flex: 1, borderRadius: 999, borderWidth: 1, borderColor: color.line, paddingVertical: 14, alignItems: 'center' },
   pass: { color: color.ink, fontFamily: font.body, fontSize: 16, fontWeight: '600' },

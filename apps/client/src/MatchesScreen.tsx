@@ -2,6 +2,7 @@ import { Image, Pressable, Text, View, StyleSheet } from 'react-native';
 import { useApp } from './context/AppContext';
 import type { InboxRow } from './match';
 import { MuteNote, Screen, Sheet } from './ui/kit';
+import { MatchGridSkeleton } from './ui/skeleton';
 import { TabBar, type TabGo } from './ui/tabs';
 import { color, font } from './theme';
 import { useMatches } from './useMatches';
@@ -14,7 +15,7 @@ export function MatchesScreen({
   go: TabGo;
 }) {
   const { sessionToken } = useApp();
-  const matches = useMatches(sessionToken);
+  const { matches, ready } = useMatches(sessionToken);
 
   return (
     <Screen footer={<TabBar active="matches" go={go} />}>
@@ -23,12 +24,18 @@ export function MatchesScreen({
         <Text style={styles.sub}>People you both want to meet.</Text>
       </View>
       <Sheet>
-        <View style={styles.grid}>
-          {matches.map((item) => (
-            <MatchTile key={item.matchId} item={item} onPress={() => onOpen(item)} />
-          ))}
-        </View>
-        {matches.length === 0 ? <MuteNote>No Matches yet. Here will introduce you.</MuteNote> : null}
+        {ready ? (
+          <>
+            <View style={styles.grid}>
+              {matches.map((item) => (
+                <MatchTile key={item.matchId} item={item} onPress={() => onOpen(item)} />
+              ))}
+            </View>
+            {matches.length === 0 ? <MuteNote>No Matches yet. Here will introduce you.</MuteNote> : null}
+          </>
+        ) : (
+          <MatchGridSkeleton />
+        )}
       </Sheet>
     </Screen>
   );
