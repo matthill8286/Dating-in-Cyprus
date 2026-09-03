@@ -20,6 +20,7 @@
       }
     },
     "android": {
+      "package": "com.here.cyprusdating",
       "adaptiveIcon": {
         "backgroundColor": "#E94057",
         "foregroundImage": "./assets/android-icon-foreground.png",
