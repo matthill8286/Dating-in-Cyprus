@@ -13,6 +13,9 @@ import {
   pinOnScreen,
   projectOnView,
   viewForCity,
+  pinchDistance,
+  pinchFocus,
+  pinchZoomDelta,
   zoomAt,
   zoomDeltaFromWheel,
 } from './map';
@@ -116,6 +119,21 @@ describe('calm zoom', () => {
     const mid = mapTiles({ ...view, zoom: view.zoom + 0.5 }, 400, 400);
     expect(mid[0]?.width).toBeGreaterThan(256);
     expect(mid[0]?.url).toContain(`/tile/${Math.floor(view.zoom + 0.5)}/`);
+  });
+
+  it('zooms a pinch by the log of the finger span, around the midpoint', () => {
+    expect(pinchDistance({ pageX: 0, pageY: 0 }, { pageX: 80, pageY: 60 })).toBe(100);
+    expect(pinchFocus({ locationX: 40, locationY: 10 }, { locationX: 120, locationY: 90 })).toEqual({
+      x: 80,
+      y: 50,
+    });
+    expect(pinchZoomDelta(100, 200)).toBeCloseTo(1);
+    expect(pinchZoomDelta(200, 100)).toBeCloseTo(-1);
+    expect(pinchZoomDelta(100, 100)).toBe(0);
+    expect(pinchZoomDelta(0, 140)).toBe(0);
+    const view = islandView(400, 400);
+    const doubled = zoomAt(view, view.zoom + pinchZoomDelta(80, 160), 200, 200, 400, 400);
+    expect(doubled.zoom).toBeCloseTo(view.zoom + 1);
   });
 });
 

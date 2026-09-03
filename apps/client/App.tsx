@@ -77,7 +77,7 @@ function ProfileGate() {
     return <MessagesScreen onOpen={setChat} go={go} />;
   }
   return (
-    <HostScreen go={go} />
+    <HostScreen go={go} onOpen={(profile) => setPerson({ profile })} />
   );
 }
 

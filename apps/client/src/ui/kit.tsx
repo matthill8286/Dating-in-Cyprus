@@ -1,7 +1,8 @@
-import { useState, type ReactNode } from 'react';
-import { Pressable, SafeAreaView, ScrollView, Text, TextInput, View, Image } from 'react-native';
-import { color } from '../theme';
+import { type ReactNode } from 'react';
+import { Pressable, SafeAreaView, ScrollView, Text, View, Image } from 'react-native';
 import { styles } from './kit.styles';
+
+export { Field } from './field';
 
 export function Screen({
   children,
@@ -14,6 +15,8 @@ export function Screen({
     <SafeAreaView style={styles.safe}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
         contentContainerStyle={styles.scroll}
       >
         {children}
@@ -128,44 +131,6 @@ export function Portrait({ uri, name }: { uri?: string; name: string }) {
 
 export function SectionLabel({ children }: { children: string }) {
   return <Text style={styles.section}>{children}</Text>;
-}
-
-export function Field({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  secure,
-  autoCapitalize,
-  multiline,
-}: {
-  label: string;
-  value: string;
-  onChangeText: (value: string) => void;
-  placeholder?: string;
-  secure?: boolean;
-  autoCapitalize?: 'none' | 'sentences';
-  multiline?: boolean;
-}) {
-  const [focused, setFocused] = useState(false);
-  return (
-    <View style={styles.field}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={color.mute}
-        secureTextEntry={secure}
-        autoCapitalize={autoCapitalize}
-        autoCorrect={false}
-        multiline={multiline}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        style={[styles.input, multiline && styles.multiline, focused && styles.inputOn]}
-      />
-    </View>
-  );
 }
 
 export function ChipRow({

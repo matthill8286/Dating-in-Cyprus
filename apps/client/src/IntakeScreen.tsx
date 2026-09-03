@@ -15,6 +15,7 @@ import {
 import { languageLabel } from './theme';
 import { ChipRow } from './ui/kit';
 import { Fixed } from './ui/deck';
+import { page } from './ui/layout';
 
 export function IntakeScreen({ onSaved }: { onSaved: () => void }) {
   const { sessionToken, setProfile } = useApp();
@@ -140,15 +141,13 @@ async function patchMe(token: string | null, values: ProfileFormValues) {
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
   thread: {
-    width: '100%',
-    maxWidth: 430,
-    alignSelf: 'center',
+    ...page,
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 24,
     gap: 20,
   },
   lines: { gap: 16 },
-  footer: { paddingBottom: 12, gap: 8, maxWidth: 430, width: '100%', alignSelf: 'center' },
+  footer: { paddingBottom: 12, gap: 8, ...page },
   chips: { paddingHorizontal: 24 },
 });

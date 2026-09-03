@@ -96,6 +96,19 @@ export function zoomDeltaFromWheel(deltaY: number): number {
   return Math.max(-WHEEL_ZOOM_CAP, Math.min(WHEEL_ZOOM_CAP, -deltaY / WHEEL_ZOOM_PX));
 }
 
+export function pinchDistance(a: { pageX: number; pageY: number }, b: { pageX: number; pageY: number }): number {
+  return Math.hypot(a.pageX - b.pageX, a.pageY - b.pageY);
+}
+
+export function pinchFocus(a: { locationX: number; locationY: number }, b: { locationX: number; locationY: number }) {
+  return { x: (a.locationX + b.locationX) / 2, y: (a.locationY + b.locationY) / 2 };
+}
+
+export function pinchZoomDelta(startDistance: number, nextDistance: number): number {
+  if (startDistance <= 0 || nextDistance <= 0) return 0;
+  return Math.log2(nextDistance / startDistance);
+}
+
 export function projectOnView(
   lat: number,
   lng: number,

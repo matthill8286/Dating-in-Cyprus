@@ -2,6 +2,7 @@ import { Image, Pressable, Text, TextInput, View, StyleSheet } from 'react-nativ
 import type { HostIntroduction, HostLine } from './host';
 import { spokenList, verificationCopy } from './host';
 import { color, font } from './theme';
+import { page } from './ui/layout';
 
 export function HostHeader({
   onIsland,
@@ -217,7 +218,7 @@ const styles = StyleSheet.create({
   bio: { color: color.ink, fontFamily: font.body, fontSize: 16, lineHeight: 24 },
   framing: { color: color.ink, fontFamily: font.display, fontSize: 20, lineHeight: 28, fontWeight: '600', marginTop: 6 },
   reason: { color: color.mute, fontFamily: font.body, fontSize: 15, lineHeight: 22 },
-  verbs: { gap: 10, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 8, maxWidth: 430, width: '100%', alignSelf: 'center' },
+  verbs: { gap: 10, ...page, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 8 },
   moreBtn: {
     borderRadius: 999,
     backgroundColor: color.roseSoft,
@@ -233,11 +234,9 @@ const styles = StyleSheet.create({
   composer: {
     flexDirection: 'row',
     gap: 8,
+    ...page,
     paddingHorizontal: 24,
     paddingBottom: 10,
-    maxWidth: 430,
-    width: '100%',
-    alignSelf: 'center',
     alignItems: 'center',
   },
   field: {

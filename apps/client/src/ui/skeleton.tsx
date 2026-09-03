@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Animated, View, StyleSheet } from 'react-native';
 import { HostHeader } from '../hostChrome';
 import { color } from '../theme';
+import { page } from './layout';
 
 export function Bone({
   height,
@@ -57,13 +58,15 @@ export function HostLoadingScreen() {
   );
 }
 
-export function MatchGridSkeleton() {
+export function MatchGridSkeleton({ tile }: { tile: { width: number; height: number } }) {
+  const width = tile.width || '47%';
+  const height = tile.height || 210;
   return (
     <View accessibilityRole="progressbar" accessibilityLabel="Loading matches" style={styles.grid}>
-      <Bone height={210} width="47%" radius={16} />
-      <Bone height={210} width="47%" radius={16} />
-      <Bone height={210} width="47%" radius={16} />
-      <Bone height={210} width="47%" radius={16} />
+      <Bone height={height} width={width} radius={16} />
+      <Bone height={height} width={width} radius={16} />
+      <Bone height={height} width={width} radius={16} />
+      <Bone height={height} width={width} radius={16} />
     </View>
   );
 }
@@ -108,14 +111,12 @@ const styles = StyleSheet.create({
   intro: { gap: 12, padding: 20, backgroundColor: color.surface, borderRadius: 24 },
   gate: { flex: 1, backgroundColor: color.bg },
   thread: {
-    width: '100%',
-    maxWidth: 430,
-    alignSelf: 'center',
+    ...page,
     paddingHorizontal: 24,
     paddingTop: 16,
     gap: 20,
   },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, width: '100%' },
   list: { gap: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   rowBody: { flex: 1, gap: 8 },

@@ -10,6 +10,7 @@ import { ActionRow, Fixed, MatchOverlay } from './ui/deck';
 import { FilterSheet } from './ui/filters';
 import { SwipeCard } from './ui/swipe';
 import { TabBar, type TabGo } from './ui/tabs';
+import { page } from './ui/layout';
 import { useDeck } from './useDeck';
 
 export function PoolScreen({
@@ -183,9 +184,7 @@ function DiscoverBody({
 const styles = StyleSheet.create({
   deck: {
     flex: 1,
-    width: '100%',
-    maxWidth: 430,
-    alignSelf: 'center',
+    ...page,
     paddingHorizontal: 16,
     paddingTop: 12,
   },

@@ -43,18 +43,21 @@ export function SignInScreen({
         {onBack ? <GhostButton title="Back" onPress={onBack} /> : null}
         <Card>
           <Field
+            kind="email"
             label="Email"
             value={email}
             onChangeText={setEmail}
             placeholder="you@example.com"
-            autoCapitalize="none"
+            returnKeyType="next"
           />
           <Field
+            kind="password"
             label="Password"
             value={password}
             onChangeText={setPassword}
             placeholder="Your password"
-            secure
+            returnKeyType="go"
+            onSubmitEditing={() => void onSignIn()}
           />
           <ErrorNote message={error} />
           <PrimaryButton title="Sign in" onPress={() => void onSignIn()} />

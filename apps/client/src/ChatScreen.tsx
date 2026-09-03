@@ -8,6 +8,7 @@ import type { Profile } from './profile';
 import { OpenSafetySheet } from './SafetySheet';
 import { color, font } from './theme';
 import { Fixed } from './ui/deck';
+import { page as pageLayout } from './ui/layout';
 import { styles as kit } from './ui/kit.styles';
 import { ChatSkeleton } from './ui/skeleton';
 
@@ -200,7 +201,7 @@ function useChatThread(sessionToken: string | null, matchId: string) {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: 16 },
+  page: { flex: 1, ...pageLayout, paddingHorizontal: 16 },
   bar: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingTop: 8, paddingBottom: 12 },
   back: { color: color.ink, fontFamily: font.body, fontSize: 28, fontWeight: '400', paddingRight: 4, paddingLeft: 4 },
   more: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },

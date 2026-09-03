@@ -7,6 +7,7 @@ import { MuteNote, Screen, Sheet } from './ui/kit';
 import { MessageListSkeleton } from './ui/skeleton';
 import { TabBar, type TabGo } from './ui/tabs';
 import { color, font } from './theme';
+import { page } from './ui/layout';
 import { useMatches } from './useMatches';
 
 export function MessagesScreen({
@@ -119,7 +120,7 @@ function ThreadRow({ item, onPress }: { item: InboxRow; onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  head: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 8, maxWidth: 430, alignSelf: 'center', width: '100%', gap: 12 },
+  head: { ...page, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 8, gap: 12 },
   title: { fontFamily: font.display, fontSize: 28, fontWeight: '700', color: color.ink },
   search: {
     fontFamily: font.body,

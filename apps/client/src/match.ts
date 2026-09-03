@@ -91,6 +91,24 @@ export function nextPhotoIndex(current: number, count: number, step: 1 | -1): nu
   return (current + step + count) % count;
 }
 
+export const MATCH_SHEET_PAD = 40;
+export const MATCH_GRID_GAP = 12;
+export const MATCH_TILE_RATIO = 0.78;
+
+export function matchGridWidth(windowWidth: number, columnCap = Number.POSITIVE_INFINITY): number {
+  return Math.max(0, Math.min(windowWidth, columnCap) - MATCH_SHEET_PAD);
+}
+
+export function matchTileSize(
+  gridWidth: number,
+  gap = MATCH_GRID_GAP,
+  ratio = MATCH_TILE_RATIO,
+): { width: number; height: number } {
+  if (gridWidth <= 0) return { width: 0, height: 0 };
+  const width = Math.max(0, Math.floor((gridWidth - gap) / 2));
+  return { width, height: Math.round(width / ratio) };
+}
+
 export function photoTap(x: number, width: number): 1 | -1 {
   return x < width * 0.35 ? -1 : 1;
 }
