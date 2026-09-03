@@ -11,6 +11,9 @@ import {
   panView,
   peopleInView,
   peopleWestToEast,
+  pinchDistance,
+  pinchFocus,
+  pinchZoomDelta,
   viewForCity,
   zoomAt,
   zoomDeltaFromWheel,
@@ -91,8 +94,13 @@ function useMapCamera(width: number, height: number, city: string) {
   const cityRef = useRef(city);
   const [view, setView] = useState<MapView>(() => islandView(width, height));
   const [drag, setDrag] = useState({ x: 0, y: 0 });
+  const viewRef = useRef(view);
+  const sizeRef = useRef({ width, height });
+  const pinchRef = useRef<{ view: MapView; distance: number; x: number; y: number } | null>(null);
   const zoomByRef = useRef<(delta: number, x?: number, y?: number) => void>(() => undefined);
   const panByRef = useRef<(dx: number, dy: number) => void>(() => undefined);
+  viewRef.current = view;
+  sizeRef.current = { width, height };
 
   zoomByRef.current = (delta, x = width / 2, y = height / 2) => {
     setView((current) => clampView(zoomAt(current, current.zoom + delta, x ?? width / 2, y ?? height / 2, width, height), width, height));
@@ -119,11 +127,13 @@ function useMapCamera(width: number, height: number, city: string) {
 
   const pan = useMemo(
     () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_event, gesture) => Math.abs(gesture.dx) > 8 || Math.abs(gesture.dy) > 8,
-        onPanResponderMove: (_event, gesture) => setDrag({ x: gesture.dx, y: gesture.dy }),
-        onPanResponderRelease: (_event, gesture) => panByRef.current(gesture.dx, gesture.dy),
-        onPanResponderTerminate: (_event, gesture) => panByRef.current(gesture.dx, gesture.dy),
+      boardPanResponder({
+        pinchRef,
+        viewRef,
+        sizeRef,
+        panByRef,
+        setDrag,
+        setView,
       }),
     [],
   );
@@ -147,6 +157,72 @@ function useMapCamera(width: number, height: number, city: string) {
       );
     },
   };
+}
+
+type PinchStart = { view: MapView; distance: number; x: number; y: number };
+
+function boardPanResponder(input: {
+  pinchRef: { current: PinchStart | null };
+  viewRef: { current: MapView };
+  sizeRef: { current: { width: number; height: number } };
+  panByRef: { current: (dx: number, dy: number) => void };
+  setDrag: (drag: { x: number; y: number }) => void;
+  setView: (view: MapView) => void;
+}) {
+  const finish = (gesture: { dx: number; dy: number }) => {
+    if (input.pinchRef.current) {
+      input.pinchRef.current = null;
+      input.setDrag({ x: 0, y: 0 });
+      return;
+    }
+    input.panByRef.current(gesture.dx, gesture.dy);
+  };
+  return PanResponder.create({
+    onMoveShouldSetPanResponder: (event, gesture) =>
+      event.nativeEvent.touches.length >= 2 ||
+      gesture.numberActiveTouches >= 2 ||
+      Math.abs(gesture.dx) > 8 ||
+      Math.abs(gesture.dy) > 8,
+    onPanResponderMove: (event, gesture) => pinchOrPan(event.nativeEvent.touches, gesture, input),
+    onPanResponderRelease: (_event, gesture) => finish(gesture),
+    onPanResponderTerminate: (_event, gesture) => finish(gesture),
+  });
+}
+
+function pinchOrPan(
+  touches: { length: number; [index: number]: { pageX: number; pageY: number; locationX: number; locationY: number } },
+  gesture: { dx: number; dy: number },
+  input: Parameters<typeof boardPanResponder>[0],
+) {
+  if (touches.length >= 2) {
+    applyPinch(touches[0], touches[1], input);
+    return;
+  }
+  if (input.pinchRef.current) return;
+  input.setDrag({ x: gesture.dx, y: gesture.dy });
+}
+
+function applyPinch(
+  a: { pageX: number; pageY: number; locationX: number; locationY: number },
+  b: { pageX: number; pageY: number; locationX: number; locationY: number },
+  input: Parameters<typeof boardPanResponder>[0],
+) {
+  const dist = pinchDistance(a, b);
+  if (!input.pinchRef.current) {
+    const focus = pinchFocus(a, b);
+    input.pinchRef.current = { view: input.viewRef.current, distance: dist, x: focus.x, y: focus.y };
+    input.setDrag({ x: 0, y: 0 });
+    return;
+  }
+  const start = input.pinchRef.current;
+  const board = input.sizeRef.current;
+  input.setView(
+    clampView(
+      zoomAt(start.view, start.view.zoom + pinchZoomDelta(start.distance, dist), start.x, start.y, board.width, board.height),
+      board.width,
+      board.height,
+    ),
+  );
 }
 
 function bindWheel(

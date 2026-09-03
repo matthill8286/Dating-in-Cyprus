@@ -8,7 +8,8 @@ const appJson = JSON.parse(
 ) as { expo: { platforms: string[] } };
 
 describe('platforms', () => {
-  it('targets iOS, Android, and web', () => {
-    expect(appJson.expo.platforms).toEqual(['ios', 'android', 'web']);
+  it('ships iOS and Android first; web is extra', () => {
+    expect(appJson.expo.platforms.slice(0, 2)).toEqual(['ios', 'android']);
+    expect(appJson.expo.platforms).toContain('web');
   });
 });

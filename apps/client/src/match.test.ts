@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { afterDecision, bioHasMore, deckTap, filterDeck, interestMatched, nextPhotoIndex, photoTap, searchInbox, splitInbox, swipeDecision, type MatchedCard } from './match';
+import { afterDecision, bioHasMore, deckTap, filterDeck, interestMatched, matchGridWidth, matchTileSize, nextPhotoIndex, photoTap, searchInbox, splitInbox, swipeDecision, type MatchedCard } from './match';
 import type { Profile } from './profile';
 
 const elena: Profile = {
@@ -62,5 +62,13 @@ describe('discovery deck', () => {
     expect(searchInbox([fresh, thread], '')).toHaveLength(2);
     expect(bioHasMore('Marina.')).toBe(false);
     expect(bioHasMore('x'.repeat(111))).toBe(true);
+  });
+
+  it('sizes Match tiles in points so a wrapping grid cannot collapse them', () => {
+    expect(matchGridWidth(390)).toBe(350);
+    expect(matchGridWidth(800)).toBe(760);
+    expect(matchGridWidth(800, 430)).toBe(390);
+    expect(matchTileSize(350)).toEqual({ width: 169, height: 217 });
+    expect(matchTileSize(0)).toEqual({ width: 0, height: 0 });
   });
 });

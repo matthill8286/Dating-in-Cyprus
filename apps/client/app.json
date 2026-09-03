@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.here.cyprusdating",
+      "appleTeamId": "TBSF92ANV7",
       "infoPlist": {
         "NSLocalNetworkUsageDescription": "Here talks to your computer so you can discover people on this island.",
         "NSAppTransportSecurity": {
@@ -20,6 +21,7 @@
       }
     },
     "android": {
+      "softwareKeyboardLayoutMode": "resize",
       "package": "com.here.cyprusdating",
       "adaptiveIcon": {
         "backgroundColor": "#E94057",

@@ -98,18 +98,18 @@ function EmailFields({
   return (
     <>
       <Field
+        kind="email"
         label="Email"
         value={form.email}
         onChangeText={(email) => setForm((current) => ({ ...current, email }))}
         placeholder="you@example.com"
-        autoCapitalize="none"
       />
       <Field
+        kind="password"
         label="Password"
         value={form.password}
         onChangeText={(password) => setForm((current) => ({ ...current, password }))}
         placeholder="At least 8 characters"
-        secure
       />
       <ChipRow
         caption="Language"
@@ -138,13 +138,13 @@ function MobileFields({
       </View>
       <View style={styles.phoneField}>
         <Field
+          kind="phone"
           label="Cyprus mobile"
           value={localFromMobile(form.mobile)}
           onChangeText={(digits) =>
             setForm((current) => ({ ...current, mobile: mobileFromLocal(digits) }))
           }
           placeholder="9xxxxxxx"
-          autoCapitalize="none"
         />
       </View>
     </View>

@@ -1,7 +1,8 @@
-import { Image, Pressable, Text, View, StyleSheet } from 'react-native';
+import { Image, Platform, Pressable, Text, View, StyleSheet, useWindowDimensions } from 'react-native';
 import { useApp } from './context/AppContext';
-import type { InboxRow } from './match';
+import { matchGridWidth, matchTileSize, type InboxRow } from './match';
 import { MuteNote, Screen, Sheet } from './ui/kit';
+import { page, WEB_COLUMN } from './ui/layout';
 import { MatchGridSkeleton } from './ui/skeleton';
 import { TabBar, type TabGo } from './ui/tabs';
 import { color, font } from './theme';
@@ -16,6 +17,10 @@ export function MatchesScreen({
 }) {
   const { sessionToken } = useApp();
   const { matches, ready } = useMatches(sessionToken);
+  const { width: windowWidth } = useWindowDimensions();
+  const tile = matchTileSize(
+    matchGridWidth(windowWidth, Platform.OS === 'web' ? WEB_COLUMN : Number.POSITIVE_INFINITY),
+  );
 
   return (
     <Screen footer={<TabBar active="matches" go={go} />}>
@@ -28,27 +33,40 @@ export function MatchesScreen({
           <>
             <View style={styles.grid}>
               {matches.map((item) => (
-                <MatchTile key={item.matchId} item={item} onPress={() => onOpen(item)} />
+                <MatchTile
+                  key={item.matchId}
+                  item={item}
+                  tile={tile}
+                  onPress={() => onOpen(item)}
+                />
               ))}
             </View>
             {matches.length === 0 ? <MuteNote>No Matches yet. Here will introduce you.</MuteNote> : null}
           </>
         ) : (
-          <MatchGridSkeleton />
+          <MatchGridSkeleton tile={tile} />
         )}
       </Sheet>
     </Screen>
   );
 }
 
-function MatchTile({ item, onPress }: { item: InboxRow; onPress: () => void }) {
-  const uri = item.profile.photos[0]?.url;
+function MatchTile({
+  item,
+  tile,
+  onPress,
+}: {
+  item: InboxRow;
+  tile: { width: number; height: number };
+  onPress: () => void;
+}) {
+  const uri = item.profile.photos?.[0]?.url;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${item.profile.firstName}, ${item.profile.age}`}
-      style={styles.tile}
+      style={[styles.tile, { width: tile.width, height: tile.height }]}
     >
       {uri ? (
         <Image source={{ uri }} style={styles.photo} accessibilityLabel={item.profile.firstName} />
@@ -68,13 +86,12 @@ function MatchTile({ item, onPress }: { item: InboxRow; onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  head: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 8, maxWidth: 430, alignSelf: 'center', width: '100%' },
+  head: { ...page, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 8 },
   title: { fontFamily: font.display, fontSize: 28, fontWeight: '700', color: color.ink },
   sub: { fontFamily: font.body, fontSize: 14, color: color.mute, marginTop: 4 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, width: '100%' },
   tile: {
-    width: '47%',
-    aspectRatio: 0.78,
+    flexShrink: 0,
     borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: color.surface,

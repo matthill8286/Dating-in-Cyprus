@@ -10,12 +10,15 @@ import { Fixed } from './ui/deck';
 import { introPending } from './ui/pending';
 import { IntroSkeleton } from './ui/skeleton';
 import { TabBar, type TabGo } from './ui/tabs';
+import { page } from './ui/layout';
 import { useHost } from './useHost';
 
 export function HostScreen({
   go,
+  onOpen,
 }: {
   go: TabGo;
+  onOpen: (profile: Profile) => void;
 }) {
   const { sessionToken } = useApp();
   const host = useHost(sessionToken);
@@ -26,7 +29,9 @@ export function HostScreen({
   const pending = introPending(host.ready, host.looking, host.busy);
 
   if (island) {
-    return <IslandStage people={host.people} footer={tabs} onBack={() => setIsland(false)} />;
+    return (
+      <IslandStage people={host.people} footer={tabs} onBack={() => setIsland(false)} onOpen={onOpen} />
+    );
   }
 
   return (
@@ -53,7 +58,11 @@ export function HostScreen({
         </View>
       }
     >
-      <ScrollView contentContainerStyle={styles.thread} style={styles.scroll}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.thread}
+        style={styles.scroll}
+      >
         <HostHeader
           onIsland={() => setIsland(true)}
           onSafety={host.introduction ? () => setSafety(true) : undefined}
@@ -84,14 +93,16 @@ function IslandStage({
   people,
   footer,
   onBack,
+  onOpen,
 }: {
   people: Profile[];
   footer: ReactNode;
   onBack: () => void;
+  onOpen: (profile: Profile) => void;
 }) {
   return (
     <Fixed footer={footer}>
-      <IslandMap people={people} city="all" onOpen={() => undefined} />
+      <IslandMap people={people} city="all" onOpen={onOpen} />
       <IslandBack onBack={onBack} />
     </Fixed>
   );
@@ -120,9 +131,7 @@ function threadFor(
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
   thread: {
-    width: '100%',
-    maxWidth: 430,
-    alignSelf: 'center',
+    ...page,
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 24,

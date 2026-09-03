@@ -1,6 +1,16 @@
-import type { ReactNode } from 'react';
-import { Image, Pressable, SafeAreaView, Text, View, StyleSheet } from 'react-native';
+import { type ReactNode } from 'react';
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  Text,
+  View,
+  StyleSheet,
+} from 'react-native';
 import { color } from '../theme';
+import { keyboardAvoidProps } from './keyboard';
 import { GhostButton, PrimaryButton } from './kit';
 import { styles } from './kit.styles';
 
@@ -11,10 +21,17 @@ export function Fixed({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  const avoid = keyboardAvoidProps(Platform.OS);
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.fixed}>{children}</View>
-      {footer}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={avoid.behavior}
+        enabled={avoid.enabled}
+      >
+        <View style={styles.fixed}>{children}</View>
+        {footer}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

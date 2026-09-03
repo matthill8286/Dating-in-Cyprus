@@ -10,5 +10,15 @@ services:
     volumes:
       - dating-pg:/var/lib/postgresql/data
 
+  # Phone / TestFlight while Postgres stays in Docker: start the API, then
+  # `docker compose --profile tunnel up tunnel` and bake the printed https URL
+  # into EXPO_PUBLIC_API_BASE_URL for a published build.
+  tunnel:
+    profiles: ['tunnel']
+    image: cloudflare/cloudflared:latest
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    command: tunnel --no-autoupdate --url http://host.docker.internal:8080
+
 volumes:
   dating-pg:

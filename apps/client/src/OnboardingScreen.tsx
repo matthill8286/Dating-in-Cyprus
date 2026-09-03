@@ -9,6 +9,7 @@ import {
 import { color, font } from './theme';
 import { PrimaryButton } from './ui/kit';
 import { Fixed } from './ui/deck';
+import { page as pageLayout } from './ui/layout';
 
 export function OnboardingScreen({
   onCreate,
@@ -98,9 +99,7 @@ function PhotoPeek({
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    width: '100%',
-    maxWidth: 430,
-    alignSelf: 'center',
+    ...pageLayout,
     paddingHorizontal: 24,
     paddingTop: 12,
     paddingBottom: 20,

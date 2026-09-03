@@ -1,14 +1,14 @@
 import { Platform, StyleSheet } from 'react-native';
 import { color, font } from '../theme';
+import { page } from './layout';
 
 export const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: color.bg },
+  keyboardAvoid: { flex: 1 },
   scroll: { flexGrow: 1, paddingBottom: 28 },
   hero: { paddingTop: 28, paddingBottom: 8 },
   heroInner: {
-    width: '100%',
-    maxWidth: 430,
-    alignSelf: 'center',
+    ...page,
     paddingHorizontal: 24,
   },
   mark: {
@@ -45,9 +45,7 @@ export const styles = StyleSheet.create({
     maxWidth: 320,
   },
   sheet: {
-    width: '100%',
-    maxWidth: 430,
-    alignSelf: 'center',
+    ...page,
     paddingHorizontal: 20,
     gap: 16,
   },
