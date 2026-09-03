@@ -1,10 +1,13 @@
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
+
+const root = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   resolve: {
     alias: {
-      'react-native': fileURLToPath(new URL('./src/react-native.stub.ts', import.meta.url)),
+      'react-native': join(root, 'src/react-native.stub.ts'),
     },
   },
   test: {
