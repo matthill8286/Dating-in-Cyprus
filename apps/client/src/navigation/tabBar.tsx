@@ -1,27 +1,34 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { StyleSheet, View } from 'react-native';
+import { color } from '../theme';
 import { TabBar, type MainTab, type TabGo } from '../ui/tabs';
-import { TAB_ROOT_SCREEN, TAB_ROUTE, type MainTabParamList } from './types';
+import { tabBarIsHidden } from './tabVisibility';
+import { TAB_ROUTE } from './types';
 
-const TAB_ORDER: MainTab[] = ['people', 'matches', 'messages', 'profile'];
+export function MainTabBar({ state, descriptors, navigation, insets }: BottomTabBarProps) {
+  const focused = state.routes[state.index];
+  const style = StyleSheet.flatten(descriptors[focused.key]?.options.tabBarStyle);
+  if (tabBarIsHidden(style)) return null;
 
-export function MainTabBar({ state, navigation }: BottomTabBarProps) {
-  const active = TAB_ORDER[state.index] ?? 'people';
+  const active = tabFromRouteName(focused.name);
   const go: TabGo = {
     people: () => navigation.navigate(TAB_ROUTE.people),
     matches: () => navigation.navigate(TAB_ROUTE.matches),
     messages: () => navigation.navigate(TAB_ROUTE.messages),
     profile: () => navigation.navigate(TAB_ROUTE.profile),
   };
-  return <TabBar active={active} go={go} />;
+  return (
+    <View style={[styles.wrap, { paddingBottom: insets.bottom }]}>
+      <TabBar active={active} go={go} />
+    </View>
+  );
 }
 
-export function hideTabBarOnPushFromRoute(route: {
-  name: string;
-  state?: { routes: Array<{ name: string }>; index?: number };
-}): boolean {
-  const tab = route.name as keyof MainTabParamList;
-  const root = TAB_ROOT_SCREEN[tab];
-  const focused = getFocusedRouteNameFromRoute(route) ?? root;
-  return focused === root;
+function tabFromRouteName(name: string): MainTab {
+  const found = (Object.keys(TAB_ROUTE) as MainTab[]).find((tab) => TAB_ROUTE[tab] === name);
+  return found ?? 'people';
 }
+
+const styles = StyleSheet.create({
+  wrap: { backgroundColor: color.paper },
+});

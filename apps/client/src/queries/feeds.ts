@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useInfiniteQuery, useQuery, type InfiniteData } from '@tanstack/react-query';
 import { fetchIntroduction, fetchMatchPage, fetchMe, fetchPoolPage } from '../api/endpoints';
 import { keys } from '../api/keys';
@@ -12,7 +13,7 @@ import type { Profile } from '../profile';
  * Pages are addressed by offset. `undefined` from `getNextPageParam` is how React Query
  * learns there is nothing left to load.
  */
-function nextPageParam<T>(last: T[], all: T[][]): number | undefined {
+export function nextPageParam<T>(last: T[], all: T[][]): number | undefined {
   if (!hasFullPage(last.length)) return undefined;
   return nextOffset(all.reduce((count, page) => count + page.length, 0));
 }
@@ -30,14 +31,15 @@ export function usePool(sessionToken: string | null) {
     queryFn: ({ pageParam }) => fetchPoolPage(sessionToken as string, pageParam),
     getNextPageParam: nextPageParam<Profile>,
   });
+  const loadMore = useCallback(() => {
+    if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
+  }, [query.fetchNextPage, query.hasNextPage, query.isFetchingNextPage]);
   return {
     people: flatten(query.data),
     loading: query.isPending,
     failed: query.isError,
-    hasMore: query.hasNextPage,
-    loadMore: () => {
-      if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
-    },
+    hasMore: Boolean(query.hasNextPage),
+    loadMore,
   };
 }
 
@@ -50,14 +52,15 @@ export function useMatchInbox(sessionToken: string | null) {
     queryFn: ({ pageParam }) => fetchMatchPage(sessionToken as string, pageParam),
     getNextPageParam: nextPageParam<InboxRow>,
   });
+  const loadMore = useCallback(() => {
+    if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
+  }, [query.fetchNextPage, query.hasNextPage, query.isFetchingNextPage]);
   return {
     matches: flatten(query.data),
     loading: query.isPending,
     failed: query.isError,
-    hasMore: query.hasNextPage,
-    loadMore: () => {
-      if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
-    },
+    hasMore: Boolean(query.hasNextPage),
+    loadMore,
   };
 }
 

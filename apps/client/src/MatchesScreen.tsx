@@ -1,5 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useEffect } from 'react';
 import { Image, Platform, Pressable, Text, View, StyleSheet, useWindowDimensions } from 'react-native';
 import { matchGridWidth, matchTileSize, type InboxRow } from './match';
 import type { MatchesStackParamList } from './navigation/types';
@@ -20,8 +21,11 @@ export function MatchesScreen() {
     matchGridWidth(windowWidth, Platform.OS === 'web' ? WEB_COLUMN : Number.POSITIVE_INFINITY),
   );
 
-  const open = (item: InboxRow, index: number) => {
-    if (shouldLoadMore(index, matches.length, hasMore)) loadMore();
+  useEffect(() => {
+    if (shouldLoadMore(matches.length - 2, matches.length, hasMore)) loadMore();
+  }, [hasMore, loadMore, matches.length]);
+
+  const open = (item: InboxRow) => {
     navigation.navigate('Person', { matchId: item.matchId, profile: item.profile });
   };
 
@@ -37,12 +41,12 @@ export function MatchesScreen() {
         ) : (
           <>
             <View style={styles.grid}>
-              {matches.map((item, index) => (
+              {matches.map((item) => (
                 <MatchTile
                   key={item.matchId}
                   item={item}
                   tile={tile}
-                  onPress={() => open(item, index)}
+                  onPress={() => open(item)}
                 />
               ))}
             </View>

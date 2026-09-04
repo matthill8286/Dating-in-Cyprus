@@ -3,6 +3,9 @@ import { useEffect } from 'react';
 import { fetchIntroduction, fetchMatchPage, fetchPoolPage } from '../api/endpoints';
 import { keys } from '../api/keys';
 import { STALE } from '../api/queryClient';
+import type { InboxRow } from '../match';
+import type { Profile } from '../profile';
+import { nextPageParam } from './feeds';
 
 /**
  * Warm the three tab feeds in parallel the moment a session exists, so the tabs are
@@ -21,13 +24,15 @@ export function usePrefetchFeeds(sessionToken: string | null): void {
       queryKey: keys.pool(),
       staleTime: STALE.pool,
       initialPageParam: 0,
-      queryFn: () => fetchPoolPage(sessionToken, 0),
+      queryFn: ({ pageParam }) => fetchPoolPage(sessionToken, pageParam),
+      getNextPageParam: nextPageParam<Profile>,
     });
     void client.prefetchInfiniteQuery({
       queryKey: keys.matches(),
       staleTime: STALE.matches,
       initialPageParam: 0,
-      queryFn: () => fetchMatchPage(sessionToken, 0),
+      queryFn: ({ pageParam }) => fetchMatchPage(sessionToken, pageParam),
+      getNextPageParam: nextPageParam<InboxRow>,
     });
   }, [client, sessionToken]);
 }

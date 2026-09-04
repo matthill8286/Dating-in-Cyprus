@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-native';
 import { lastMessagePreview, messageClock } from './chat';
 import { searchInbox, splitInbox, type InboxRow } from './match';
@@ -22,8 +22,11 @@ export function MessagesScreen() {
   const searching = query.trim().length > 0;
   const rows = searchInbox(searching ? matches : threads, query);
 
-  const open = (item: InboxRow, index: number) => {
-    if (shouldLoadMore(index, matches.length, hasMore)) loadMore();
+  useEffect(() => {
+    if (shouldLoadMore(matches.length - 2, matches.length, hasMore)) loadMore();
+  }, [hasMore, loadMore, matches.length]);
+
+  const open = (item: InboxRow) => {
     navigation.navigate('Chat', { matchId: item.matchId, profile: item.profile });
   };
 
@@ -50,14 +53,11 @@ export function MessagesScreen() {
             {!searching && fresh.length > 0 ? (
               <FreshTray
                 items={fresh}
-                onOpen={(item) => {
-                  const index = matches.findIndex((row) => row.matchId === item.matchId);
-                  open(item, index >= 0 ? index : 0);
-                }}
+                onOpen={open}
               />
             ) : null}
-            {rows.map((item, index) => (
-              <ThreadRow key={item.matchId} item={item} onPress={() => open(item, index)} />
+            {rows.map((item) => (
+              <ThreadRow key={item.matchId} item={item} onPress={() => open(item)} />
             ))}
             <ErrorNote message={failed ? 'Messages did not load. Try again in a moment.' : null} />
             {rows.length === 0 && !failed ? (
