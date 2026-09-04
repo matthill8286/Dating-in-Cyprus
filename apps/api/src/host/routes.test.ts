@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { hashPassword } from '../account/password';
 import { MemoryAccountStore } from '../account/store';
 import { buildApp } from '../app';
@@ -85,6 +85,101 @@ describe('Introduction proposal', () => {
     expect(intro?.expiresAt).toBe('2026-08-31T12:00:00.000Z');
     expect(intro?.portraitUrl).toMatch(/^https?:\/\//);
     expect(again.body.introduction?.introductionId).toBe(intro?.introductionId);
+    await app.close();
+  });
+});
+
+/** Give the background queue-ahead a chance to finish before asserting on it. */
+async function settle(done: () => boolean): Promise<void> {
+  for (let i = 0; i < 100 && !done(); i += 1) {
+    await new Promise((resume) => setTimeout(resume, 10));
+  }
+}
+
+async function accountIdOf(app: Awaited<ReturnType<typeof seededApp>>, token: string) {
+  const me = await app.inject({ method: 'GET', url: '/v1/profiles/me', headers: auth(token) });
+  return (me.json() as { accountId: string }).accountId;
+}
+
+describe('Introduction fast path', () => {
+  it('re-reads an open Introduction without listing every Profile', async () => {
+    const accounts = new MemoryAccountStore();
+    const profiles = new MemoryProfileStore();
+    const loop = new MemoryLoopStore();
+    const intros = new MemoryIntroStore();
+    await applySeed(accounts, profiles, hashPassword, loop);
+    const app = await buildApp({
+      config: testConfig(),
+      accounts,
+      profiles,
+      loop,
+      intros,
+      now: () => NOW,
+    });
+    const token = await signInAlex(app);
+    const first = await readIntro(app, token);
+    const viewerId = await accountIdOf(app, token);
+    // Once someone is queued there is no background scan left to race with, so what the
+    // spies see below is only the work of serving the response.
+    await settle(() => Boolean(intros.findQueuedNow(viewerId)));
+    const everyProfile = vi.spyOn(profiles, 'list');
+    const everyAccount = vi.spyOn(accounts, 'listAdmitted');
+    const again = await readIntro(app, token);
+    expect(again.body.introduction?.introductionId).toBe(first.body.introduction?.introductionId);
+    expect(everyProfile).not.toHaveBeenCalled();
+    expect(everyAccount).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('chooses the person after this one ahead of time, so Not this costs no model call', async () => {
+    const accounts = new MemoryAccountStore();
+    const profiles = new MemoryProfileStore();
+    const loop = new MemoryLoopStore();
+    const intros = new MemoryIntroStore();
+    await applySeed(accounts, profiles, hashPassword, loop);
+    let asked = 0;
+    const app = await buildApp({
+      config: loadConfig({
+        CORS_ORIGINS: 'http://localhost:8081',
+        SESSION_SECRET: 's'.repeat(32),
+        NODE_ENV: 'test',
+        DATA_REGION: 'westeurope',
+        PHOTO_STORE_REGION: 'westeurope',
+        DATABASE_URL: 'postgres://dating:dating@localhost:5432/dating',
+        HOST_MODEL_URL: 'https://example.test/openai/chat/completions',
+      }),
+      accounts,
+      profiles,
+      loop,
+      intros,
+      now: () => NOW,
+      hostFetch: async (_url, init) => {
+        asked += 1;
+        return modelPick(init, 'Paphos');
+      },
+    });
+    const token = await signInAlex(app);
+    const shown = await readIntro(app, token);
+    const viewerId = await accountIdOf(app, token);
+    await settle(() => Boolean(intros.findQueuedNow(viewerId)));
+    const waiting = intros.findQueuedNow(viewerId);
+    expect(waiting?.profileId).toBeTruthy();
+    expect(waiting?.profileId).not.toBe(shown.body.introduction?.profileId);
+
+    // Re-reading the open card never asks again.
+    const askedAfterQueue = asked;
+    await readIntro(app, token);
+    await readIntro(app, token);
+    expect(asked).toBe(askedAfterQueue);
+
+    // Not this is answered by the person already waiting, not by a fresh choice.
+    await app.inject({
+      method: 'POST',
+      url: `/v1/introductions/${shown.body.introduction?.introductionId}/pass`,
+      headers: auth(token),
+    });
+    const next = await readIntro(app, token);
+    expect(next.body.introduction?.profileId).toBe(waiting?.profileId);
     await app.close();
   });
 });

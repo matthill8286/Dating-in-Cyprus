@@ -4,6 +4,7 @@ import type { Profile, ProfilePhoto } from './profile';
 import { languageLabel, color, font } from './theme';
 import { photoVerificationLabel, photoVerificationOf } from './verify';
 import { ChipRow } from './ui/kit';
+import { asText } from './ui/mark';
 
 export function HeroPhoto({
   profile,
@@ -62,7 +63,7 @@ export function PersonCopy({
         </Text>
         {onMessage ? (
           <Pressable onPress={onMessage} accessibilityRole="button" accessibilityLabel={`Message ${profile.firstName}`} style={styles.plane}>
-            <Text style={styles.planeMark}>➤</Text>
+            <Text style={styles.planeMark}>{asText('➤')}</Text>
           </Pressable>
         ) : null}
       </View>

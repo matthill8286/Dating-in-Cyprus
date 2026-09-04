@@ -1,50 +1,56 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Image, Platform, Pressable, Text, View, StyleSheet, useWindowDimensions } from 'react-native';
-import { useApp } from './context/AppContext';
 import { matchGridWidth, matchTileSize, type InboxRow } from './match';
-import { MuteNote, Screen, Sheet } from './ui/kit';
+import type { MatchesStackParamList } from './navigation/types';
+import { shouldLoadMore } from './page';
+import { useApp } from './context/AppContext';
+import { useMatchInbox } from './queries/feeds';
+import { ErrorNote, MuteNote, Screen, Sheet } from './ui/kit';
 import { page, WEB_COLUMN } from './ui/layout';
 import { MatchGridSkeleton } from './ui/skeleton';
-import { TabBar, type TabGo } from './ui/tabs';
 import { color, font } from './theme';
-import { useMatches } from './useMatches';
 
-export function MatchesScreen({
-  onOpen,
-  go,
-}: {
-  onOpen: (match: InboxRow) => void;
-  go: TabGo;
-}) {
+export function MatchesScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<MatchesStackParamList>>();
   const { sessionToken } = useApp();
-  const { matches, ready } = useMatches(sessionToken);
+  const { matches, loading, failed, hasMore, loadMore } = useMatchInbox(sessionToken);
   const { width: windowWidth } = useWindowDimensions();
   const tile = matchTileSize(
     matchGridWidth(windowWidth, Platform.OS === 'web' ? WEB_COLUMN : Number.POSITIVE_INFINITY),
   );
 
+  const open = (item: InboxRow, index: number) => {
+    if (shouldLoadMore(index, matches.length, hasMore)) loadMore();
+    navigation.navigate('Person', { matchId: item.matchId, profile: item.profile });
+  };
+
   return (
-    <Screen footer={<TabBar active="matches" go={go} />}>
+    <Screen>
       <View style={styles.head}>
         <Text style={styles.title}>Matches</Text>
         <Text style={styles.sub}>People you both want to meet.</Text>
       </View>
       <Sheet>
-        {ready ? (
+        {loading ? (
+          <MatchGridSkeleton tile={tile} />
+        ) : (
           <>
             <View style={styles.grid}>
-              {matches.map((item) => (
+              {matches.map((item, index) => (
                 <MatchTile
                   key={item.matchId}
                   item={item}
                   tile={tile}
-                  onPress={() => onOpen(item)}
+                  onPress={() => open(item, index)}
                 />
               ))}
             </View>
-            {matches.length === 0 ? <MuteNote>No Matches yet. Here will introduce you.</MuteNote> : null}
+            <ErrorNote message={failed ? 'Matches did not load. Try again in a moment.' : null} />
+            {matches.length === 0 && !failed ? (
+              <MuteNote>No Matches yet. Here will introduce you.</MuteNote>
+            ) : null}
           </>
-        ) : (
-          <MatchGridSkeleton tile={tile} />
         )}
       </Sheet>
     </Screen>

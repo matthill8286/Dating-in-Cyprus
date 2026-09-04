@@ -1,5 +1,12 @@
 import { Pool } from 'pg';
-import type { ChatMessage, LoopStore, MatchRecord, SafetyReport } from './store';
+import type { ChatMessage, LoopStore, MatchRecord, MessagePage, SafetyReport } from './store';
+
+const MESSAGE_COLS =
+  'message_id AS "messageId", match_id AS "matchId", from_id AS "fromId", body, sent_at AS "sentAt"';
+
+function toMessage(row: ChatMessage): ChatMessage {
+  return { ...row, sentAt: new Date(row.sentAt).toISOString() };
+}
 
 const DDL = `
   CREATE TABLE IF NOT EXISTS interests (
@@ -168,18 +175,37 @@ export class PostgresLoopStore implements LoopStore {
     return message;
   }
 
-  async listMessages(matchId: string): Promise<ChatMessage[]> {
+  async listMessages(matchId: string, page?: MessagePage): Promise<ChatMessage[]> {
+    await this.ensure();
+    if (page?.limit == null && !page?.before) {
+      const all = await this.pool.query<ChatMessage>(
+        `SELECT ${MESSAGE_COLS} FROM messages WHERE match_id = $1 ORDER BY sent_at ASC`,
+        [matchId],
+      );
+      return all.rows.map(toMessage);
+    }
+    const result = await this.pool.query<ChatMessage>(
+      `SELECT * FROM (
+         SELECT ${MESSAGE_COLS} FROM messages
+          WHERE match_id = $1 AND ($2::timestamptz IS NULL OR sent_at < $2::timestamptz)
+          ORDER BY sent_at DESC
+          LIMIT $3
+       ) window_rows ORDER BY "sentAt" ASC`,
+      [matchId, page.before ?? null, page.limit ?? null],
+    );
+    return result.rows.map(toMessage);
+  }
+
+  async lastMessages(matchIds: string[]): Promise<Map<string, ChatMessage>> {
+    if (matchIds.length === 0) return new Map();
     await this.ensure();
     const result = await this.pool.query<ChatMessage>(
-      `SELECT message_id AS "messageId", match_id AS "matchId", from_id AS "fromId",
-              body, sent_at AS "sentAt"
-         FROM messages WHERE match_id = $1 ORDER BY sent_at ASC`,
-      [matchId],
+      `SELECT DISTINCT ON (match_id) ${MESSAGE_COLS}
+         FROM messages WHERE match_id = ANY($1::uuid[])
+        ORDER BY match_id, sent_at DESC`,
+      [matchIds],
     );
-    return result.rows.map((row) => ({
-      ...row,
-      sentAt: new Date(row.sentAt).toISOString(),
-    }));
+    return new Map(result.rows.map((row) => [row.matchId, toMessage(row)]));
   }
 
   async recordBlock(fromId: string, toId: string): Promise<void> {
@@ -197,6 +223,16 @@ export class PostgresLoopStore implements LoopStore {
       [aId, bId],
     );
     return Boolean(result.rows[0]);
+  }
+
+  async blockedIds(accountId: string): Promise<Set<string>> {
+    await this.ensure();
+    const result = await this.pool.query<{ id: string }>(
+      `SELECT to_id AS id FROM blocks WHERE from_id = $1
+       UNION SELECT from_id AS id FROM blocks WHERE to_id = $1`,
+      [accountId],
+    );
+    return new Set(result.rows.map((row) => row.id));
   }
 
   async recordReport(reporterId: string, subjectId: string, reason: string): Promise<SafetyReport> {

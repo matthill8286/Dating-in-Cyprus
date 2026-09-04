@@ -1,32 +1,71 @@
 import { describe, expect, it } from 'vitest';
-import { readSession, SESSION_KEY, sessionExpired, writeSession, type SessionStore } from './session';
+import {
+  asyncSessionStore,
+  readSession,
+  SESSION_KEY,
+  sessionExpired,
+  writeSession,
+  type SessionStore,
+} from './session';
 
-function memoryStore(start: Record<string, string> = {}): SessionStore {
-  const data = { ...start };
+function memoryStore(): SessionStore {
+  const held = new Map<string, string>();
   return {
-    getItem: (key) => data[key] ?? null,
+    getItem: (key) => held.get(key) ?? null,
     setItem: (key, value) => {
-      data[key] = value;
+      held.set(key, value);
     },
     removeItem: (key) => {
-      delete data[key];
+      held.delete(key);
     },
   };
 }
 
-describe('session persistence', () => {
-  it('reads and writes the session token, and clears it on sign-out', () => {
+describe('session storage', () => {
+  it('keeps and clears the token, and tolerates having no store at all', () => {
     const store = memoryStore();
-    expect(readSession(null)).toBeNull();
     expect(readSession(store)).toBeNull();
-    writeSession(store, 'tok-1');
-    expect(store.getItem(SESSION_KEY)).toBe('tok-1');
-    expect(readSession(store)).toBe('tok-1');
+    writeSession(store, 'sess-1');
+    expect(store.getItem(SESSION_KEY)).toBe('sess-1');
     writeSession(store, null);
     expect(readSession(store)).toBeNull();
-    writeSession(null, 'tok-2');
+    expect(readSession(null)).toBeNull();
+    expect(() => writeSession(null, 'sess-1')).not.toThrow();
+  });
+
+  it('treats 401 as an expired session', () => {
     expect(sessionExpired(401)).toBe(true);
-    expect(sessionExpired(200)).toBe(false);
+    expect(sessionExpired(403)).toBe(false);
     expect(sessionExpired(undefined)).toBe(false);
+  });
+});
+
+describe('asyncSessionStore', () => {
+  it('prefers the secure store when the platform has one', async () => {
+    let held: string | null = 'from-keychain';
+    const secure = {
+      read: async () => held,
+      write: async (token: string | null) => {
+        held = token;
+      },
+    };
+    const store = asyncSessionStore(secure, memoryStore());
+    expect(await store.read()).toBe('from-keychain');
+    await store.write(null);
+    expect(await store.read()).toBeNull();
+  });
+
+  it('falls back to the browser store on web', async () => {
+    const browser = memoryStore();
+    const store = asyncSessionStore(null, browser);
+    await store.write('sess-2');
+    expect(await store.read()).toBe('sess-2');
+    expect(browser.getItem(SESSION_KEY)).toBe('sess-2');
+  });
+
+  it('reads null when there is no store anywhere', async () => {
+    const store = asyncSessionStore(null, null);
+    await store.write('sess-3');
+    expect(await store.read()).toBeNull();
   });
 });

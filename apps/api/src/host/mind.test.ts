@@ -23,6 +23,14 @@ const alina = {
   bio: 'Paphos harbour walks. I stayed after the first winter.',
 };
 
+const bogdan = {
+  profileId: 'p-bogdan',
+  firstName: 'Bogdan',
+  city: 'Nicosia' as const,
+  languagesSpoken: ['bg'] as const,
+  bio: 'Nicosia old town.',
+};
+
 function jsonReply(profileId: string) {
   return {
     ok: true,
@@ -53,9 +61,16 @@ describe('EU host model', () => {
       fetch: async () => jsonReply('not-in-pool'),
     });
     expect(fallback?.firstName).toBe('Elena');
-    const ignored = await chooseWithModel([elena, alina], alex, 'Russian that speaks English', {
+    // Elena speaks one of the two named languages, so she is a candidate the model may pick.
+    const halfMatch = await chooseWithModel([elena, alina], alex, 'Russian that speaks English', {
       url: 'https://example.test/v1',
       fetch: async () => jsonReply('p-elena'),
+    });
+    expect(halfMatch?.firstName).toBe('Elena');
+    // Bogdan speaks neither, so he is never offered however firmly the model asks.
+    const ignored = await chooseWithModel([elena, alina, bogdan], alex, 'Russian', {
+      url: 'https://example.test/v1',
+      fetch: async () => jsonReply('p-bogdan'),
     });
     expect(ignored?.firstName).toBe('Alina');
   });

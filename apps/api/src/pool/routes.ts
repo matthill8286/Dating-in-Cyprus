@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { apiError } from '../account/contracts';
 import type { LoopDeps } from '../match/actions';
-import { poolResponse } from './contracts';
+import { listPageQuery, poolResponse, slicePage } from './contracts';
 import { listVisibleProfiles } from './visible';
 
 export async function poolRoutes(app: FastifyInstance, opts: LoopDeps): Promise<void> {
@@ -12,6 +12,7 @@ export async function poolRoutes(app: FastifyInstance, opts: LoopDeps): Promise<
     '/v1/pool',
     {
       schema: {
+        querystring: listPageQuery,
         response: { 200: poolResponse, 403: apiError },
       },
     },
@@ -23,7 +24,11 @@ export async function poolRoutes(app: FastifyInstance, opts: LoopDeps): Promise<
           message: 'Only a Resident can use the Pool.',
         });
       }
-      return { admitted: true as const, profiles: await listVisibleProfiles(account, opts) };
+      const profiles = await listVisibleProfiles(account, opts);
+      return {
+        admitted: true as const,
+        profiles: slicePage(profiles, req.query.limit, req.query.offset ?? 0),
+      };
     },
   );
 }

@@ -66,4 +66,8 @@ describe('signInRefusalMessage', () => {
   it('explains a wrong email or password', () => {
     expect(signInRefusalMessage('unauthenticated')).toBe('Email or password is wrong.');
   });
+
+  it('explains when the phone cannot reach the API', () => {
+    expect(signInRefusalMessage('network')).toMatch(/Cannot reach Here/);
+  });
 });

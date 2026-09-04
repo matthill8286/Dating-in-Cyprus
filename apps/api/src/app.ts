@@ -1,4 +1,5 @@
 import Fastify, { type FastifyInstance } from 'fastify';
+import etag from '@fastify/etag';
 import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';
@@ -77,6 +78,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     contentSecurityPolicy: { directives: { defaultSrc: ["'none'"] } },
   });
   await app.register(cors, { origin: opts.config.CORS_ORIGINS });
+  await app.register(etag);
   await app.register(sensible);
   await app.register(swagger, {
     openapi: { info: { title: 'cyprus-dating API', version: '1.0.0' }, servers: [{ url: '/' }] },
@@ -94,6 +96,13 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
       return reply.unauthorized();
     }
     req.accountId = claims.accountId;
+  });
+
+  // Per-account data, so never shared, but still worth revalidating: paired with the ETag
+  // above this turns a poll for an unchanged thread into a 304 with no body.
+  app.addHook('onSend', async (req, reply) => {
+    if (req.method !== 'GET' || isPublicPath(req.url)) return;
+    reply.header('cache-control', 'private, max-age=0, must-revalidate');
   });
 
   app.get(
@@ -121,6 +130,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     await profiles.close();
     await loop.close();
     await verifications.close();
+    await intros.close();
   });
   await registerRoutes(app, opts, {
     accounts,

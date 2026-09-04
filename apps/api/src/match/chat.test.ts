@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app';
 import { loadConfig } from '../config';
 import { MemoryAccountStore } from '../account/store';
@@ -145,6 +145,100 @@ describe('Chat after Match', () => {
     expect(preview.json()).toMatchObject({
       matches: [{ lastMessage: { body: 'Hello from Limassol', fromMe: false } }],
     });
+    await app.close();
+  });
+
+  it('returns a newest-first window of a long thread', async () => {
+    const app = await build();
+    const { man, woman, matchId } = await openMatch(app);
+    for (const body of ['one', 'two', 'three', 'four', 'five']) {
+      await app.inject({
+        method: 'POST',
+        url: `/v1/matches/${matchId}/messages`,
+        headers: auth(man.token),
+        payload: { body },
+      });
+    }
+    const recent = await app.inject({
+      method: 'GET',
+      url: `/v1/matches/${matchId}/messages?limit=2`,
+      headers: auth(woman.token),
+    });
+    const page = (recent.json() as { messages: Array<{ body: string; sentAt: string }> }).messages;
+    expect(page.map((message) => message.body)).toEqual(['four', 'five']);
+    const older = await app.inject({
+      method: 'GET',
+      url: `/v1/matches/${matchId}/messages?limit=2&before=${encodeURIComponent(page[0]!.sentAt)}`,
+      headers: auth(woman.token),
+    });
+    const bodies = (older.json() as { messages: Array<{ body: string }> }).messages.map(
+      (message) => message.body,
+    );
+    expect(bodies).not.toContain('four');
+    expect(bodies).not.toContain('five');
+    expect(bodies.length).toBeLessThanOrEqual(2);
+    await app.close();
+  });
+
+  it('answers a poll for an unchanged thread with 304', async () => {
+    const app = await build();
+    const { man, woman, matchId } = await openMatch(app);
+    await app.inject({
+      method: 'POST',
+      url: `/v1/matches/${matchId}/messages`,
+      headers: auth(man.token),
+      payload: { body: 'Hello' },
+    });
+    const first = await app.inject({
+      method: 'GET',
+      url: `/v1/matches/${matchId}/messages`,
+      headers: auth(woman.token),
+    });
+    expect(first.statusCode).toBe(200);
+    expect(first.headers['cache-control']).toBe('private, max-age=0, must-revalidate');
+    const tag = first.headers.etag as string;
+    expect(tag).toBeTruthy();
+    const unchanged = await app.inject({
+      method: 'GET',
+      url: `/v1/matches/${matchId}/messages`,
+      headers: { ...auth(woman.token), 'if-none-match': tag },
+    });
+    expect(unchanged.statusCode).toBe(304);
+    await app.inject({
+      method: 'POST',
+      url: `/v1/matches/${matchId}/messages`,
+      headers: auth(woman.token),
+      payload: { body: 'And back' },
+    });
+    const changed = await app.inject({
+      method: 'GET',
+      url: `/v1/matches/${matchId}/messages`,
+      headers: { ...auth(woman.token), 'if-none-match': tag },
+    });
+    expect(changed.statusCode).toBe(200);
+    await app.close();
+  });
+
+  it('builds the inbox without reading each thread in turn', async () => {
+    const loop = new MemoryLoopStore();
+    const app = await buildApp({
+      config: testConfig(),
+      accounts: new MemoryAccountStore(),
+      profiles: new MemoryProfileStore(),
+      loop,
+      now: () => NOW,
+    });
+    const { man, woman, matchId } = await openMatch(app);
+    await app.inject({
+      method: 'POST',
+      url: `/v1/matches/${matchId}/messages`,
+      headers: auth(man.token),
+      payload: { body: 'Hello' },
+    });
+    const perThread = vi.spyOn(loop, 'listMessages');
+    const inbox = await app.inject({ method: 'GET', url: '/v1/matches', headers: auth(woman.token) });
+    expect(inbox.json()).toMatchObject({ matches: [{ lastMessage: { body: 'Hello' } }] });
+    expect(perThread).not.toHaveBeenCalled();
     await app.close();
   });
 

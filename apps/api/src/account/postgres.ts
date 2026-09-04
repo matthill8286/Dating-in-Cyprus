@@ -136,6 +136,19 @@ export class PostgresAccountStore implements AccountStore {
     return row ? toAccount(row) : null;
   }
 
+  async findManyByIds(ids: string[]): Promise<Account[]> {
+    if (ids.length === 0) return [];
+    await this.ensure();
+    const result = await this.pool.query<AccountRow>(
+      `SELECT id, email, password_hash, date_of_birth::text AS date_of_birth,
+              launch_language, gender, seeking, mobile, resident_admitted
+         FROM accounts
+        WHERE id = ANY($1::uuid[])`,
+      [ids],
+    );
+    return result.rows.map(toAccount);
+  }
+
   async listAdmitted(): Promise<Account[]> {
     await this.ensure();
     const result = await this.pool.query<AccountRow>(

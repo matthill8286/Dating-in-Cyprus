@@ -96,6 +96,16 @@ export class PostgresProfileStore implements ProfileStore {
     return row ? toProfile(row) : null;
   }
 
+  async findManyByAccountIds(accountIds: string[]): Promise<Profile[]> {
+    if (accountIds.length === 0) return [];
+    await this.ensure();
+    const result = await this.pool.query<ProfileRow>(
+      `SELECT ${SELECT_COLS} FROM profiles WHERE account_id = ANY($1::uuid[])`,
+      [accountIds],
+    );
+    return result.rows.map(toProfile);
+  }
+
   async findById(profileId: string): Promise<Profile | null> {
     await this.ensure();
     const result = await this.pool.query<ProfileRow>(

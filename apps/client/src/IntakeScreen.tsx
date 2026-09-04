@@ -38,10 +38,7 @@ export function IntakeScreen({ onSaved }: { onSaved: () => void }) {
     setState({
       ...next,
       done: false,
-      lines: [
-        ...next.lines,
-        { id: 'save-fail', kind: 'host', body: 'I could not save that. Try those lines again.' },
-      ],
+      lines: [...next.lines, { id: 'save-fail', kind: 'host', body: saveRefusal(result.code) }],
     });
   };
 
@@ -57,6 +54,11 @@ export function IntakeScreen({ onSaved }: { onSaved: () => void }) {
       </ScrollView>
     </Fixed>
   );
+}
+
+function saveRefusal(code: string): string {
+  if (code === 'network') return 'I cannot reach the island. Check your connection and send again.';
+  return 'I could not save that. Try those lines again.';
 }
 
 function IntakeFooter({

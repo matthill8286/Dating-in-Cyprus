@@ -16,6 +16,11 @@ export const lastMessagePreview = z.object({
   sentAt: z.string(),
 });
 
+export const matchListQuery = z.object({
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
 export const matchListResponse = z.object({
   matches: z.array(
     z.object({
@@ -28,6 +33,12 @@ export const matchListResponse = z.object({
 
 export const messageBody = z.object({
   body: z.string().min(1).max(2000),
+});
+
+/** Newest-first window into a thread; `before` is an exclusive `sentAt` cursor for loading older. */
+export const messageListQuery = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  before: z.string().datetime().optional(),
 });
 
 export const passResponse = z.object({

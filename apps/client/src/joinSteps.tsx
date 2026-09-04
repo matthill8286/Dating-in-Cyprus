@@ -13,6 +13,7 @@ import {
 } from './join';
 import { genderLabel, languageLabel, seekingLabel, color, font } from './theme';
 import { CheckRow, ChipRow, Field } from './ui/kit';
+import { asText } from './ui/mark';
 
 export const STEP_COPY: Record<JoinStep, { title: string; subtitle: string; action: string }> = {
   email: {
@@ -134,7 +135,7 @@ function MobileFields({
   return (
     <View style={styles.phone}>
       <View style={styles.code}>
-        <Text style={styles.codeText}>🇨🇾 +357</Text>
+        <Text style={styles.codeText}>+357</Text>
       </View>
       <View style={styles.phoneField}>
         <Field
@@ -222,7 +223,7 @@ function ChoiceList({
             <Text style={[styles.choiceText, on ? styles.choiceTextOn : null]}>
               {labels[option] ?? option}
             </Text>
-            <Text style={[styles.tick, on ? styles.tickOn : null]}>{on ? '✓' : ''}</Text>
+            <Text style={[styles.tick, on ? styles.tickOn : null]}>{on ? asText('✓') : ''}</Text>
           </Pressable>
         );
       })}

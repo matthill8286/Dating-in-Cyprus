@@ -30,7 +30,23 @@ describe('host matching', () => {
     expect(chooseFromPool([elena, alina], alex, 'Paphos harbour')?.firstName).toBe('Alina');
     expect(chooseFromPool([elena, alina], alex)?.firstName).toBe('Elena');
     expect(chooseFromPool([elena, alina], alex, '25, russian, fun')?.firstName).toBe('Alina');
-    expect(chooseFromPool([elena], alex, 'Russian that speaks English')).toBeUndefined();
     expect(chooseFromPool([], alex)).toBeUndefined();
+  });
+
+  it('offers whoever speaks one of the named languages, preferring whoever speaks both', () => {
+    const want = 'Russian that speaks English';
+    // Elena speaks only English of the two, but a half match still beats an empty Host tab.
+    expect(chooseFromPool([elena], alex, want)?.firstName).toBe('Elena');
+    // Alina speaks both, so she still comes first when both are on the island.
+    expect(chooseFromPool([elena, alina], alex, want)?.firstName).toBe('Alina');
+    expect(matchScore(alex, alina, want)).toBeGreaterThan(matchScore(alex, elena, want));
+    // Someone who speaks neither is still left out.
+    const bogdan = {
+      firstName: 'Bogdan',
+      city: 'Nicosia' as const,
+      languagesSpoken: ['bg'] as const,
+      bio: 'Nicosia old town.',
+    };
+    expect(chooseFromPool([bogdan], alex, want)).toBeUndefined();
   });
 });

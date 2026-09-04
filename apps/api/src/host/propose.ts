@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { FastifyReply } from 'fastify';
 import type { Account } from '../account/store';
 import { expressInterest, recordPass, type LoopDeps } from '../match/actions';
-import { listVisibleProfiles } from '../pool/visible';
+import { listVisibleProfiles, visibleProfile } from '../pool/visible';
 import type { Profile } from '../profile/store';
 import { requireResident } from '../profile/resident';
 import type { IntroductionBody } from './contracts';
@@ -35,18 +35,66 @@ export async function currentIntroduction(
       message: 'Publish a Profile before asking Here for an Introduction.',
     });
   }
-  const visible = await listVisibleProfiles(viewer, opts);
-  const want = await opts.intros.lastWant(viewer.id);
-  const open = await opts.intros.findOpen(viewer.id);
-  const kept = open ? visible.find((person) => person.profileId === open.profileId) : undefined;
-  if (open && kept && isFresh(open.expiresAt, opts.now())) {
-    return { introduction: presentIntro(open, kept, own, open.want ?? want) };
+  const live = await liveIntroduction(viewer, opts);
+  if (live) {
+    const kept = await visibleProfile(viewer, live.profileId, opts);
+    if (kept) {
+      const held = live.want ?? (await opts.intros.lastWant(viewer.id));
+      queueAhead(viewer, own, live, opts);
+      return { introduction: presentIntro(live, kept, own, held) };
+    }
+    // The person is gone since we chose them, so this record is spent.
+    await opts.intros.mark(live.introductionId, 'replaced');
   }
+  const want = await opts.intros.lastWant(viewer.id);
+  const visible = await listVisibleProfiles(viewer, opts);
   const next = await pickNext(visible, own, opts, want);
   if (!next) return { introduction: null };
-  const record = await openIntroduction(viewer, next, opts.now, want);
+  const record = await openIntroduction(viewer, next, opts.now, want, 'open');
   await opts.intros.save(record);
+  queueAhead(viewer, own, record, opts);
   return { introduction: presentIntro(record, next, own, want) };
+}
+
+/**
+ * The Introduction to show now: whichever is already open, or the one queued behind it
+ * promoted in place. Promotion is what makes Yes and Not this feel instant.
+ */
+async function liveIntroduction(
+  viewer: Account,
+  opts: HostDeps,
+): Promise<IntroductionRecord | null> {
+  const open = await opts.intros.findOpen(viewer.id);
+  if (open && isFresh(open.expiresAt, opts.now())) return open;
+  const queued = await opts.intros.findQueued(viewer.id);
+  if (!queued || !isFresh(queued.expiresAt, opts.now())) return null;
+  await opts.intros.mark(queued.introductionId, 'open');
+  return { ...queued, status: 'open' };
+}
+
+/**
+ * Choose the person after this one now, in the background, so the model round trip is spent
+ * while the Resident is reading rather than after they decide. Failure is not worth
+ * reporting: the next request simply falls back to choosing on demand.
+ */
+function queueAhead(
+  viewer: Account,
+  own: Profile,
+  showing: IntroductionRecord,
+  opts: HostDeps,
+): void {
+  void (async () => {
+    const queued = await opts.intros.findQueued(viewer.id);
+    if (queued) return;
+    const want = showing.want ?? (await opts.intros.lastWant(viewer.id));
+    const visible = await listVisibleProfiles(viewer, opts);
+    const candidates = visible.filter((person) => person.profileId !== showing.profileId);
+    const next = await pickNext(candidates, own, opts, want);
+    if (!next) return;
+    // Another request may have queued someone while the model was thinking.
+    if (await opts.intros.findQueued(viewer.id)) return;
+    await opts.intros.save(await openIntroduction(viewer, next, opts.now, want, 'queued'));
+  })().catch(() => undefined);
 }
 
 export async function requestIntroduction(
@@ -67,11 +115,15 @@ export async function requestIntroduction(
   const visible = await listVisibleProfiles(viewer, opts);
   const open = await opts.intros.findOpen(viewer.id);
   if (open) await opts.intros.mark(open.introductionId, 'replaced');
+  // Anyone queued was chosen for the previous want, so they no longer answer the question.
+  const stale = await opts.intros.findQueued(viewer.id);
+  if (stale) await opts.intros.mark(stale.introductionId, 'replaced');
   await opts.intros.rememberWant(viewer.id, want);
   const next = await pickNext(visible, own, opts, want);
   if (!next) return { introduction: null };
-  const record = await openIntroduction(viewer, next, opts.now, want);
+  const record = await openIntroduction(viewer, next, opts.now, want, 'open');
   await opts.intros.save(record);
+  queueAhead(viewer, own, record, opts);
   return { introduction: presentIntro(record, next, own, want) };
 }
 
@@ -130,7 +182,8 @@ async function openIntroduction(
   viewer: Account,
   person: Presented,
   now: () => Date,
-  want?: string,
+  want: string | undefined,
+  status: 'open' | 'queued',
 ): Promise<IntroductionRecord> {
   const created = now();
   return {
@@ -140,7 +193,7 @@ async function openIntroduction(
     accountId: person.accountId,
     createdAt: created.toISOString(),
     expiresAt: new Date(created.getTime() + INTRO_MS).toISOString(),
-    status: 'open',
+    status,
     want,
   };
 }

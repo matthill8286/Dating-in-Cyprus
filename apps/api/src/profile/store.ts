@@ -30,6 +30,7 @@ export type ProfileWrite = Omit<
 export interface ProfileStore {
   upsert(accountId: string, data: ProfileWrite): Promise<Profile>;
   findByAccountId(accountId: string): Promise<Profile | null>;
+  findManyByAccountIds(accountIds: string[]): Promise<Profile[]>;
   findById(profileId: string): Promise<Profile | null>;
   list(): Promise<Profile[]>;
   setPhotoVerification(
@@ -60,6 +61,13 @@ export class MemoryProfileStore implements ProfileStore {
 
   async findByAccountId(accountId: string): Promise<Profile | null> {
     return this.byAccount.get(accountId) ?? null;
+  }
+
+  async findManyByAccountIds(accountIds: string[]): Promise<Profile[]> {
+    return accountIds.flatMap((accountId) => {
+      const profile = this.byAccount.get(accountId);
+      return profile ? [profile] : [];
+    });
   }
 
   async findById(profileId: string): Promise<Profile | null> {

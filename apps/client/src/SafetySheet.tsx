@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCallback, useState } from 'react';
 import { Modal, Pressable, Text, View, StyleSheet } from 'react-native';
+import { keys } from './api/keys';
 import { safetyOnOwnProfile, type ReportReason } from './safety';
 import {
   runBlock,
@@ -34,6 +36,20 @@ export function SafetySheet({
   const [step, setStep] = useState<Step>('menu');
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [busy, setBusy] = useState(false);
+  const client = useQueryClient();
+
+  /** Blocking or unmatching changes who Here may introduce and who is in the inbox. */
+  const forgetThem = useCallback(
+    (done: () => void) => () => {
+      client.setQueryData(keys.intro(), null);
+      void client.invalidateQueries({ queryKey: keys.intro() });
+      void client.invalidateQueries({ queryKey: keys.matches() });
+      void client.invalidateQueries({ queryKey: keys.pool() });
+      if (matchId) client.removeQueries({ queryKey: keys.messages(matchId) });
+      done();
+    },
+    [client, matchId],
+  );
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
@@ -55,7 +71,7 @@ export function SafetySheet({
               name={name}
               busy={busy}
               onBack={() => setStep('menu')}
-              onConfirm={() => void runBlock(token, profileId, busy, setBusy, onBlocked)}
+              onConfirm={() => void runBlock(token, profileId, busy, setBusy, forgetThem(onBlocked))}
             />
           ) : null}
           {step === 'unmatch' && matchId ? (
@@ -63,7 +79,9 @@ export function SafetySheet({
               name={name}
               busy={busy}
               onBack={() => setStep('menu')}
-              onConfirm={() => void runUnmatch(token, matchId, busy, setBusy, onUnmatched ?? onBlocked)}
+              onConfirm={() =>
+                void runUnmatch(token, matchId, busy, setBusy, forgetThem(onUnmatched ?? onBlocked))
+              }
             />
           ) : null}
           {step === 'report' ? (

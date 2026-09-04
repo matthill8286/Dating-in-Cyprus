@@ -2,6 +2,7 @@ import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { IslandMap } from './IslandMap';
 import type { Profile } from './profile';
 import { color, font } from './theme';
+import { asText } from './ui/mark';
 
 export function DiscoverHeader({
   city,
@@ -23,8 +24,8 @@ export function DiscoverHeader({
     <View style={[styles.header, overlay && styles.headerOverlay]} pointerEvents="box-none">
       <PlaceLabel overlay={overlay} place={place} />
       <View style={styles.tools}>
-        <MapTool mark="◎" label="Map" on={mapOn} overlay={overlay} onPress={onToggleMap} />
-        <MapTool mark="☰" label="Filters" on={filtersOn} overlay={overlay} onPress={onToggleFilters} />
+        <MapTool mark={asText('◎')} label="Map" on={mapOn} overlay={overlay} onPress={onToggleMap} />
+        <MapTool mark={asText('☰')} label="Filters" on={filtersOn} overlay={overlay} onPress={onToggleFilters} />
       </View>
     </View>
   );

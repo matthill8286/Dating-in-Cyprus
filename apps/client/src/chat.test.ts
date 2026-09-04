@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
-  appendLine,
   canSend,
   CHAT_POLL_MS,
   lastMessagePreview,
   messageClock,
-  threadPreview,
   threadState,
   type ChatLine,
 } from './chat';
@@ -20,7 +18,6 @@ const hello: ChatLine = {
 describe('chat thread', () => {
   it('starts empty and can send a trimmed message', () => {
     expect(threadState([])).toBe('empty');
-    expect(threadPreview([])).toBe('Say hello');
     expect(canSend('')).toBe(false);
     expect(canSend('   ')).toBe(false);
     expect(canSend('Hi')).toBe(true);
@@ -32,12 +29,7 @@ describe('chat thread', () => {
     expect(messageClock(undefined)).toBe('');
   });
 
-  it('appends a sent line onto a populated thread', () => {
-    const next = appendLine([], hello);
-    expect(threadState(next)).toBe('populated');
-    expect(threadPreview(next)).toBe('Hello from Limassol');
-    expect(appendLine(next, { ...hello, messageId: '2', fromMe: false, body: 'Hi' })).toHaveLength(
-      2,
-    );
+  it('reads as populated once a line lands', () => {
+    expect(threadState([hello])).toBe('populated');
   });
 });

@@ -25,6 +25,9 @@ export type SignInPostResult = { data?: { token: string }; error?: { code?: stri
 export function signInRefusalMessage(code: string): string {
   if (code === 'invalid') return 'Enter your email and password.';
   if (code === 'unauthenticated') return 'Email or password is wrong.';
+  if (code === 'network') {
+    return 'Cannot reach Here. Check your phone is on the same Wi‑Fi as your Mac and the API is running.';
+  }
   return 'Sign in failed.';
 }
 

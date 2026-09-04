@@ -33,6 +33,7 @@ export interface AccountStore {
   create(account: NewAccount): Promise<Account>;
   findByEmail(email: string): Promise<Account | null>;
   findById(id: string): Promise<Account | null>;
+  findManyByIds(ids: string[]): Promise<Account[]>;
   listAdmitted(): Promise<Account[]>;
   close(): Promise<void>;
 }
@@ -56,6 +57,13 @@ export class MemoryAccountStore implements AccountStore {
 
   async findById(id: string): Promise<Account | null> {
     return this.byId.get(id) ?? null;
+  }
+
+  async findManyByIds(ids: string[]): Promise<Account[]> {
+    return ids.flatMap((id) => {
+      const account = this.byId.get(id);
+      return account ? [account] : [];
+    });
   }
 
   async listAdmitted(): Promise<Account[]> {

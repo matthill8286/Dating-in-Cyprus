@@ -26,6 +26,18 @@ export async function listVisibleProfiles(viewer: Account, opts: PoolDeps) {
   });
 }
 
+/**
+ * Resolve one profile the viewer is allowed to see, without materialising the whole pool.
+ * Two indexed reads plus the hidden-ids union, rather than every admitted account and profile.
+ */
+export async function visibleProfile(viewer: Account, profileId: string, opts: PoolDeps) {
+  const target = await matchingTarget(viewer, profileId, opts);
+  if (!target) return null;
+  const hidden = await opts.loop.hiddenIds(viewer.id);
+  if (hidden.has(target.account.id)) return null;
+  return presentProfile(target.profile, target.account, opts.now());
+}
+
 export async function matchingTarget(
   viewer: Account,
   profileId: string,
