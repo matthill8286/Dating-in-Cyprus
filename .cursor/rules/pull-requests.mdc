@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Pull requests
 
-Never push commits to `master` (or `main`). Use a feature branch and open a PR against `master`.
+Never push commits to `master` (or `main`). Never open a pull request against `master` or `main`. Use a feature branch. Only open a PR when the user names the base branch.
 
 Every PR uses `.github/PULL_REQUEST_TEMPLATE.md`. Fill it in. Do not open a blank PR.
 

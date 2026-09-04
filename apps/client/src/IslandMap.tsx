@@ -21,15 +21,20 @@ import {
 } from './map';
 import type { Profile } from './profile';
 import { font } from './theme';
+import { Bone } from './ui/skeleton';
 
 export function IslandMap({
   people,
   city,
+  loading,
   onOpen,
+  onBrowseIndex,
 }: {
   people: Profile[];
   city: string;
+  loading?: boolean;
   onOpen: (profile: Profile) => void;
+  onBrowseIndex?: (index: number) => void;
 }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [picked, setPicked] = useState<string | null>(null);
@@ -38,6 +43,15 @@ export function IslandMap({
   const pins = mapPins(ordered, camera.view, size.width, size.height);
   const inView = peopleInView(ordered, camera.view, size.width, size.height, camera.drag);
   const selected = inView.find((person) => person.profileId === picked) ?? inView[0];
+
+  const browseAt = useRef(-1);
+  useEffect(() => {
+    if (!selected || !onBrowseIndex) return;
+    const index = ordered.findIndex((person) => person.profileId === selected.profileId);
+    if (index < 0 || index === browseAt.current) return;
+    browseAt.current = index;
+    onBrowseIndex(index);
+  }, [onBrowseIndex, ordered, selected]);
 
   return (
     <View style={styles.wrap}>
@@ -80,10 +94,17 @@ export function IslandMap({
       <PeekStrip
         people={inView}
         selectedId={selected?.profileId}
-        empty="No one in this part of the island."
+        empty={loading ? 'Finding people on the island…' : 'No one in this part of the island.'}
         onPick={(profile) => setPicked(profile.profileId)}
         onOpen={onOpen}
       />
+      {loading ? (
+        <View pointerEvents="none" style={styles.loading} accessibilityRole="progressbar" accessibilityLabel="Loading people on the island">
+          <Bone height={12} width="40%" />
+          <Bone height={12} width="55%" />
+          <Bone height={12} width="48%" />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -286,5 +307,13 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: '#5a6570',
     zIndex: 5,
+  },
+  loading: {
+    position: 'absolute',
+    left: 24,
+    right: 24,
+    top: '40%',
+    gap: 10,
+    zIndex: 4,
   },
 });

@@ -1,6 +1,7 @@
 import { Text, View, StyleSheet } from 'react-native';
 import { color, font } from './theme';
 import { GhostButton, PrimaryButton, Screen, Sheet } from './ui/kit';
+import { asText } from './ui/mark';
 
 export function NotifyScreen({ onDone }: { onDone: () => void }) {
   return (
@@ -11,7 +12,7 @@ export function NotifyScreen({ onDone }: { onDone: () => void }) {
           <GhostButton title="Skip" onPress={onDone} />
         </View>
         <View style={styles.mark}>
-          <Text style={styles.bubble}>♡</Text>
+          <Text style={styles.bubble}>{asText('♡')}</Text>
         </View>
         <Text style={styles.title}>Enable notifications</Text>
         <Text style={styles.subtitle}>

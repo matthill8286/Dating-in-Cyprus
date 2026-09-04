@@ -13,6 +13,7 @@ import { color } from '../theme';
 import { keyboardAvoidProps } from './keyboard';
 import { GhostButton, PrimaryButton } from './kit';
 import { styles } from './kit.styles';
+import { asText } from './mark';
 
 export function Fixed({
   children,
@@ -47,8 +48,8 @@ export function ActionRow({
 }) {
   return (
     <View style={styles.actions}>
-      <CircleButton glyph="✕" label="Pass" tone="pass" onPress={onPass} />
-      <CircleButton glyph="♥" label="Like" tone="like" onPress={onLike} />
+      <CircleButton glyph={asText('✕')} label="Pass" tone="pass" onPress={onPass} />
+      <CircleButton glyph={asText('♥')} label="Like" tone="like" onPress={onLike} />
       {onInfo ? <CircleButton glyph="i" label="View profile" tone="pass" onPress={onInfo} /> : null}
     </View>
   );

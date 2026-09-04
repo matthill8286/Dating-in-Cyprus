@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Image, Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-native';
-import { api } from './api/client';
-import { appendLine, canSend, CHAT_POLL_MS, type ChatLine } from './chat';
 import { useApp } from './context/AppContext';
 import { ChatPerson } from './PersonScreen';
 import type { Profile } from './profile';
+import { useChatThread } from './queries/chat';
 import { OpenSafetySheet } from './SafetySheet';
 import { color, font } from './theme';
 import { Fixed } from './ui/deck';
+import { ErrorNote } from './ui/kit';
+import { asText } from './ui/mark';
 import { page as pageLayout } from './ui/layout';
 import { styles as kit } from './ui/kit.styles';
 import { ChatSkeleton } from './ui/skeleton';
@@ -26,7 +27,7 @@ export function ChatScreen({
   onUnmatched: () => void;
 }) {
   const { sessionToken } = useApp();
-  const { lines, setLines, ready } = useChatThread(sessionToken, match.matchId);
+  const thread = useChatThread(sessionToken, match.matchId);
   const [draft, setDraft] = useState('');
   const [safety, setSafety] = useState(false);
 
@@ -36,7 +37,10 @@ export function ChatScreen({
         <Composer
           value={draft}
           onChange={setDraft}
-          onSend={() => void sendLine(sessionToken, match.matchId, draft, setDraft, setLines)}
+          onSend={() => {
+            thread.send(draft);
+            setDraft('');
+          }}
         />
       }
     >
@@ -47,14 +51,24 @@ export function ChatScreen({
           onProfile={onProfile}
           onSafety={() => setSafety(true)}
         />
-        <ScrollView style={styles.thread} contentContainerStyle={styles.threadInner}>
-          {!ready ? <ChatSkeleton /> : null}
-          {ready && lines.length === 0 ? <EmptyThread profile={match.profile} onPress={onProfile} /> : null}
-          {lines.map((line) => (
+        <ScrollView
+          style={styles.thread}
+          contentContainerStyle={styles.threadInner}
+          onScroll={({ nativeEvent }) => {
+            if (nativeEvent.contentOffset.y <= 0) thread.loadOlder();
+          }}
+          scrollEventThrottle={200}
+        >
+          {!thread.ready ? <ChatSkeleton /> : null}
+          {thread.ready && thread.lines.length === 0 ? (
+            <EmptyThread profile={match.profile} onPress={onProfile} />
+          ) : null}
+          {thread.lines.map((line) => (
             <View key={line.messageId} style={line.fromMe ? kit.bubbleMe : kit.bubbleThem}>
               <Text style={line.fromMe ? kit.bubbleMeText : kit.bubbleThemText}>{line.body}</Text>
             </View>
           ))}
+          <ErrorNote message={thread.sendFailed ? 'That message did not send.' : null} />
         </ScrollView>
       </View>
       <OpenSafetySheet
@@ -106,25 +120,6 @@ function ChatBar({
   );
 }
 
-async function sendLine(
-  sessionToken: string | null,
-  matchId: string,
-  draft: string,
-  setDraft: (value: string) => void,
-  setLines: (update: (prev: ChatLine[]) => ChatLine[]) => void,
-) {
-  if (!sessionToken || !canSend(draft)) return;
-  const { data } = await api.POST('/v1/matches/{matchId}/messages', {
-    headers: { authorization: `Bearer ${sessionToken}` },
-    params: { path: { matchId } },
-    body: { body: draft.trim() },
-  });
-  if (data) {
-    setLines((prev) => appendLine(prev, data));
-    setDraft('');
-  }
-}
-
 function Composer({
   value,
   onChange,
@@ -151,7 +146,7 @@ function Composer({
         accessibilityLabel="Send"
         style={styles.send}
       >
-        <Text style={styles.sendMark}>➤</Text>
+        <Text style={styles.sendMark}>{asText('➤')}</Text>
       </Pressable>
     </View>
   );
@@ -168,36 +163,6 @@ function EmptyThread({ profile, onPress }: { profile: Profile; onPress: () => vo
       <Text style={kit.matchHint}>Tap to see their photos and bio. Then say hello.</Text>
     </Pressable>
   );
-}
-
-function useChatThread(sessionToken: string | null, matchId: string) {
-  const [lines, setLines] = useState<ChatLine[]>([]);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    if (!sessionToken) return;
-    let cancelled = false;
-    setReady(false);
-    const load = async () => {
-      try {
-        const { data } = await api.GET('/v1/matches/{matchId}/messages', {
-          headers: { authorization: `Bearer ${sessionToken}` },
-          params: { path: { matchId } },
-        });
-        if (!cancelled && data?.messages) setLines(data.messages);
-      } finally {
-        if (!cancelled) setReady(true);
-      }
-    };
-    void load();
-    const timer = setInterval(() => void load(), CHAT_POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [sessionToken, matchId]);
-
-  return { lines, setLines, ready };
 }
 
 const styles = StyleSheet.create({

@@ -40,15 +40,21 @@ export function matchScore(
   if (viewer.city === person.city) score += 4;
   if (sharedLanguage(viewer.languagesSpoken, person.languagesSpoken)) score += 3;
   if (person.photoVerification === 'verified') score += 1;
+  score += spokenAsked(person, want) * 3;
   score += hintHits(person, want) * 5;
   score += Math.min(6, sharedBioTokens(viewer.bio ?? '', person.bio ?? '').length * 2);
   return score;
 }
 
+/**
+ * Anyone who speaks at least one language the Resident named. Requiring all of them let a
+ * phrase like "Russian that speaks English" empty a full island, and the want is remembered,
+ * so that emptiness persisted. Ranking still prefers whoever speaks more of what was asked.
+ */
 export function speakingPool<T extends ReasonFacts>(visible: T[], want?: string): T[] {
   const langs = wantedLanguages(want);
   if (langs.length === 0) return visible;
-  return visible.filter((person) => langs.every((code) => person.languagesSpoken.includes(code)));
+  return visible.filter((person) => langs.some((code) => person.languagesSpoken.includes(code)));
 }
 
 export function chooseFromPool<T extends ReasonFacts>(
@@ -63,6 +69,11 @@ export function chooseFromPool<T extends ReasonFacts>(
     if (gap !== 0) return gap;
     return a.firstName.localeCompare(b.firstName);
   })[0];
+}
+
+/** How many of the named languages this person actually speaks, so all of them still wins. */
+function spokenAsked(person: ReasonFacts, want?: string): number {
+  return wantedLanguages(want).filter((code) => person.languagesSpoken.includes(code)).length;
 }
 
 function hintHits(person: ReasonFacts, want?: string): number {

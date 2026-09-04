@@ -28,8 +28,12 @@ export function SignInScreen({
   const [error, setError] = useState<string | null>(null);
 
   const onSignIn = async () => {
-    const result = await completeSignIn({ email, password }, postSignIn, setSessionToken);
-    setError(result.ok ? null : signInRefusalMessage(result.code));
+    try {
+      const result = await completeSignIn({ email, password }, postSignIn, setSessionToken);
+      setError(result.ok ? null : signInRefusalMessage(result.code));
+    } catch {
+      setError(signInRefusalMessage('network'));
+    }
   };
 
   return (
@@ -70,11 +74,15 @@ export function SignInScreen({
 }
 
 async function postSignIn(values: SignInValues) {
-  const { data, error } = await api.POST('/v1/sessions', {
-    body: { email: values.email, password: values.password },
-  });
-  return {
-    data: data ?? undefined,
-    error: error ? { code: joinApiErrorCode(error) } : undefined,
-  };
+  try {
+    const { data, error, response } = await api.POST('/v1/sessions', {
+      body: { email: values.email, password: values.password },
+    });
+    if (data?.token) return { data: { token: data.token } };
+    if (error) return { error: { code: joinApiErrorCode(error) } };
+    if (!response) return { error: { code: 'network' } };
+    return { error: { code: 'error' } };
+  } catch {
+    return { error: { code: 'network' } };
+  }
 }

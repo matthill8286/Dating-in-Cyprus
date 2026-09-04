@@ -111,6 +111,22 @@ describe('saveProfile', () => {
     expect(stored).toEqual(profile);
   });
 
+  it('reports a refusal rather than throwing when the API is unreachable', async () => {
+    const result = await saveProfile(
+      {
+        firstName: 'Ada',
+        city: 'Limassol',
+        languagesSpoken: ['en'],
+        bio: 'Hello.',
+      },
+      async () => {
+        throw new TypeError('Network request failed');
+      },
+      () => undefined,
+    );
+    expect(result).toEqual({ ok: false, code: 'network' });
+  });
+
   it('does not store a Profile when the form is invalid', async () => {
     const patch = async () => ({ data: profile });
     const result = await saveProfile(

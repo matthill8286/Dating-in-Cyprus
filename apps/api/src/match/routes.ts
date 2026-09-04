@@ -6,8 +6,10 @@ import {
   chatMessageResponse,
   interestResponse,
   matchDetailResponse,
+  matchListQuery,
   matchListResponse,
   messageBody,
+  messageListQuery,
   messageListResponse,
   passResponse,
   profileIdBody,
@@ -25,6 +27,7 @@ import {
   unmatchPair,
   type LoopDeps,
 } from './actions';
+import { slicePage } from '../pool/contracts';
 import { fileBlock, fileReport } from './safety';
 
 const matchIdParam = z.object({ matchId: z.string() });
@@ -56,8 +59,12 @@ export async function matchRoutes(app: FastifyInstance, opts: LoopDeps): Promise
 
   typed.get(
     '/v1/matches',
-    { schema: { response: { 200: matchListResponse, 403: apiError } } },
-    async (req, reply) => listOwnMatches(req.accountId, reply, opts),
+    { schema: { querystring: matchListQuery, response: { 200: matchListResponse, 403: apiError } } },
+    async (req, reply) => {
+      const body = await listOwnMatches(req.accountId, reply, opts);
+      if (!body) return;
+      return { matches: slicePage(body.matches, req.query.limit, req.query.offset ?? 0) };
+    },
   );
 
   typed.get(
@@ -87,10 +94,18 @@ export async function matchRoutes(app: FastifyInstance, opts: LoopDeps): Promise
     {
       schema: {
         params: matchIdParam,
+        querystring: messageListQuery,
         response: { 200: messageListResponse, 403: apiError, 404: apiError },
       },
     },
-    async (req, reply) => listChat(req.accountId, req.params.matchId, reply, opts),
+    async (req, reply) =>
+      listChat(
+        req.accountId,
+        req.params.matchId,
+        { limit: req.query.limit, before: req.query.before },
+        reply,
+        opts,
+      ),
   );
 
   typed.post(

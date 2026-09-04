@@ -3,6 +3,7 @@ import { Image, Pressable, SafeAreaView, Text, View, StyleSheet } from 'react-na
 import { nextPhotoIndex, photoTap } from './match';
 import type { Profile } from './profile';
 import { color, font } from './theme';
+import { asText } from './ui/mark';
 
 export function PhotoStory({
   profile,
@@ -53,7 +54,7 @@ export function PhotoStory({
           <Pressable onPress={onMessage} accessibilityRole="button" style={styles.composer}>
             <Text style={styles.hint}>Send message…</Text>
             <View style={styles.send}>
-              <Text style={styles.sendMark}>➤</Text>
+              <Text style={styles.sendMark}>{asText('➤')}</Text>
             </View>
           </Pressable>
         ) : null}
@@ -86,7 +87,7 @@ function StoryHeader({
         )}
         <Text style={styles.name}>{profile.firstName}</Text>
         <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Close">
-          <Text style={styles.close}>✕</Text>
+          <Text style={styles.close}>{asText('✕')}</Text>
         </Pressable>
       </View>
     </View>

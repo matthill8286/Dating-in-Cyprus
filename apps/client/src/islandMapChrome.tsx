@@ -4,6 +4,7 @@ import type { MapView } from './map';
 import { mapTiles, MAX_ZOOM, MIN_ZOOM } from './map';
 import type { Profile } from './profile';
 import { color, font } from './theme';
+import { asText } from './ui/mark';
 import { photoVerificationLabel, photoVerificationOf } from './verify';
 
 export function MapBackdrop({ view, width, height }: { view: MapView; width: number; height: number }) {
@@ -70,7 +71,7 @@ export function ZoomPad({
         <Text style={styles.zoomMark}>−</Text>
       </Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel="Show whole island" onPress={onFit} style={styles.zoomBtn}>
-        <Text style={styles.zoomMark}>◎</Text>
+        <Text style={styles.zoomMark}>{asText('◎')}</Text>
       </Pressable>
     </View>
   );

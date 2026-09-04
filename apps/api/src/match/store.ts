@@ -12,6 +12,12 @@ export type ChatMessage = {
   sentAt: string;
 };
 
+/** Newest-first window into a thread. `before` is an exclusive `sentAt` cursor. */
+export type MessagePage = {
+  limit?: number;
+  before?: string;
+};
+
 export type SafetyReport = {
   reportId: string;
   reporterId: string;
@@ -30,9 +36,13 @@ export interface LoopStore {
   findMatch(matchId: string): Promise<MatchRecord | null>;
   dropMatch(matchId: string): Promise<MatchRecord | null>;
   addMessage(matchId: string, fromId: string, body: string): Promise<ChatMessage>;
-  listMessages(matchId: string): Promise<ChatMessage[]>;
+  listMessages(matchId: string, page?: MessagePage): Promise<ChatMessage[]>;
+  /** Newest message per match, in one read, for building an inbox without an N+1. */
+  lastMessages(matchIds: string[]): Promise<Map<string, ChatMessage>>;
   recordBlock(fromId: string, toId: string): Promise<void>;
   isBlocked(aId: string, bId: string): Promise<boolean>;
+  /** Every account blocked in either direction, so an inbox needs one read rather than one per row. */
+  blockedIds(accountId: string): Promise<Set<string>>;
   recordReport(reporterId: string, subjectId: string, reason: string): Promise<SafetyReport>;
   close(): Promise<void>;
 }
@@ -137,8 +147,22 @@ export class MemoryLoopStore implements LoopStore {
     return message;
   }
 
-  async listMessages(matchId: string): Promise<ChatMessage[]> {
-    return [...(this.messages.get(matchId) ?? [])];
+  async listMessages(matchId: string, page?: MessagePage): Promise<ChatMessage[]> {
+    const all = [...(this.messages.get(matchId) ?? [])];
+    const before = page?.before;
+    const older = before ? all.filter((message) => message.sentAt < before) : all;
+    if (page?.limit == null) return older;
+    return older.slice(Math.max(0, older.length - page.limit));
+  }
+
+  async lastMessages(matchIds: string[]): Promise<Map<string, ChatMessage>> {
+    const last = new Map<string, ChatMessage>();
+    for (const matchId of matchIds) {
+      const thread = this.messages.get(matchId);
+      const newest = thread?.[thread.length - 1];
+      if (newest) last.set(matchId, newest);
+    }
+    return last;
   }
 
   async recordBlock(fromId: string, toId: string): Promise<void> {
@@ -147,6 +171,16 @@ export class MemoryLoopStore implements LoopStore {
 
   async isBlocked(aId: string, bId: string): Promise<boolean> {
     return this.blocks.has(`${aId}>${bId}`) || this.blocks.has(`${bId}>${aId}`);
+  }
+
+  async blockedIds(accountId: string): Promise<Set<string>> {
+    const ids = new Set<string>();
+    for (const key of this.blocks) {
+      const [from, to] = key.split('>');
+      if (from === accountId && to) ids.add(to);
+      if (to === accountId && from) ids.add(from);
+    }
+    return ids;
   }
 
   async recordReport(reporterId: string, subjectId: string, reason: string): Promise<SafetyReport> {

@@ -1,31 +1,37 @@
-import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-native';
 import { lastMessagePreview, messageClock } from './chat';
-import { useApp } from './context/AppContext';
 import { searchInbox, splitInbox, type InboxRow } from './match';
-import { MuteNote, Screen, Sheet } from './ui/kit';
+import type { MessagesStackParamList } from './navigation/types';
+import { shouldLoadMore } from './page';
+import { useApp } from './context/AppContext';
+import { useMatchInbox } from './queries/feeds';
+import { ErrorNote, MuteNote, Screen, Sheet } from './ui/kit';
 import { MessageListSkeleton } from './ui/skeleton';
-import { TabBar, type TabGo } from './ui/tabs';
 import { color, font } from './theme';
 import { page } from './ui/layout';
-import { useMatches } from './useMatches';
 
-export function MessagesScreen({
-  onOpen,
-  go,
-}: {
-  onOpen: (match: InboxRow) => void;
-  go: TabGo;
-}) {
+export function MessagesScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<MessagesStackParamList>>();
   const { sessionToken } = useApp();
-  const { matches, ready } = useMatches(sessionToken);
+  const { matches, loading, failed, hasMore, loadMore } = useMatchInbox(sessionToken);
   const [query, setQuery] = useState('');
   const { fresh, threads } = splitInbox(matches);
   const searching = query.trim().length > 0;
   const rows = searchInbox(searching ? matches : threads, query);
 
+  useEffect(() => {
+    if (shouldLoadMore(matches.length - 2, matches.length, hasMore)) loadMore();
+  }, [hasMore, loadMore, matches.length]);
+
+  const open = (item: InboxRow) => {
+    navigation.navigate('Chat', { matchId: item.matchId, profile: item.profile });
+  };
+
   return (
-    <Screen footer={<TabBar active="messages" go={go} />}>
+    <Screen>
       <View style={styles.head}>
         <Text style={styles.title}>Messages</Text>
         <TextInput
@@ -40,15 +46,21 @@ export function MessagesScreen({
         />
       </View>
       <Sheet>
-        {!ready ? (
+        {loading ? (
           <MessageListSkeleton />
         ) : (
           <>
-            {!searching && fresh.length > 0 ? <FreshTray items={fresh} onOpen={onOpen} /> : null}
+            {!searching && fresh.length > 0 ? (
+              <FreshTray
+                items={fresh}
+                onOpen={open}
+              />
+            ) : null}
             {rows.map((item) => (
-              <ThreadRow key={item.matchId} item={item} onPress={() => onOpen(item)} />
+              <ThreadRow key={item.matchId} item={item} onPress={() => open(item)} />
             ))}
-            {rows.length === 0 ? (
+            <ErrorNote message={failed ? 'Messages did not load. Try again in a moment.' : null} />
+            {rows.length === 0 && !failed ? (
               <MuteNote>{searching ? 'No matches with that name.' : 'No messages yet. Say hello.'}</MuteNote>
             ) : null}
           </>

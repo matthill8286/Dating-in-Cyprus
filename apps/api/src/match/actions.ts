@@ -4,7 +4,7 @@ import { matchingTarget } from '../pool/visible';
 import { presentProfile } from '../profile/present';
 import { requireResident } from '../profile/resident';
 import type { ProfileStore } from '../profile/store';
-import type { LoopStore } from './store';
+import type { ChatMessage, LoopStore, MessagePage } from './store';
 import { isParty, otherParty } from './store';
 
 export type LoopDeps = {
@@ -66,11 +66,31 @@ export async function listOwnMatches(
   const viewer = await requireResident(opts.accounts, accountId, reply);
   if (!viewer) return;
   const records = await opts.loop.listMatches(viewer.id);
-  const matches = [];
-  for (const record of records) {
-    const item = await presentMatch(record.matchId, viewer.id, opts);
-    if (item) matches.push(item);
-  }
+  if (records.length === 0) return { matches: [] };
+  const blocked = await opts.loop.blockedIds(viewer.id);
+  const open = records.filter((record) => !blocked.has(otherParty(record, viewer.id)));
+  const otherIds = open.map((record) => otherParty(record, viewer.id));
+  const [accounts, profiles, newest] = await Promise.all([
+    opts.accounts.findManyByIds(otherIds),
+    opts.profiles.findManyByAccountIds(otherIds),
+    opts.loop.lastMessages(open.map((record) => record.matchId)),
+  ]);
+  const accountById = new Map(accounts.map((account) => [account.id, account]));
+  const profileByAccount = new Map(profiles.map((profile) => [profile.accountId, profile]));
+  const now = opts.now();
+  const matches = open.flatMap((record) => {
+    const otherId = otherParty(record, viewer.id);
+    const account = accountById.get(otherId);
+    const profile = profileByAccount.get(otherId);
+    if (!account || !profile) return [];
+    return [
+      {
+        matchId: record.matchId,
+        profile: presentProfile(profile, account, now),
+        lastMessage: lastMessageOf(newest.get(record.matchId), viewer.id),
+      },
+    ];
+  });
   return { matches };
 }
 
@@ -90,12 +110,13 @@ export async function readMatch(
 export async function listChat(
   accountId: string | undefined,
   matchId: string,
+  page: MessagePage,
   reply: FastifyReply,
   opts: LoopDeps,
 ) {
   const party = await requireMatchParty(accountId, matchId, reply, opts);
   if (!party) return;
-  const rows = await opts.loop.listMessages(matchId);
+  const rows = await opts.loop.listMessages(matchId, page);
   return {
     messages: rows.map((row) => ({
       messageId: row.messageId,
@@ -182,17 +203,19 @@ async function presentMatch(matchId: string, viewerId: string, opts: LoopDeps) {
     opts.profiles.findByAccountId(otherId),
   ]);
   if (!account || !profile) return null;
-  const rows = await opts.loop.listMessages(matchId);
-  const last = rows[rows.length - 1];
+  const newest = await opts.loop.lastMessages([matchId]);
   return {
     matchId,
     profile: presentProfile(profile, account, opts.now()),
-    lastMessage: last
-      ? {
-          body: last.body,
-          fromMe: last.fromId === viewerId,
-          sentAt: new Date(last.sentAt).toISOString(),
-        }
-      : null,
+    lastMessage: lastMessageOf(newest.get(matchId), viewerId),
+  };
+}
+
+function lastMessageOf(message: ChatMessage | undefined, viewerId: string) {
+  if (!message) return null;
+  return {
+    body: message.body,
+    fromMe: message.fromId === viewerId,
+    sentAt: new Date(message.sentAt).toISOString(),
   };
 }

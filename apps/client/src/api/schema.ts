@@ -256,7 +256,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    limit?: number;
+                    offset?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -779,7 +782,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    limit?: number;
+                    offset?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -998,7 +1004,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    limit?: number;
+                    before?: string;
+                };
                 header?: never;
                 path: {
                     matchId: string;

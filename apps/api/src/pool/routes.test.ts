@@ -86,6 +86,25 @@ describe('Pool photos', () => {
     expect(body.profiles).toHaveLength(womenSeekingMen().length);
     expect(body.profiles.every((item) => item.photos.length === 3)).toBe(true);
     expect(body.profiles.every((item) => item.photos[0]?.url.startsWith('https://'))).toBe(true);
+    const page = await app.inject({
+      method: 'GET',
+      url: '/v1/pool?limit=20&offset=0',
+      headers: { authorization: `Bearer ${token}` },
+    });
+    const next = await app.inject({
+      method: 'GET',
+      url: '/v1/pool?limit=20&offset=20',
+      headers: { authorization: `Bearer ${token}` },
+    });
+    expect((page.json() as { profiles: unknown[] }).profiles).toHaveLength(
+      Math.min(20, womenSeekingMen().length),
+    );
+    if (womenSeekingMen().length > 20) {
+      expect((next.json() as { profiles: unknown[] }).profiles.length).toBeGreaterThan(0);
+      expect((page.json() as { profiles: Array<{ firstName: string }> }).profiles[0]?.firstName).not.toBe(
+        (next.json() as { profiles: Array<{ firstName: string }> }).profiles[0]?.firstName,
+      );
+    }
     await app.close();
   });
 });

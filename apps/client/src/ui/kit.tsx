@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { Pressable, SafeAreaView, ScrollView, Text, View, Image } from 'react-native';
 import { styles } from './kit.styles';
+import { asText } from './mark';
 
 export { Field } from './field';
 
@@ -39,7 +40,7 @@ export function Hero({
     <View style={styles.hero}>
       <View style={styles.heroInner}>
         <View style={styles.mark}>
-          <Text style={styles.markText}>♥</Text>
+          <Text style={styles.markText}>{asText('♥')}</Text>
         </View>
         <Text style={styles.kicker}>{kicker}</Text>
         <Text style={styles.title}>{title}</Text>
@@ -224,7 +225,7 @@ export function CheckRow({
       style={[styles.check, on ? styles.checkOn : null]}
     >
       <View style={[styles.box, on ? styles.boxOn : null]}>
-        {on ? <Text style={styles.tick}>✓</Text> : null}
+        {on ? <Text style={styles.tick}>{asText('✓')}</Text> : null}
       </View>
       <View style={styles.checkCopy}>
         <Text style={styles.checkLabel}>{label}</Text>

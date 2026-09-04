@@ -9,6 +9,7 @@ import {
 } from './join';
 import { color, font } from './theme';
 import { PrimaryButton } from './ui/kit';
+import { asText } from './ui/mark';
 
 export function BirthdayFields({
   form,
@@ -25,7 +26,7 @@ export function BirthdayFields({
   return (
     <>
       <Pressable onPress={onToggle} accessibilityRole="button" style={styles.dateBtn}>
-        <Text style={styles.dateMark}>▦</Text>
+        <Text style={styles.dateMark}>{asText('▦')}</Text>
         <Text style={styles.dateText}>{birthdayLabel(form.dateOfBirth)}</Text>
       </Pressable>
       {picker ? (

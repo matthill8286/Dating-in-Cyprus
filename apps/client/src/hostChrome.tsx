@@ -3,6 +3,7 @@ import type { HostIntroduction, HostLine } from './host';
 import { spokenList, verificationCopy } from './host';
 import { color, font } from './theme';
 import { page } from './ui/layout';
+import { asText } from './ui/mark';
 
 export function HostHeader({
   onIsland,
@@ -51,7 +52,7 @@ export function HostMessage({ line }: { line: HostLine }) {
     return (
       <View style={styles.hostRow}>
         <View style={styles.mark}>
-          <Text style={styles.markText}>◇</Text>
+          <Text style={styles.markText}>{asText('◇')}</Text>
         </View>
         <Text style={styles.hostCopy}>{line.body}</Text>
       </View>

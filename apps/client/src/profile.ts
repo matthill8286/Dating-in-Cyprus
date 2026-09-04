@@ -93,10 +93,16 @@ export async function saveProfile(
   setProfile: (profile: Profile) => void,
 ): Promise<{ ok: true } | { ok: false; code: string }> {
   if (validateProfileForm(values) !== 'ok') return { ok: false, code: 'invalid' };
-  const { data, error } = await patch(values);
-  if (data) {
-    setProfile(data);
-    return { ok: true };
+  // An unreachable API rejects rather than resolving with an error, and an escaping throw
+  // would leave the caller stuck on its busy flag with nothing on screen to explain why.
+  try {
+    const { data, error } = await patch(values);
+    if (data) {
+      setProfile(data);
+      return { ok: true };
+    }
+    return { ok: false, code: error?.code ?? 'error' };
+  } catch {
+    return { ok: false, code: 'network' };
   }
-  return { ok: false, code: error?.code ?? 'error' };
 }

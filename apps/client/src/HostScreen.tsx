@@ -1,38 +1,25 @@
-import { useState, type ReactNode } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useState } from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 import { useApp } from './context/AppContext';
 import { canDecide, hostLines, type HostLine } from './host';
-import { HostComposer, HostHeader, HostMessage, IslandBack, VerbRow } from './hostChrome';
-import { IslandMap } from './IslandMap';
-import type { Profile } from './profile';
+import { HostComposer, HostHeader, HostMessage, VerbRow } from './hostChrome';
+import type { PeopleStackParamList } from './navigation/types';
 import { OpenSafetySheet } from './SafetySheet';
+import { ErrorNote } from './ui/kit';
 import { Fixed } from './ui/deck';
-import { introPending } from './ui/pending';
 import { IntroSkeleton } from './ui/skeleton';
-import { TabBar, type TabGo } from './ui/tabs';
 import { page } from './ui/layout';
 import { useHost } from './useHost';
 
-export function HostScreen({
-  go,
-  onOpen,
-}: {
-  go: TabGo;
-  onOpen: (profile: Profile) => void;
-}) {
+export function HostScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<PeopleStackParamList>>();
   const { sessionToken } = useApp();
   const host = useHost(sessionToken);
-  const [island, setIsland] = useState(false);
   const [safety, setSafety] = useState(false);
   const [draft, setDraft] = useState('');
-  const tabs = <TabBar active="people" go={go} />;
-  const pending = introPending(host.ready, host.looking, host.busy);
-
-  if (island) {
-    return (
-      <IslandStage people={host.people} footer={tabs} onBack={() => setIsland(false)} onOpen={onOpen} />
-    );
-  }
+  const pending = host.introPending;
 
   return (
     <Fixed
@@ -54,7 +41,6 @@ export function HostScreen({
               host.ask(text);
             }}
           />
-          {tabs}
         </View>
       }
     >
@@ -64,7 +50,7 @@ export function HostScreen({
         style={styles.scroll}
       >
         <HostHeader
-          onIsland={() => setIsland(true)}
+          onIsland={() => navigation.navigate('Island')}
           onSafety={host.introduction ? () => setSafety(true) : undefined}
         />
         <View style={styles.lines}>
@@ -72,6 +58,7 @@ export function HostScreen({
             <HostMessage key={line.id} line={line} />
           ))}
           {pending ? <IntroSkeleton /> : null}
+          <ErrorNote message={introRefusal(host)} />
         </View>
       </ScrollView>
       <OpenSafetySheet
@@ -89,23 +76,10 @@ export function HostScreen({
   );
 }
 
-function IslandStage({
-  people,
-  footer,
-  onBack,
-  onOpen,
-}: {
-  people: Profile[];
-  footer: ReactNode;
-  onBack: () => void;
-  onOpen: (profile: Profile) => void;
-}) {
-  return (
-    <Fixed footer={footer}>
-      <IslandMap people={people} city="all" onOpen={onOpen} />
-      <IslandBack onBack={onBack} />
-    </Fixed>
-  );
+function introRefusal(host: { introFailed: boolean; actionFailed: boolean }): string | null {
+  if (host.actionFailed) return 'That did not go through. Try again.';
+  if (host.introFailed) return "I could not reach the island just now. Pull down or ask again.";
+  return null;
 }
 
 function threadFor(
@@ -124,8 +98,8 @@ function threadFor(
     verb: pending ? null : host.verb,
     matched: host.matched,
     want: host.want,
-    looking: false,
-  }).filter((line) => line.id !== 'empty' && line.id !== 'open');
+    looking: pending,
+  });
 }
 
 const styles = StyleSheet.create({
